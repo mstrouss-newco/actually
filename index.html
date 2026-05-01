@@ -1279,10 +1279,11 @@ html, body {
 }
 
 .bn-block-title {
+  font-family: 'Newsreader', serif;
   font-size: clamp(28px, 3.5vw, 40px);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
   margin-bottom: 18px;
 }
 
@@ -1812,7 +1813,183 @@ html, body {
   }
 
 
-/* How it works */
+
+  /* === Brand section lede & spacing === */
+  .brand-section-lede {
+    font-family: 'Newsreader', serif;
+    font-weight: 300;
+    font-size: clamp(18px, 2vw, 22px);
+    line-height: 1.5;
+    color: rgba(15,15,15,0.7);
+    max-width: 720px;
+    margin: 0 auto 48px;
+    text-align: center;
+  }
+  .consent-section .brand-section-lede { margin-bottom: 0; }
+
+  /* === Buyer profile card === */
+  .buyer-card {
+    background: white;
+    border-radius: 18px;
+    border: 1px solid rgba(0,0,0,0.08);
+    padding: 32px;
+    max-width: 640px;
+    margin: 0 auto;
+    box-shadow: 0 24px 48px -20px rgba(0,0,0,0.16);
+  }
+  @media (max-width: 600px) {
+    .buyer-card { padding: 24px 20px; }
+  }
+  .buyer-header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 20px;
+  }
+  .buyer-avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: url("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCADwAPADASIAAhEBAxEB/8QAHAAAAAcBAQAAAAAAAAAAAAAAAAEDBAUGBwII/8QAQxAAAgEDAwIEBAMGBAQDCQAAAQIDAAQRBRIhMUEGE1FhByIycRQjgUJSkaGxwRVi0eEkM0NyCHPwFjRERVNjkrLx/8QAGgEAAgMBAQAAAAAAAAAAAAAAAAECAwQFBv/EACgRAAICAgIBBQEAAQUAAAAAAAABAhEDIRIxBBMiMkFRBWEUQnGRof/aAAwDAQACEQMRAD8A9EmhQo6yHQCo6FCgYRoUKOgAUVChQIFChXSo7fSpNAWl2c0KWFtMf2Dig1s6/WUX7tinxZFzj+iNClPLQf8AxEGfTzBXQgLfTJEfswo4sPUj+iNClzaTAZ25+1cNDIvVG/hRTQ1NMToUPvR9qRKwsUKOhigAUVHRUAChQoUAChQoUACjoHii70AHmioUKABQoUKABQo8e9DGaA6Co/tyaO5aCytWutQuIrW2UZMkrBR/Osz8UfGjSNOLweHLRtRnHHnyZSIfbu1Pj+lUsqXRqC27sCxG1B1LHAqv674y8L6CCNR1aF5R/wBKA72/gK86eJfHviLxG5/H6jKkBziC3PloB6ccn9aq44ORx7ilyS6RU5yZvOsfHCxh3LomjSTEdJLltg/gOaqGp/GbxVd7hbS2dmh4Ahi3EfqazQmjzS5yI9ljvfG3ia+yLrXb9s9lk2f0qKm1O+nyZr68kP8AnnY/3plQ6UrYqFDK5OWdyfUux/vS0V9dRH8q5uE/7ZmH96bZos80WwJq18T67bMGt9Z1GMjoBOT/AFqxad8UvF1l/wDNTOvpcRBuPvxVEFdZxRyYUbJpnxwvVIXWNHtrheheB9h/gau2ifFHwlqxVJLmXTp2/ZuV2j/8uleZc0YPGO3pT5sabXR7Lt/Ku4RNY3ENzCejxMGH8qJsg4Ix968iaPrOo6NOJdKvbi0b/wC0+FP3XpWp+GPjVeRbYfE1ml5FwDPbDa4+6ng/pTuLLFla7NnNFTLw/rmj+Jbbz9Dvo5+MtETtdfuvWpB0ZDhgRTcWi2M1I4oUKFRJA70KGKFMYMcUB0oUKABQodqFAAoxRUnqd7Y6Lp0moaxcx2tpGOWc9fYDqT7ChKyMpKPY5ihMnPRR1J7Vnvjr4saT4cMlloqpqepr8rOD+VEfcjr9h/Gsz+I/xX1DxH5ljo5ksNI5U7TtlmH+YjoPYVmWePam3WkZpTcid8T+KdX8T3Zn1m9kn5ysWcRp9lHFQu7nrXGc0dRIHYaug1JCjFRGKcUM1yPejzQM7BoZohXQFABijrnpQzQB3XPeuhzR7aAORR0eMUdAHOKOjNFQIXtLuezuUuLSaWCdDlZImKsP1Fa/4J+M0sYjs/FsX4iH6ReRgB1Hqyjg/cVjNDNNScehf8HsmzmtdSso73SriO6tZBlXjOR/6/nQryp4Q8Xat4TvRPpU+I2P5lu/MUg9x2PuOa9H+CPGWl+NLQtaH8PqMa5mtHPzD3B/aHvViqXRdDK1pk5QrplKsVbqKLFRL7sKhR0XNAw/0oqH6UO9AEf4o1/TvCOktqOrPz0hhX65W9FH9+1eXvHPjPUvGGpm51CTbAhPkWyH8uIe3qfU0r4+8R33ifUXvdQkzk7Y4lPyRr2VR/fvVUHWiUvpGJtydsOhj0oV0BzURHODXVcyOqEZOc9vSk551A+TlT0yaYxY9K6Tmo430abQ8iJk8ZPWlhcrFlnc7ScDJGKKYDzFGFpKGdHXKkEUqzgDIODSqgOwMUeQBzTWW6SIFncYHU+lV3UdemlR/wAAj4XO5guT+lNRbYMss1wsQJfCr6k0hZX0N4XaF8RqcbsdT7VRYtfuFg8sFTI/1SOMke3PakVvJrUkQSMpBOdpwufUCrPTFZpfnqHCckn2rtZPbms2ju7i3WOS68xll+blzlk7nNTVj4it4JXWPzng/YD8tik8bCy45NdDpVdtvEME9zIBIiwqq7SwIJPepm1uY5ow6Orqe6moOLQWOaIV0CCODR4qIHBoq7xQxQBwBTrTr25068iu7GeSC5ibckiNgqf/AF2pAqaKmB6V+GvxDtvFsKafqhS31pF4xws47lff1H8KuzKUOGGDXji3mkt5klgkeOVCGV0OGUjoQfWvR/wr8fR+K7VdM1Vlj1qFcq/QXC/vD/N6irE1LvsshPjpl2NFXbKVYqw5FcmomlbCozRUKAPGuqsQo+9MQakdWQEoP1NRylORvGR15pMxAyS4VeDRNII1kLMwCjJwOa4uJI1AY/QD8xHYVHPfKkZ3bgA3zMy9R2NNRsBa+uovKVfpMvAZT8yn3FR1nBdvcQGaKWWBywR4yNrEdj7iu5AJYWkkjG1lJQKduSOc+4FM9P1O5/xCIWSRk7XDE/8AU7k/fHSrEkDYldHzLtTPbHlsEuSFAPHFMdQeRblbFXLpE+1THls+49anod13cWzXckhtYYfPZZGw2e49yT/Kmt3e7phfWkkUMxziKNcMgPvUkIZ2/wCItwtxAZGbcU8xun2I7VJ2+sMd6z8MBxTNAbiPegCMcmQI2Cx9x3+9TFtohv2LxoSQBgYwc+tRm0tslGLl0VrWb6a5kAQlVxjGetRH4ieE7BI6c5wG4zWiyeDNSuQGMIBznJGCarmueDdUsZGd7f8AL67l6Uo5YdWTeDJ+DW0mjmVLK2tRcIhL7gn5jcc/pUadqtjOQD3qY0eOXTbuOR/MgABy6D5iCOg+9IajZwjNwjYiDbWjz8+asUr6K3FrsfWIsLrSRC7LJOJgFi5Dc+h9PaltQ8NSmKVbKB7aeBPMeGb5XkX1HbgelRGnRpb3Fvc2/wA75OY34AHpmpaB7u1WS/e4VnRtvkySbmKnvz1WjroiVFZZELbGIHfFTWkazPZyMxGQw5VR/OmN4BLdM8alEkwzKvY96CQSBi0S4TO0FiKbpgXPSfEDXV4lu0EkZkBKM/Q1Z4GZ0y4Ab2rKYri7tbjeAu8cCTkj9KnLTWro/MJkJTBYbcbl71VKH4STL73o8U1tZ1ljDKQQRnI5P2p2ORVdAFiuSBSmKLFIBPFOLG5nsrqK5tJXhuImDpIhwVYd6SxRgUAeovh54th8Z6HvfbHqtsAtxEO/o4HoasJ6815W8J69d+Gtbg1Kxb54zh0zxIh+pT9/5GvUmm6la67pNtquntugnUMR3U9wfcGrPkrLcU6dMUoUf3ou9RNJ4s1C5d52XHljaQCTUQCGVjGwbnBK13rTeZcu6nOR8mOxz3ppOsUkqSZ8lcjcV4JHripJGERkZxC29y/mEjg4Kj29c0ncC6tLBQ0qxWV6nEu7fuCnofQ5pZ7Caa3uGMoRYfmO9sFVPeoVjIYWhLFkLbsEcA+oqaQCMErzXipNcOYo888/SOoAozNZIkYhiZ5mbLuXPyDPAX396dWqhLtLoAICPKYe+OR+o70pDZWH5265FuwOIy3Jb0+33qVioNbdI7xLmQG4td3HmHG7jo1Lw2aPdRGxILPnKqDwT2wa5V5or6W3uzGcQgbcEhmPQj3rQ/A+iLaWqzyoGuHGSx5xVGbKsSs0ePgeaXET8OeEY7YK94u5uoX0+9XXTdNggcskYX7U4hhHGBT+3iPPFcbLnlN9nfw+LDGuhAwA84FKfhY5I2SaNHRhgqwyCKeJDzjvT6GzDA5wMetUpyZfLitUZj4x0FI5o7oWQns1TYY4xhox6j1FZ1rdikGo/h9PUyxTwiRdvOM16MvbZRHwc1k8egGTXb+VLz8Dd+cwMLJlHQ9Dj0+1bvGzuPZg8nBGfxM4h/ExyW9sUUeTu+XaBu9zXcscN3cqkkhiUL8ol+rrVpu9NuLyxvJJjBHe20pSSHO1mUdCPaqrc2rNdjzizAjDFuoA7V0oZOSORlwvG6Gd5Y/hSszNFKhcqYs/Nx6imUc0Mt0HkX5AeUX09qkZyltEFmictIm4b+Mg9Of0qCltZolE2xhEx+Vz0NXLZnaLx4fTTnRLeRZJkdmLW7D5lPYqfSoLxBol5p7PLGrG1ZjhlIbb7HHQ11o0sdskM9xGkq5PlszEbSOoIHWrhbaekwkOn3kNvbTwESTuSyknggA96V0x0UXSZSu91uHWRcMp34yfQCtKsZjJBEXOHI5B9azfWdOXSrvZbTCeEgFJQpGf496e6TrlxC8azSNJGf8AmCQ8Y9VqMly2hGjYoqQtbyC6H5EgfAH3NOBz0qtoYAKMChijHFKgCrT/AII+KxpOsHR76TFhfthMniOXt9s9KzGjUlGDKSrAggjsR0NNOnYHsGaMxyMp7Vwag/h/4hHijwhbXjkfjbf8m4H+Yd/1FThpyVGvHPkjwbNDcyiaQeVtQ8behPvTDe9tGzTrHKx5ixkkH1/2p5cl1nG2YREIW8teQT7+tMvx8kYSBXDxk7zEVztJ9DViRkOmbULi6EnyyTPyykjJXHII9KZ20zXBu7YxCJtpbzh1VB2rgq9vOjqxQyoSXB5wf7U5imu/JjXaxgfCBgnX0GetSQhnZpbLNGZoJZcsQQz8HI4x6U+0/TraVWkmcgI2HB/pXFzeSwpJZnanlfWoAyT96TszbwFlYTBiu4yId2zPt3pMaJfS7aKXUSkBdodwYLIvzD/atb0VQkCA+lZ14WgeSXz3bexA+Yjk1o2ncqoUZNcvy5W6Oz4EKVk4hwBTu3GTk00gXgZ6inyqRGGFc2jrN0hyp4zSymRuRgDvmm1spYYH6VJiELbFmYAMcVZCLZVkko9jGQluCc1DeItNS702YrEslwq5j7Nkdge3tU3dPbnKRzqrjqTUS+m6neMy28p2D9vtVqxSWyh549GceINPkbw7Fcak8NxepKibolKyKufpb1NVeWxf8I0qAsoYrluox2NXT4laNqUQt2tHJZlJmYnG/b0/hUHo8Ns8j289q1rqM0e6UnO2UdmHYE1sxy4xuzHkj6k6KNq7QySrHYo/0hWV+cEdce1RsgjWIjfvmHGMZHvVl1m1exu2RSPkw2CPqHcZqLubW4liaCxt5LmIMNrQxlgCRkDI7+1b4STVnMnBqVMi4ZDDHvRhvB+jGdw9anfDDSSsGZZNhY7dqjHHJ+2Kav4R8RwwedLol95R+bcEJIH2plY7raeQ3HmxODwpBDe4xUm0+mR4SXaLdrUllqckUsyt5ajYIQACf16c1R5oojqgVg4Tfyg7DParPb30d7C8Oxbdk+cjOdwA6+2OuKjL9re5hCsCJIM7HVf+Zk9/QURItE9pNxpu83SyIh3Kgy23p7VbEkV0BjZWU9COhrMdLNvF5W4Kr7/nLpv49hVp1TUToujqLLZJNKxYOv0qp7/6VCS2OEbLJJNHDjzZETPTccUrEVlGY3Vx/lOaoPhnw1feKXaa4vmiVujNliT9vSutX8M+IvC83mI7mDPEyElD9/SoWrq9lywurrRfgpo9pqt+GvFvmTpaazEFLfKsnvVzlhU4KbivYjnNJumQeJraLj8Ftf8A8H8WLZTvi01IeS2egkH0n+1b9KuyRlNeS2EllJHcROC8ZDqy9iDkZr1RoupJrXh/TtUiYMLiFWYj97HP8xU1tMeO4vZ4NuFguEWFJWR5MlWAwft+tMLYXKZsEjBSSTfiVQHJHYH0riUQC7cRl/MT5goOQCKd2T2t/NPNdmdZVjzH5RG3d05z0qxFI3tzew3Uu2MK6H5hjIVc9D7UGkvby6nnjnSKLPLBwox7Clbqy1CIXEcbF0kQO7Dv7E02gsilnNcStieEKyxnuO5oA4v7c3CrcxRAJu8vfu+aRsZJxT1Gjh0qDy41S7RvkkA+sH6s00luIl/DIsg3MmHEa8rn+5qWv7tYNJgV7RPw4b8uTPzK3vj19KTJRLT4RTFqOQB3JOBV4sr+xtwqmUMT6c1nnhy0m1WFEjJS1XknpuNXjTfDSxjPmk+2K5mZRt8jsYHPiuKLNbXkMgAHHPGafpMBuAI9qrxs/wAOuBu4o0vgsiozYNYpJfR0IN17i5aWQ4OFz7UlfFgzLuwmc80p4auId35hONuRikr4m7u2EK8noKE6WiLVyYxia3t5DJL833p5b6k8zFbcH2Ve9UvVLuQTlecKSMU90HWIbW5Xz5kjB4bLgED2q2KkyLjBKx94nupprJWMe57eVZSh/aXoy/qKot7GbmO91uylQW8chtfwjjiWEY79mycgVbdV1rSzLJsvoSuc/Vmqto0SarMLizLSJFdbp4cYjcDOGHqRUoXG7IzUZJUQni3TZP8ACfxDxnEYzz9W33/T+lPPBuu6dF4Q07TIJkiu4bmSW5iY4aVm+lwehXHGO1WzxujTaFNJpTxyTQnLpwdy91YdjivPuoLE15mImKIHI9V9v49K1+O/Ug4sx536GVZaPTel6nB5QZT83HtUjqulaFr9qYb2C3lBGczICQfZhzXlrTvFOqaZtENyzoOiyc1dtG+KZCJFf25XJwzocjH2pPxssNx2al52HNqTot2o/B+znt2k0q+uLQSD6CBKmPT1qqXnw28T6K5ntIor/I4kgPzj32NWreFvE9lqMCNaXKupHQHp9xVrNzDc2zKzqpPQnpmq4+Tkjpsry+Hjltf+HlC7e60i7uWu45Le9bhhJEVZs9eDUXrV5uWG3hIEKRrwPU816x1LSrLUbSWO7jgu7WYD5JV3Dj+lY/4z+EYO+48NMQw5NpK/b/Ix/oa04fLhJ1LRiy+FOCvHtEN8ONTXZAkLDzYxtZO/3rSb7XrX8NPaXKJIrptZSazbwx8PvE2mOdRudLlSJFzgSDf98A031++aaVvyGB6HJ5qnLBSy3E2eNNel71sT1TTImLGJcrnjHP26VZvC97IdKia5YZ3/AIfLHncBx/KqFpwnlu0ignMEjMMZPyn2q3arC9k6eTIGjWdTt/zdM4qxXFpMrmlkTcV0WxcOPmA567u9bV8Cr7zfD2oaSxyLWTzYl7hG/wB6xKBiMZ6HnHt6g1ofwdv/AMH42hhJwl3E0LffqKug6dGLIrVnmWUKwWNmMTudxDKFwT05pOC5lXzpFSLzAQGXbhGUev8ArTK9u5Z5VaeRXCDZ8p5wKlIr5rTR3t4rWPLx+bLIx3HB6farzGc209xLFPNckPDwdschXnsPt7Um13bvC63MbKzDEaxHlz3JPpR6Xh9NYsyhedqg5YsMc4pBBaT3qMm4KqEfmc/NjrxTGJypHFqUL2Z+VVHfJBP71d66DLasY5AsaMCY+Rvz+0P7ik54nOoTsCkm3GWTgHin+tNu0K3KjarMGUKfl7g5754pXtAui9eD7qODRbVFIB2jNaPo8gKISSxNYVpl5Ja2luGB2HBH2rQ9M1zUr6FV0WyCpj/3i44A9wtcrPiblaO54uVKPE2Boofwy+db5Rh1HNZl47h/BXMU1mxMbHj/AEqV0+C6mjDavfzXsg52q2yNP4VXtaaAMIreMJArkhQSdzHqeeapSSZe22rLP4fupFt0OTuI5xUys5jO8Eg9jUDoyFIE3AhsZqWjbcSrA4NZpd6Nij7dkXrukx6lO0qNPsYfSsgUD16VD2PhCySXdJZbznO5pD/erslo5h81QTHnk+hphMjZOCd9WRyNFTwqRyNH0tXTNrboAOijJNMb/T5bNnl0UxoG5aGQfKT6gjpT2MOGBcnFSUflNCVwQSCOaObbD0VFFA0HU5BLLDe+V+Y53Nt2nfn6f81Zp8QtMhttTmmtFKYbE0f7pPRh7GtRs91jqdxFc2LvJNJvDwJuVAPlBI689yKgfiPpsbRifGJHUxn3x0rVgmoZNGXyMblidmPTEXMiJHGiHAHHfA6mm8lvIj4KE55BHIxUtMjQyebbF4wy7ATwTxzSUP8Aw2pRrK2VHDBTkYPauwpHn5RpjWw1C60+ZZbOd4pAeqnGa0DQPipexbIdVXzIxwZEGD/CqPf2areRwx7ndh8yqvQ+gpg0G2MsWXcP2epx/aoTxQyL3IuxeRkw/Fnpzw3420/UkUwzoR6Z5H6Vb4JIrxPy3TJHWvIGhyiG/jZ2KqTyQ2P51efBvjHWLfX4tPhZrxHmCKQckAn1HUYrnZfCcdx6Oph8+ORqM9M9GW7CCBVyCfWsL+Klilhr0skSbY7gCVVA4BPUVttxcSSKh2qCvHSqf8R/D66xoMt2gJvLVd647r+0MVRinxkbcuJuG+zAGaQSK65TByG9PerPotzPqccfnSlpPNBZiMkgc9O9V24iaSVUXpjJPoKtfhi3W3tTMRjeMJ/2+v8A/K6DSZyuTjf+S321wu8gd/Tp9x/pVg8L3n4DxBpl0r7RFcISfQE4NUxZQWBJz3JP98f1qUtLl15Bx3yT6fyoWmVd6MhW3ik1JoH/AC1QHLEY/j7U4NxBa3BghEfksrKzyDcCcH+Qp5HaI1urW9xuut3zF12jHopz8x+9RMkcOyWW4J3M3lqytgo2c5I7itJiHkbQw2MEpSNZCcR7OCw757YptZmKHU0kWNjExI2leQD2p/NEbK1t7d4dm/DLLJz5gPdc0hBeLafi4nhCSPwLgfMy4/kAfWgBJrFIZbWQzGJptzNGVPyLngn70/10wHRFVhIrbvMQgAgsTzn04xQczySQvcSukkiqVbG4OOxx1xTHxRdyW8slvGdsUijIxwcdSP1qPbRLpF88I6MmtaXYm6YCCEcIByx9zV/s9LtbOHCqAg6LmqD8N7vGlxgtxir9G7TkA/T1rk+TfJ2d/wAKEZRTQu5edfKgG2PocVVb+Mt4pitgCYrcDzD2L+lXqSRdI0O81ExeYYELquM5Pb9M4qhafqJbQJNTkt5rqfczy+Qu5txOcn2qrHb2jRlijQ9IsluNmHVQ3HJxipDUdNSIFY7mFpB1Cms68L+NrLUW8lJGiuF6xy8GpnWrW+1m3iWDWDptuXG8RR7ndfvnik8bTqSol6lpOLsl3e4tIJVEvysN3yt3FM7S6MjgkUnp+myWls1tDc3NxEekty2XNSEFnEEC4ww71W1Toti1VkvZ6ek0QYkjuTTWdEhnK/s9j6VIQFrS1Ks4YkdKg7ufLknpUpNJaK4NyZE38qwa3aS9FKyKW7dPpz69/wBKgPHxE9ixQZKfN09qnLkmaQL1AOf1FNlit9S8QwaLJJsnmTdk91PUD3xUsbbkmQzVwaMDjTz7YoPMeYnCxKpJHripiy8G6zqrRNFpl2uR8zMgUe2M+ta9o2hafoWrXtvBZC3kWZl/M5fbnjk9qvEE9tGACMnHUmuhLy6dIwY/5qlFSkzC1+GWv3wt1kS3s5oshpnlySvbhasmj/Bu3EhbV9QkuMjBigXy1P69TWoXOsWolhIhVCMqfm60P8YjSQMjIvtVUvKyPVly8DFDdf8AZAad8PPDmnupi0W3dl+UtKDJ9jycVYLTSbW2BFvaW9v/AOXGq/0FNrzxFGHUG4QHGTyMcVEXnjXTbclpr6BT3+cZrPJzl+ssUIR3pFrtbYM0iyOPk6n2oXawxWF4dy4ET/8A6mqKvxH0Tn/j48t71WvHPxEt7jTHstLk3y3HyFkPRe+PenjxSb6JTzJLbM/t7bz7jy+8jbnx2XP96te1EjVVwqjAx0xURoto1pbGSYDzZOSOOB2ANSO4GXC7sqOT1I/TqP5iuklRyMk+TFYyVZjg5U5+3tT+2l+VuMNg/L6/w4phGgkXdgYH7S8j+IwR+tPraMouNxbrx3/3pkUUG+thFb4illeYPyjIQNvbHvTGZ1khEiRB5kly7BcgDtkd+a7uZ7uWbfJK0W0gEknavtSNlc/g9TDM6NGoO4joevGO/PNXoxDqDWLw3sEO5o1RwwV13rGw/dB6Ckbi4lubi4zOkJl3F2I4cD+/tS8ERMheOMNOQG3qm7Pqy+p9qa67etdS2cU9vbxyWyeWWiGBJzkFven9iHovUiawihlynlGJpJhwD7dwKg/EFzcS3Xk3ThvK4XByADz1qWuZJ5pNuoC1jKBSigdBngDHaoXXEI1GYlkbd8w2dBRFbBvRb/h7fAIkLNjnH+lbFp0iGNT6V5t0a6NreKVYgH+ta74Z8RieMRSEeYOPvWDzMTu0dfwPIUVTNWtr+KKzlWUKVIwVIzn2xVRe20+1Mr2lv+F8zO4Quyg59qjNa1z8LdWEbf8ALmJBNctcDU9SFvE/5cWC5H7R9KxQxSSOhLOpOkHpgsYbm4f8DGwBxGxGcn7mrHY210sId/ywe7nHPpUZe2gS3VVGyVRx6H7UqNZDpDH5m6UKFZOpzVjin2W44SrRY4PxVupM8JKfvpyP5VIQSwlST1xxVftbi6ZQ1vuBUftH6aFvcXrv+eI1BPbkmqp40ugbcXsnAzSF0LEJjI9qjrqJi2M8U+hI8kt0J4pCT5mAIyDWZ9kl/gZxwcE96z/4qWk1pNZarAzLtUwsykgqeoOR071qgiARvQVVfHVsl54a1GGQ/L5LOD6FRkf0q7BPjkRVnjcGYi/jTW2KO+o3MsqDCvI+449OaSl8c+IXLZ1KYE+mBUJYwiWQBy2zGTtHNLNYq0LuJY1KnkE8kfau/wCnBfR5z/UZapSFLnxDq1ywabULlyP85FJf4jqLjLXV0R/5jUnaorToqJvOfsfan+peYvlljIdo2s5PVqlUV0iv1JvtsYSS3TR75ZZShO3Jcn+WadaVcR2kxlfY5DA7WTORUfMWdtxB+bkZpzYQNdSbEBLdgO5ptIXJ3dlvuryDxFbs0Gnw+dGvJXCMuPQU0sbFNFgS8v4WUyHEbMMj7cdDTDQWmguQUhVlhbDMOCc+vqK0mXTI9V0CazkYHzl3Kf3W7EfrUFFdDeZ2Vb/HIZUA8wY/y9P1BpxBqEUjfWrAdsZA+3QiqBc2txYXsttcRlJYjtYEU8spAXUyTGIZxkDNRcKJxyGjwShyGHzccNnIz/3df409nlPl+VEAWZCTn9lcck/6VWNKZthKOJVIIU+h9wanLQBwI3kO9iuW/akPQZ/j0qui5MoyRzCwdpi0UDn6D+3j0FIm3k2CRYRtdgiNj5wB1IHv60rczCK5Ufmsu3l1fOW9ea4a3mkkhEbMSRkBnwR75q6zKOILUwSiVzsUYkQOxTIzyoINM9TRNQ1As0qpEoG0kZwD2z3+9PJpvni86QzeWMbXHH2prdzyW10ZhHEwkUqO6mhAw7+KHT3CbfOV4wY2LcDnr71H65a+UyTJKJUk7hcAH0FSrW0M+oQRS27x4QMwiO4Hqa4mla8tlsYUCWzvvRnB49cH0prQisqSCCOoq06RLKQlzDnKYJIqu3ltJay7ZFIB5U5HI9amPDV2USaDdjcOntSyrlEnhlUqNBkH/tHYLHBhZosOPvTLSIdR068uE85IpQdxRuS3uPekPDd+dNvUYkbScGrBrWiy392bmyk2yMA8bZ71znLi6fR1IK6l9ouvh+6gu7IF2V2KE739ff8A0pxdWMKXEb7oQ7xbiygc+xrObG61rT5mjm0ydmPJMIypPrVjSfV7uJMWLQ46GZwP5Coy0dbH5KosMlxCtskUcamRfqlDZ3+wFOdPjOfMl4JGAPQVE6Vb3IIe5AZx1AHA+1WGKLzYw3Ix19qyZJt6Q5S5OzthtX5TSCvl8dhSrgjAHQUiAN2KoIjsyYj69RVB+Kuqrp/hm5QMPOuvyUH36/yq33Vwsa4J9q8//EHWpNX8Sypcblt7djEiegHU/etnh4ec7/DH5ubhjaX2MNH3m3kECq7BcF2XG0egNNGKxZYq3mZwT2xXcC+Xcsru/kqRuB4OPWlEEvlzxpCHRwSm7qo9RXZ+zhfQ107EjSQJvxMBjC5IIPFOZ3JZrfYxib6VdvmyOv8AOubC0VrGSbe4lVuAp60rMQ8YlZNsiLtBxznuTTIUMzZAKEJDM/Az+yPvUpo2l3llc4nZLSCf8sXUobZGT0JIpOW3niggikhyrASK6ncdp7HH962uy1dPE/wpvNP/AMNdtT0uMPGn/RSMD6h6sRniiwoh/D3wf8RpFOubMvKdigSbt3GQ4IyMGrZpHw41vTNIRr5UO0kMxccU9+An+JaJMI7C6i1XR7y3W5umBK/hJeyHPJPtV58ezTWlhMy3Ds9zLvCZ4jHoKjYmin+KPganiXRkuLa+gt9biXKykExyDsr/ANjXnjxPpGueC9cfStbthb3MY3AsoZXXsyt3Fe1PBN1PcabunbJCgCov4neENL8Y6H+E1dNrREmC5T/mQMe49R6joaipbJJnkKw1lpQEmZW5zjGOfWrv4Ft21PxZodqAGM13GrD1Gcn+lVfxn4C1bwNfINTi83T5T+RexcxSj7/sn2NaP/4areLVviRaFEZ49Pt3uWb90/SP606tqiyM6RkOowQ7lQBpoVOGdeP4e1N3Mkc0ETLI9sG+Uj68egNWC9tNsHnTpJEIj+YqnqCO3tTfRyVlhunRJUV2RYW4IOODn29aSZGiNe6aDUIwga3HGBKQ2PciuI4beKeMXEctwhVnMcTY2k9D/tSF/BE9wymTY5faWJ3c57n0ptNJHLIkcX/D7F2FwSTIR3+9TRFi9reKgljk89sE4aM4P8fSnljDNHFcMy+ZaxfK65GUJ6YpmsSSh1L+WCgAIGc/euWingjdWGWBBYZ7ds+tFgKajp6y6cbvILKoH5fQD0I7HmoK3ma3mWRDgirTZ6g626WkwQpccbnAJVP/AF3qE1rTW0+/ngIGExjPcGpR/GLraJm1vFuowyHB6HNXDwxrkmxrSZsvGMxn1rKbe4e3kDIfuPWp2xv90iSxHEi9qz5cCaNeHPWzeNPlE8ImU8Y7VKWZDISqDf8AvEVQvA+sJPG8MrYIPIPatBspFjJBweMiuTki4OjuYJKcbHUNuzyA+9TE8SW1r84GT1x1FQiXDxTEocMe9Ce/PSV847VVaLmjuZ1Ck5pjJcBQccseg9aTlma+bZajcq9W7D9a6tLIi53M24jkn/SoV9sg5XpCOo2ErWIkYM0zOvyq2MDrivNWuTmbWr6TG3fM/H616Y8Q3hFjMgGDCnmsc88eg9PevMrMs1xK5GXdywP610/5z+TOX/SWoo7thI6gKDvXow5OPSpBxImlLmQRiQnKt1GP6UdlGZLvYDtJAJK8Fh6CnKLKPxWI8DYdu4ZAx656V0bs5jVA06TzbVWkePGQgUDkfp3NITTeVczRuiE52hWXgEenvXFvKYkRLZUVwASVXkN2XJ705ki82zWdlDSByjszAHd2JHUmgiPfD7kbkDRwRzMokkZWIkQY/LO3oOeTWw/BaGx1PTdT0EXKWmq3O5S0gH0H/wCme/HQGq34R06fSDpOp6DLb6lLfW7Qz2DHDRMeoIzyOh/WrX4Z0WXw14ktI9e00S/jl8iORLgM8TMf+bEvXI6H0pMBR/h/L4V8VgveXFnp6SI6iBmjW5Uep6B81ZPGUzGSKL8QbjBB3kg5H6Vf7vSGnsoLcXUz2KMBOJ8SSXIz+8eg+1Uvx7ZxRasEtIljjCgbE6CoiZd/AESnTF9xinHjkm30aQoADkDIpP4ebV0jLMAR1yaV8aTxTeH7jJ2FSCMjrSAg7K1tdX0mSw1aBbqwuU2ywuMg+49D70n8HfhrafD+48QXlpcvcRXzIkAdcNHGuTtJ78nrUr4Za1nsYmgclgAMMNvPtVymUQ28UI4OMn704tpNkoq2keN9VktFB/CQFpcmZRy25SMYHbg81V08M6ldEsJBEXGWMjcse/FWsbt3ytj2p9BKmQko2seh7VRC4rZqWNfZQo/CN9aXImSWCWRB8ikcZ/WoVdOkS9mFxAnmMDlGOGz6gVq96dwIHp2qtw6KZriSa6bfMr7oZQfmX71YsgpYl9FEmhYKxty8UY5lZ+pPtXVpJtaG5eBZnk4Xc3HHqKnnsjZT3b6g0zSct8q5Rh2PoBXOraPDa2sV/D88T4Mqx9Oe49qnyKvTZD6fDbT3JaSNIUxtVgxxnt165rjxUZXt4ZXigG7AMiKd3HGCadJfW90rxPE0cakEOg6+g+9WjT9Na9t0m1K2USkECMHoh7MOx96d07BQ5LRkp9qe2i/LnuPSp/XvB97YXDyWsRmtScqVOSB6YqJtdNvzMBHazc8crgVNyUlojGDi9khp+ozWcqSISGX9of0q6af49MW3zI33DgjGQaQ8MeA7jUMvfSC3QHBTq59/StK0HwZpGmMrR23mTAcSzDcc/auXnzYk6a2dfBhyNWnSIrStbvdXAaC2aJP35flH6DqamILISy5u5Gm/y9FqTvLNEY/lrg9xxSPkrwQGGPesMpp9G1Qa7H2VjiCRhVH7qjFLWEZaTc/TsKTiVfK+UYJ7nk09tF2RttBJ9qqZPorfjtYF0PUZshZ4oW++COce1ea1VQkTxwOBnBcnIY+gFeh/iTcE+H7yIEb5U8sHuM152SR4bjyXYjY5GM8Z6V1v5y9jZyP6L9yQ9tblW1ES3KAxIuGXdtKj1B9afReW9tcTC4gkVBuVXcqXbIwNvr3phPCFmea5jcPncSo+RhSOnyxCGcOuXJBQDoDXRo5ljwSyW8jTzAzRSjbIR0Y+x7EVJiwkntIXMJG8F4UQhmIz3qMuZ50tYFmcjbkLHt27lx9Xoa7trjzIJ5DuVogGVxnHWosaLzourDSmspNMDI21Xea4Oxt6nlT228d+avCeKL3U/FlvqcenSm+jh8mORsBbWI/U0a9SW9TWWadrM11pi2Szxxwx9YzGMyZ55bvU1our3gvT5cxlvFTAZ14KjoG9qhf6TUL6NeuPEur+UqDUJ2VeBg9Kr97d3E7l5J5Wc9yxrN57zVp9aaXUbqRCPpjgO1F+w/1pe117Vjqgt0kSeMN8yyrzt9dwp2iLxyo0G21XULTm3u5kxzjdTt/F+ryxiO4ujKg7MKgpriBIXuDKpjHDAckH7VD32s2VmyGRpJFf6TCu/Ptx0NNNMi4uPZt3wnv77xBrhiuApsbNRK5x+10UCtYuH8yZm7Zqu/DrQk8O+ELdSpW7vALiYtwwyMgH7Cp+lLWi7BH/AHHkuWN4mxIv6EUlJIjRADhicYPP61KzTeadk4JI43DqKZNbLv2n6W/aqhGkK0/NURluf2WPb2rh8oxU5UjrxSOnSYeaF/llgfYwPoOhH6U/vQJlWVevRvek+ySI6dfPiZGAZW4IPeu5baMwGF1ULjG0dP8AalImCsSMA9ia7JDgnHPf/WgaRUG8MXEOqo0SqkK4YS9efcetTqXa294sEp+pcqT39afwsGzGSV3fST6+lRXiKyeezL2/F1bHzEx3x1WpW32R4qO0SSeX54kIycYB9Ka3duQ7E9/5030XUI722jlQ845U/wAwanFRZUGCCuOdoyU/TvR0PtEdp2oXFjIpRiQOxq6aT4ms7gKszeRIePm+kn2NUyeBQ2RhsHt0NICE8E5+1UZPHjkLceeWPXZr+VmhUqEdCOvBFN2gQfsD9DWb6fqF5Yj/AIad05+nPFTcPiu5AAuYkl9x8prHPxJL4muPlRfyLauOAFUD+Jp1K5FvgcD0qrQ+J7RmAeOWMnv9QqTTXNOntiqXA3gfSQQaplhyL6LVlg+mUr4hXaLYSGRthJPlgjh2HRayHxLpj2mrOs6YeRRLkdORmtZ+IMB1a30mxslZwZjLPIB8sY6fxqmeM1WDVJVZP+EAQIG5wCMcHt0rp+GnCKOZ5lTkyq2u94PKFyGMpKPG3YeopnHAkE5UzoAG2klT04596W1E20LxtbNkkksPQ071W2ElvFexxyKrABnAGM/YVvTOc0OrqCa60tESTzrbdlWx8yY4/hUdIkcFo6rMZQpwSgxjJ6YPWlNMvjZ3ayqzCHG0ptySKnPw8T28ssFmqJNkpLyxP9hzUboklyInRvLuLgwhD83Cl2x6dauPh1UAYbxJLGdrEc49s1ndpeS2t59I3BjuLc5NaF4fWGKFTbAgOdzDrzUcionie6JbU44o7WW7dQWjU4NQnhVTMJJWPzOSan9YiMmmXMQON8Zx7Gq54RMiJLv6jgVWviXv5FgtghkbIyR3NXr4O+ArfxH4qj1a7h22OluJGwMCaTqqn1x1NVLw5o11q+r2+n2KmS6uXCj0A7sfYDmvVmg6Na+GtDttJsBlI1zI/d2PVj96cFXuZDK79qH08nmSFv4UkaMniiHNNuySVKj/2Q==") center/cover;
+    flex-shrink: 0;
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .buyer-name {
+    font-size: 18px; font-weight: 700;
+    margin: 0 0 3px;
+    letter-spacing: -0.01em;
+  }
+  .buyer-tag {
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 500;
+    margin: 0;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .buyer-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .buyer-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 18px 0 20px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    margin-bottom: 22px;
+  }
+  @media (max-width: 600px) {
+    .buyer-stats { grid-template-columns: repeat(2, 1fr); gap: 14px 8px; }
+  }
+  .buyer-stat-num {
+    font-family: 'Newsreader', serif;
+    font-weight: 400;
+    font-size: 24px;
+    line-height: 1;
+    margin: 0 0 4px;
+    letter-spacing: -0.02em;
+  }
+  .buyer-stat-label {
+    font-size: 10.5px;
+    color: rgba(15,15,15,0.5);
+    margin: 0;
+    line-height: 1.3;
+  }
+  .buyer-section-title {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(15,15,15,0.45);
+    margin: 0 0 12px;
+  }
+  .retailer-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .retailer-bar {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .retailer-name {
+    font-size: 13px; font-weight: 500;
+    width: 70px;
+    flex-shrink: 0;
+  }
+  .retailer-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .retailer-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 1s ease;
+  }
+  .retailer-pct {
+    font-size: 12px;
+    color: rgba(15,15,15,0.55);
+    font-weight: 500;
+    min-width: 32px;
+    text-align: right;
+  }
+  .adjacent-brands {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .adjacent-brands span {
+    background: rgba(184,92,61,0.08);
+    color: var(--accent);
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  
+  /* === Brand tabs === */
+  .brand-tabs-bar {
+    background: var(--bg);
+    padding: 36px 24px 28px;
+    text-align: center;
+    border-bottom: 0.5px solid rgba(15,15,15,0.06);
+  }
+  .brand-tabs {
+    display: inline-flex;
+    gap: 4px;
+    background: rgba(15,15,15,0.06);
+    padding: 4px;
+    border-radius: 100px;
+  }
+  .brand-tab {
+    padding: 10px 24px;
+    border-radius: 100px;
+    border: none;
+    background: transparent;
+    font-family: 'Switzer', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(15,15,15,0.55);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+  }
+  .brand-tab:hover:not(.active) { color: var(--ink); }
+  .brand-tab.active {
+    background: var(--ink);
+    color: var(--bg);
+  }
+  @media (max-width: 480px) {
+    .brand-tab { padding: 9px 18px; font-size: 12px; }
+  }
+  .tab-content { display: block; }
+  .tab-content.tab-hidden { display: none; }
+
+  /* How it works */
 .how-it-works {
   position: relative;
   z-index: 2;
@@ -1897,10 +2074,11 @@ html, body {
 .pillar-label { display: none; }
 
 .pillar-title {
+  font-family: 'Newsreader', serif;
   font-size: clamp(24px, 2.8vw, 32px);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.12;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
   margin-bottom: 12px;
   color: var(--ink);
 }
@@ -2439,12 +2617,145 @@ html, body {
 
   <!-- BRANDS -->
   <section class="screen" data-screen="brands" style="padding: 0;">
+    <div class="brand-tabs-bar">
+      <div class="brand-tabs">
+        <button class="brand-tab active" data-tab="activation">Activate your fans</button>
+        <button class="brand-tab" data-tab="loyalty">Know your buyers</button>
+      </div>
+    </div>
+
+    <div class="tab-content tab-hidden" data-tab="loyalty">
     <div class="brand-hero">
       <div class="brand-hero-inner">
         <span class="brand-eyebrow"><span class="pulse"></span>For brands</span>
-        <h1 class="brand-headline">Your best marketers are already buying from you.</h1>
-        <p class="brand-subhead">Actually turns verified customers into a paid recommendation channel — from your top advocates to the friend recommending you in a group chat.</p>
+        <h1 class="brand-headline">You don't know <em>who</em> buys you.</h1>
+        <p class="brand-subhead">When customers buy your product at Target, Sephora, or Amazon, the retailer keeps their identity — not you. Actually changes that. And the same verified buyers become your most credible voices.</p>
         <button class="btn" id="brandHeroCta">Get on the brand list <span class="arrow">→</span></button>
+      </div>
+    </div>
+
+    <div class="brand-section">
+      <div class="brand-section-inner">
+        <p class="section-eyebrow">the attribution gap</p>
+        <h2 class="section-title">Built a brand. <em>Lost the buyer.</em></h2>
+        <div class="pillars">
+          <div class="pillar">
+            <div class="pillar-number">01</div>
+            <div class="pillar-content">
+              <h3 class="pillar-title">You sold through retail. The buyer disappeared.</h3>
+              <p class="pillar-body">Millions of units shipped to Target, Sephora, Walmart, Amazon. They have the customer relationship. You have a wholesale invoice and a hope that they'll come back.</p>
+            </div>
+          </div>
+          <div class="pillar">
+            <div class="pillar-number">02</div>
+            <div class="pillar-content">
+              <h3 class="pillar-title">Every "register your purchase" play converts under 2%.</h3>
+              <p class="pillar-body">Pack-in cards, QR codes, loyalty apps, SMS shortcodes — the buyer has no reason to push through the friction. Twenty years of trying to close this gap, and the data still belongs to the retailer.</p>
+            </div>
+          </div>
+          <div class="pillar">
+            <div class="pillar-number">03</div>
+            <div class="pillar-content">
+              <h3 class="pillar-title">Cookies are gone. So is your retargeting.</h3>
+              <p class="pillar-body">iOS killed the pixel. The post-cookie attribution stack everyone promised hasn't shown up. You're spending into a black box and hoping the ROAS reports are real.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="brand-section">
+      <div class="brand-section-inner">
+        <p class="section-eyebrow">the buyer layer</p>
+        <h2 class="section-title">Every purchase. Every retailer.<br><em>One identity.</em></h2>
+        <p class="brand-section-lede">Actually unifies a buyer's verified purchase history across every retailer they shop at. Email, card, or receipt — same buyer, one profile, real attribution.</p>
+
+        <div class="buyer-card">
+          <div class="buyer-header">
+            <div class="buyer-avatar"></div>
+            <div>
+              <p class="buyer-name">@sarah_k</p>
+              <p class="buyer-tag"><span class="buyer-dot"></span>Verified buyer · loyalty tier 02</p>
+            </div>
+          </div>
+
+          <div class="buyer-stats">
+            <div class="buyer-stat">
+              <p class="buyer-stat-num">$247</p>
+              <p class="buyer-stat-label">spent on you · 12 mo</p>
+            </div>
+            <div class="buyer-stat">
+              <p class="buyer-stat-num">8</p>
+              <p class="buyer-stat-label">orders</p>
+            </div>
+            <div class="buyer-stat">
+              <p class="buyer-stat-num">6</p>
+              <p class="buyer-stat-label">retailers</p>
+            </div>
+            <div class="buyer-stat">
+              <p class="buyer-stat-num">Mar 18</p>
+              <p class="buyer-stat-label">last purchase</p>
+            </div>
+          </div>
+
+          <p class="buyer-section-title">Where she buys you</p>
+          <div class="retailer-bars">
+            <div class="retailer-bar">
+              <span class="retailer-name">Target</span>
+              <div class="retailer-track"><div class="retailer-fill" style="width: 41%;"></div></div>
+              <span class="retailer-pct">41%</span>
+            </div>
+            <div class="retailer-bar">
+              <span class="retailer-name">Ulta</span>
+              <div class="retailer-track"><div class="retailer-fill" style="width: 28%;"></div></div>
+              <span class="retailer-pct">28%</span>
+            </div>
+            <div class="retailer-bar">
+              <span class="retailer-name">Amazon</span>
+              <div class="retailer-track"><div class="retailer-fill" style="width: 18%;"></div></div>
+              <span class="retailer-pct">18%</span>
+            </div>
+            <div class="retailer-bar">
+              <span class="retailer-name">Walmart</span>
+              <div class="retailer-track"><div class="retailer-fill" style="width: 8%;"></div></div>
+              <span class="retailer-pct">8%</span>
+            </div>
+            <div class="retailer-bar">
+              <span class="retailer-name">CVS</span>
+              <div class="retailer-track"><div class="retailer-fill" style="width: 5%;"></div></div>
+              <span class="retailer-pct">5%</span>
+            </div>
+          </div>
+
+          <p class="buyer-section-title" style="margin-top: 20px;">Also buys in your category</p>
+          <div class="adjacent-brands">
+            <span>Maybelline</span>
+            <span>The Ordinary</span>
+            <span>Glow Recipe</span>
+            <span>Rare Beauty</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand-section consent-section">
+      <div class="brand-section-inner">
+        <p class="section-eyebrow">clean consent</p>
+        <h2 class="section-title">Opted in for themselves. <em>You benefit.</em></h2>
+        <p class="brand-section-lede">Pack-in cards and QR codes ask the buyer to do something for the brand. Actually buyers came for their own reason — a verified storefront and a way to earn on what they share. Brand visibility is the byproduct, not the ask. Cleaner consent. Higher participation. Real data.</p>
+      </div>
+    </div>
+    </div>
+    <!-- end tab-loyalty -->
+
+    <div class="tab-content" data-tab="activation">
+    <div class="brand-hero">
+      <div class="brand-hero-inner">
+        <span class="brand-eyebrow"><span class="pulse"></span>For brands</span>
+        <h1 class="brand-headline">Your best marketers<br>are <em>already</em> buying from you.</h1>
+        <p class="brand-subhead">Actually turns verified customers into a paid recommendation channel — from your top advocates to the friend recommending you in a group chat.</p>
+        <button class="btn" id="brandHeroCta2">Get on the brand list <span class="arrow">→</span></button>
       </div>
     </div>
 
@@ -2478,6 +2789,37 @@ html, body {
       </div>
     </div>
 
+    <div class="brand-section">
+      <div class="brand-section-inner">
+        <p class="section-eyebrow">what brands do on actually</p>
+        <h2 class="section-title">Boost the wins. <em>Nurture the rest.</em></h2>
+        <div class="boost-nurture">
+          <div>
+            <p class="bn-block-label">01 — Boost</p>
+            <h3 class="bn-block-title">Amplify what's already working.</h3>
+            <ul class="bn-list">
+              <li><strong>Pay performance bonuses</strong> to recommenders who drive real sales.</li>
+              <li><strong>Surface viral moments</strong> the second they happen, before competitors notice.</li>
+              <li><strong>Run targeted campaigns</strong> for new launches with your top customers.</li>
+              <li><strong>Move budget</strong> from cold influencer marketing to verified buyers.</li>
+            </ul>
+          </div>
+          <div>
+            <p class="bn-block-label">02 — Nurture</p>
+            <h3 class="bn-block-title">Build with the people who love you.</h3>
+            <ul class="bn-list">
+              <li><strong>Send product samples</strong> to top recommenders before public launches.</li>
+              <li><strong>Offer early access</strong> to drops and exclusive lines.</li>
+              <li><strong>Message directly</strong> — not through agencies or middlemen.</li>
+              <li><strong>Reward loyalty</strong> with status and perks tied to actual purchase history.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+    <!-- end tab-activation -->
+
     <div class="plug-band">
       <div class="plug-band-inner">
         <p class="plug-eyebrow">Already plugged in</p>
@@ -2495,8 +2837,8 @@ html, body {
 
     <div class="brand-section">
       <div class="brand-section-inner">
-        <p class="section-eyebrow">what you'd see</p>
-        <h2 class="section-title">Real customers. <em>Real attribution.</em></h2>
+        <p class="section-eyebrow">in the dashboard</p>
+        <h2 class="section-title">Real buyers. <em>Real attribution.</em></h2>
         <div class="dashboard-card">
           <div class="dashboard-header">
             <div>
@@ -2564,35 +2906,6 @@ html, body {
             </div>
           </div>
           <p class="dashboard-footer">+ 143 more recommenders this month</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="brand-section">
-      <div class="brand-section-inner">
-        <p class="section-eyebrow">what brands do on actually</p>
-        <h2 class="section-title">Boost the wins. <em>Nurture the rest.</em></h2>
-        <div class="boost-nurture">
-          <div>
-            <p class="bn-block-label">01 — Boost</p>
-            <h3 class="bn-block-title">Amplify what's already working.</h3>
-            <ul class="bn-list">
-              <li><strong>Pay performance bonuses</strong> to recommenders who drive real sales.</li>
-              <li><strong>Surface viral moments</strong> the second they happen, before competitors notice.</li>
-              <li><strong>Run targeted campaigns</strong> for new launches with your top customers.</li>
-              <li><strong>Move budget</strong> from cold influencer marketing to verified buyers.</li>
-            </ul>
-          </div>
-          <div>
-            <p class="bn-block-label">02 — Nurture</p>
-            <h3 class="bn-block-title">Build with the people who love you.</h3>
-            <ul class="bn-list">
-              <li><strong>Send product samples</strong> to top recommenders before public launches.</li>
-              <li><strong>Offer early access</strong> to drops and exclusive lines.</li>
-              <li><strong>Message directly</strong> — not through agencies or middlemen.</li>
-              <li><strong>Reward loyalty</strong> with status and perks tied to actual purchase history.</li>
-            </ul>
-          </div>
         </div>
       </div>
     </div>
@@ -3109,6 +3422,34 @@ document.getElementById('shareBtn').addEventListener('click', () => {
 });
 
 window.actuallyState = state;
+
+  // Brand page tab toggle
+  document.querySelectorAll('.brand-tab').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const tab = this.dataset.tab;
+      document.querySelectorAll('.brand-tab').forEach(b => {
+        b.classList.toggle('active', b === this);
+      });
+      document.querySelectorAll('.tab-content').forEach(c => {
+        c.classList.toggle('tab-hidden', c.dataset.tab !== tab);
+      });
+      // Smooth scroll to top of brand section
+      const tabsBar = document.querySelector('.brand-tabs-bar');
+      if (tabsBar) {
+        tabsBar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // Wire up the second hero CTA (activation tab) to also go to brand signup
+  const brandHeroCta2 = document.getElementById('brandHeroCta2');
+  if (brandHeroCta2) {
+    brandHeroCta2.addEventListener('click', () => {
+      const signup = document.getElementById('brandSignup');
+      if (signup) signup.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
 </script>
 
 </body>
