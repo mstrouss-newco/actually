@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Find your people</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#141210}a:hover{color:#141210}
+.sc::-webkit-scrollbar{display:none}
+.sc{scrollbar-width:none}
+.rise{animation:rise .5s cubic-bezier(.2,.9,.25,1.2) both}
+.rise:nth-child(2){animation-delay:.08s}.rise:nth-child(3){animation-delay:.16s}.rise:nth-child(4){animation-delay:.24s}
+@keyframes rise{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.pick{transition:all .2s}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#FFFFFF;color:#141210;font-family:'DM Sans',sans-serif;position:relative;overflow:hidden">
+<div class="sc" style="height:100%;overflow-y:auto;padding:20px 0 120px;box-sizing:border-box">
+<div style="padding:0 20px;display:flex;flex-direction:column"><a href="MyFeed.dc.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 14px 0 8px;border-radius:999px;background:#F4F1EE;font-size:13px;font-weight:700;text-decoration:none;color:#141210"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg>My feed</a>
+<h1 style="font-family:'Fraunces',serif;font-weight:400;font-size:38px;line-height:1.02;letter-spacing:-0.02em;margin:22px 0 0">Find your <em>people.</em></h1>
+<div style="font-size:15px;color:#5E5852;margin-top:8px">Follow friends to see what they actually bought.</div>
+</div>
+<div style="padding:24px 20px 0;font-family:'Fraunces',serif;font-size:22px">Friends already here</div>
+<div style="display:flex;flex-direction:column;gap:2px;padding:6px 20px 0">
+<sc-for list="{{friends}}" as="f" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #F1EDE8">
+<div style="width:44px;height:44px;border-radius:50%;background:{{f.av}};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none">{{f.ini}}</div>
+<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:15px">{{f.name}}</div><div style="font-size:13px;color:#7A746D">{{f.why}}</div></div>
+<button type="button" class="pick" onClick="{{f.tap}}" style="height:38px;padding:0 16px;border-radius:999px;border:1.5px solid #141210;background:{{f.bg}};color:{{f.fg}};font:700 13px 'DM Sans',sans-serif;cursor:pointer">{{f.label}}</button>
+</div>
+</sc-for>
+</div>
+<div style="padding:26px 20px 0;font-family:'Fraunces',serif;font-size:22px">Shop like you</div>
+<div style="font-size:13px;color:#7A746D;padding:4px 20px 0">Same brands, same sizes. See what they own that you don't.</div>
+<div class="sc" style="display:flex;gap:12px;overflow-x:auto;padding:12px 20px 4px">
+<sc-for list="{{matches}}" as="m" hint-placeholder-count="3">
+<div style="flex:none;width:200px;border:1.5px solid #EFEBE6;border-radius:24px;padding:12px">
+<div style="display:flex;gap:6px">
+<div style="flex:1;height:76px;border-radius:12px;background:#F3F0EB"><img src="{{m.i1}}" alt="" style="display:block;width:100%;height:100%;object-fit:contain;padding:8%;box-sizing:border-box"></div>
+<div style="flex:1;height:76px;border-radius:12px;background:#F3F0EB"><img src="{{m.i2}}" alt="" style="display:block;width:100%;height:100%;object-fit:contain;padding:8%;box-sizing:border-box"></div>
+<div style="flex:1;height:76px;border-radius:12px;background:#F3F0EB"><img src="{{m.i3}}" alt="" style="display:block;width:100%;height:100%;object-fit:contain;padding:8%;box-sizing:border-box"></div>
+</div>
+<div style="font-weight:700;font-size:15px;margin-top:10px">{{m.name}}</div>
+<div style="font-size:12px;color:#7A746D;margin-top:2px">{{m.why}}</div>
+<button type="button" class="pick" onClick="{{m.tap}}" style="margin-top:10px;width:100%;height:38px;border-radius:999px;border:1.5px solid #141210;background:{{m.bg}};color:{{m.fg}};font:700 13px 'DM Sans',sans-serif;cursor:pointer">{{m.label}}</button>
+</div>
+</sc-for>
+</div>
+<div style="padding:22px 16px 0"><a href="Friends.dc.html" style="display:flex;align-items:center;justify-content:center;height:54px;border-radius:999px;background:#141210;color:#fff;font-weight:700;font-size:15px;text-decoration:none">See what they bought</a></div>
+</div>
+<nav style="position:absolute;z-index:10;left:12px;right:12px;bottom:16px;height:66px;background:#141210;border-radius:30px;display:flex;align-items:center;gap:2px;padding:0 6px;box-shadow:0 12px 30px rgba(20,18,16,.28)">
+<a href="Home.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21H3z"></path></svg>Today</a>
+<a href="Orders.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v13H3z"></path><path d="M3 7 6 3h12l3 4"></path></svg>Orders</a>
+<a href="Closet.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7a2 2 0 1 1 2 2c-1.2.4-2 1-2 2v1"></path><path d="M2.5 19 12 12l9.5 7z"></path></svg>Closet</a>
+<a href="Friends.dc.html" style="flex:1;height:54px;border-radius:22px;background:#FFFFFF;color:#141210;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"></circle><path d="M3 20a6 6 0 0 1 12 0"></path><path d="M16 5.5a3.2 3.2 0 0 1 0 6"></path><path d="M18 14.5a5.5 5.5 0 0 1 3 5.5"></path></svg>Feed</a>
+<a href="Earn.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"></rect><path d="M12 8v13M3 12.5h18"></path><path d="M12 8C10 4 6 4 6 6.5S12 8 12 8s6-1 6-1.5S14 4 12 8z"></path></svg>Earn</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { on: { alex: true } }; }
+  renderVals() {
+    const on = this.state.on;
+    const b = k => ({ label: on[k] ? 'Following' : 'Follow', bg: on[k] ? '#141210' : '#fff', fg: on[k] ? '#fff' : '#141210', tap: () => this.setState({ on: { ...on, [k]: !on[k] } }) });
+    return {
+      friends: [
+        { k: 'alex', name: 'Alex Rivera', ini: 'AR', av: '#FFE1DC', why: 'In your contacts. Shops Aritzia and Nike.' },
+        { k: 'jess', name: 'Jess Park', ini: 'JP', av: '#DCEFDF', why: 'In your contacts. Shops Everlane and Madewell.' },
+        { k: 'priya', name: 'Priya Shah', ini: 'PS', av: '#DCEBFF', why: 'In your contacts. Shops Reformation.' }
+      ].map(f => ({ ...f, ...b(f.k) })),
+      matches: [
+        { k: 'm1', name: 'Dani M.', why: '4 brands in common. Also a size 4.', i1: '/art/dresses-wrap-floral.webp', i2: '/art/acc-crossbody-blush.webp', i3: '/art/shoes-chelsea-tan.webp' },
+        { k: 'm2', name: 'Rae T.', why: '3 brands in common. Same shoe size.', i1: '/art/tops-cardigan-sage.webp', i2: '/art/shoes-dad-sneaker-grey.webp', i3: '/art/tops-striped-tee.webp' },
+        { k: 'm3', name: 'Lena K.', why: '5 brands in common.', i1: '/art/dresses-satin-slip-blush.webp', i2: '/art/shoes-canvas-butter.webp', i3: '/art/bottoms-linen-short-sage.webp' }
+      ].map(m => ({ ...m, ...b(m.k) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

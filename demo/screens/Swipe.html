@@ -20,6 +20,10 @@ a{color:#141210}a:hover{color:#141210}
 @keyframes bump{50%{transform:scale(1.18)}}
 .rise{animation:rise .5s cubic-bezier(.2,.9,.25,1.2)}
 @keyframes rise{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.nl{animation:nl 1.4s ease-in-out infinite}
+.nr{animation:nr 1.4s ease-in-out infinite}
+@keyframes nl{50%{transform:translateX(-5px)}}
+@keyframes nr{50%{transform:translateX(5px)}}
 </style>
 </helmet>
 <div style="width:390px;height:844px;box-sizing:border-box;background:#FFFFFF;color:#141210;font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;padding:20px 20px 26px;overflow:hidden">
@@ -37,7 +41,7 @@ a{color:#141210}a:hover{color:#141210}
 <span class="{{privCls}}" style="background:#F4F1EE;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700">{{priv}} private</span>
 </div>
 </div>
-<div style="font-size:13px;color:#7A746D;margin-top:4px">Swipe right to share it on your feed, the page friends follow. Swipe left to keep it private.</div>
+<div style="font-size:13px;color:#7A746D;margin-top:4px">Your feed is the page friends follow. When they buy from it, you earn cash back.</div>
 <div style="position:relative;flex:1;margin-top:16px">
 <div style="position:absolute;inset:26px 26px 0;border-radius:32px;background:#E4DED6;transform:scale(.9) translateY(24px)"></div>
 <div style="position:absolute;inset:14px 14px 0;border-radius:32px;background:#ECE7E0;transform:scale(.95) translateY(12px);box-shadow:0 8px 20px rgba(20,18,16,.06)"></div>
@@ -53,10 +57,7 @@ a{color:#141210}a:hover{color:#141210}
 </div>
 </div>
 </div>
-<div style="display:flex;gap:10px;align-items:center;margin-top:18px">
-<button type="button" class="pill" onClick="{{goLeft}}" style="flex:1;height:58px;border-radius:999px;border:1.5px solid #E2DDD7;background:#fff;font:700 15px 'DM Sans',sans-serif;color:#141210;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Keep private</button>
-<button type="button" class="pill" onClick="{{goRight}}" style="flex:1;height:58px;border-radius:999px;border:0;background:#141210;font:700 15px 'DM Sans',sans-serif;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer">Share<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
-</div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding:0 6px;font-size:13px;font-weight:700;color:#7A746D"><span class="nl" style="display:flex;align-items:center;gap:6px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Keep private</span><span style="font-size:12px;font-weight:500">Drag the card</span><span class="nr" style="display:flex;align-items:center;gap:6px;color:#2F7A4F">Share<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span></div>
 <button type="button" onClick="{{restPrivate}}" style="margin-top:10px;height:36px;border:0;background:transparent;font:500 13px 'DM Sans',sans-serif;color:#7A746D;cursor:pointer;text-decoration:underline">Keep the other {{left}} private</button>
 </sc-if>
 <sc-if value="{{finished}}" hint-placeholder-val="{{ false }}">
@@ -69,6 +70,7 @@ a{color:#141210}a:hover{color:#141210}
 <div style="font-family:'Fraunces',serif;font-size:40px;line-height:1">Your feed is <em>ready.</em></div>
 <div style="font-size:15px;color:#7A746D;margin-top:12px">{{onFeed}} shared · {{priv}} kept private</div>
 <a href="MyFeed.dc.html" style="margin-top:26px;display:flex;align-items:center;justify-content:center;height:56px;padding:0 32px;border-radius:999px;background:#141210;color:#fff;font-weight:700;text-decoration:none">See my feed</a>
+<a href="FindPeople.dc.html" style="margin-top:8px;height:44px;display:flex;align-items:center;font-size:15px;font-weight:700;color:#5B44B0;text-decoration:none">Find friends to follow</a>
 </div>
 </sc-if>
 </div>

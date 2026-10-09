@@ -19,6 +19,10 @@ const DEPTH = {
   OrderDetail: 12, Sizes: 11, Brand: 12, BrandZara: 12, BrandAritzia: 12, BrandEverlane: 12, BrandLevis: 12,
 };
 const PRELOAD = Object.keys(ROUTES);
+// Which journey she picked on "What do you want most?". Organizer is the default.
+let goal = 'org';
+try { goal = sessionStorage.getItem('goal') || 'org'; } catch (_) {}
+const BY_GOAL = { Reveal: { earn: 'RevealEarn', share: 'RevealShare' }, Home: { earn: 'HomeEarn', share: 'HomeShare' } };
 
 // ---------- loading and compiling screens ----------
 class DCLogic {
@@ -143,6 +147,7 @@ class Screen extends Component {
     super(p);
     this.logic = p.data.make();
     this.logic.__force = () => this.forceUpdate();
+    p.onLogic && p.onLogic(this.logic);
   }
   componentDidMount() {
     this.logic.componentDidMount && this.logic.componentDidMount();
@@ -184,6 +189,12 @@ class App extends Component {
   }
   go(name, mode) {
     const cur = this.state.name;
+    if (cur === 'Goal' && this.logic && this.logic.state.on) {
+      const on = this.logic.state.on;
+      goal = on.earn ? 'earn' : on.share ? 'share' : 'org';
+      try { sessionStorage.setItem('goal', goal); } catch (_) {}
+    }
+    name = (BY_GOAL[name] && BY_GOAL[name][goal]) || name;
     if (name === cur) return;
     const dir = mode || ((DEPTH[name] ?? 10) < (DEPTH[cur] ?? 10) ? 'back' : 'fwd');
     this.show(name, dir, true);
@@ -206,7 +217,7 @@ class App extends Component {
   render(_, { layers }) {
     return h(Fragment, null, layers.map(l =>
       h('div', { key: l.id, class: `layer ${l.cls}` },
-        h(Screen, { name: l.name, data: l.data, go: this.go }),
+        h(Screen, { name: l.name, data: l.data, go: this.go, onLogic: lg => { this.logic = lg; } }),
         h('div', { class: 'dim' }))));
   }
 }
