@@ -167,7 +167,7 @@ class Component extends DCLogic {
       shelves: cats.map(n => {
         const its = items.filter(i => i.cat === n).sort(fns.new);
         const r = its.filter(i => i.ret).length;
-        return { name: n, count: counts[n], hasRet: r > 0, ret: r + ' can still go back', c1: its[1].bg, c2: its[0].bg, c3: its[2].bg, i1: its[1].img, i2: its[0].img, i3: its[2].img, open: () => this.setState({ cat: n }) };
+        return { name: n, count: counts[n], hasRet: r > 0, ret: r + ' you can still return', c1: its[1].bg, c2: its[0].bg, c3: its[2].bg, i1: its[1].img, i2: its[0].img, i3: its[2].img, open: () => this.setState({ cat: n }) };
       }),
       back: () => this.setState({ cat: null }),
       cur: cat ? { name: cat, lower: cat.toLowerCase(), count: counts[cat], items: list } : { items: [] },
