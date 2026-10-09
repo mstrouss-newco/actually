@@ -111,7 +111,7 @@ class Component extends DCLogic {
     const clamp = v => Math.max(0, Math.min(1, v));
     return {
       sorting: s.i < total, finished: s.i >= total,
-      total, done: Math.min(s.i + 1, total), left: total - s.i - 1, pct: Math.round(s.i / total * 100),
+      total, done: Math.min(s.i + 1, total), left: total - s.i, pct: Math.round(s.i / total * 100),
       card: at(0), bg2: at(1).bg, bg3: at(2).bg,
       dx: s.dx, dy: s.dy, rot: (s.dx / 18).toFixed(1),
       tr: s.drag ? 'none' : 'transform .28s cubic-bezier(.2,.8,.2,1)',
