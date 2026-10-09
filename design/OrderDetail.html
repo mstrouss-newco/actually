@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Order</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#141210}a:hover{color:#141210}
+.sc::-webkit-scrollbar{display:none}
+.sc{scrollbar-width:none}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#FFFFFF;color:#141210;font-family:'DM Sans',sans-serif;position:relative;overflow:hidden">
+<div class="sc" style="height:100%;overflow-y:auto;padding:0 0 120px;box-sizing:border-box">
+<div style="background:#FFE1DC;padding:20px 20px 26px;border-radius:0 0 36px 36px">
+<a href="Orders.dc.html" style="display:inline-flex;align-items:center;gap:4px;height:40px;padding:0 14px 0 8px;border-radius:999px;background:#fff;font-size:14px;font-weight:700;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg>Orders</a>
+<div style="display:flex;gap:16px;align-items:flex-end;margin-top:20px">
+<div style="width:110px;height:138px;border-radius:22px;background:#F3F0EB;flex:none;transform:rotate(-3deg);box-shadow:0 10px 24px rgba(201,64,47,.18)"><img src="https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/tops-overshirt-rose.webp" alt="" style="display:block;width:100%;height:100%;object-fit:contain;padding:10%;box-sizing:border-box"></div>
+<div style="flex:1;min-width:0;padding-bottom:4px">
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#C9402F">Zara</div>
+<h1 style="font-family:'Fraunces',serif;font-weight:400;font-size:32px;line-height:1;letter-spacing:-0.02em;margin:6px 0 0">Wool overshirt</h1>
+<div style="font-size:14px;color:#6B4A44;margin-top:6px">Size S · ordered Sep 14</div>
+</div>
+</div>
+</div>
+<div style="margin:18px 16px 0;background:#141210;color:#fff;border-radius:26px;padding:20px 18px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-family:'Fraunces',serif;font-size:26px">Return by Friday</div><div style="background:#FF6159;color:#141210;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700">2 days left</div></div>
+<div style="font-size:14px;color:#C9C3BC;margin-top:8px;line-height:1.45">Free drop-off at any Zara store, or mail it back for $3.95.</div>
+<div style="display:flex;gap:8px;margin-top:16px">
+<a href="#" style="flex:1;display:flex;align-items:center;justify-content:center;height:48px;border-radius:999px;background:#fff;color:#141210;font-weight:700;font-size:14px;text-decoration:none">Start return on zara.com</a>
+<button type="button" aria-label="Remind me tomorrow" style="width:48px;height:48px;border-radius:50%;border:1.5px solid #4A4642;background:transparent;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10 21h4"></path></svg></button>
+</div>
+</div>
+<div style="padding:26px 20px 0;font-family:'Fraunces',serif;font-size:24px">Shipping</div>
+<div style="margin:12px 16px 0;background:#FAF8F6;border-radius:24px;padding:18px">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="4">
+<div style="display:flex;gap:14px">
+<div style="display:flex;flex-direction:column;align-items:center;width:16px"><span style="width:14px;height:14px;border-radius:50%;background:{{s.dot}};flex:none;margin-top:3px"></span><span style="width:2px;flex:1;background:{{s.line}};min-height:22px"></span></div>
+<div style="padding-bottom:14px"><div style="font-weight:700;font-size:15px">{{s.t}}</div><div style="font-size:13px;color:#7A746D">{{s.d}}</div></div>
+</div>
+</sc-for>
+<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #EAE5DF;padding-top:14px;font-size:14px"><span style="color:#7A746D">UPS · 1Z 84A 902 ••• 3341</span><a href="#" style="font-weight:700">Track</a></div>
+</div>
+<div style="padding:26px 20px 0;font-family:'Fraunces',serif;font-size:24px">Receipt</div>
+<div style="margin:12px 16px 0;border:1.5px solid #EFEBE6;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:10px;font-size:14px">
+<div style="display:flex;justify-content:space-between"><span style="color:#7A746D">Order</span><span style="font-weight:700">Sep 14, 2026</span></div>
+<div style="display:flex;justify-content:space-between"><span style="color:#7A746D">Item</span><span style="font-weight:700">$69.90</span></div>
+<div style="display:flex;justify-content:space-between"><span style="color:#7A746D">Sent to</span><span style="font-weight:700">sam@actually.shop</span></div>
+<a href="#" style="margin-top:6px;display:flex;align-items:center;justify-content:center;height:46px;border-radius:999px;border:1.5px solid #141210;font-weight:700;text-decoration:none">Open the original email</a>
+</div>
+</div>
+<nav style="position:absolute;z-index:10;left:12px;right:12px;bottom:16px;height:66px;background:#141210;border-radius:30px;display:flex;align-items:center;gap:2px;padding:0 6px;box-shadow:0 12px 30px rgba(20,18,16,.28)">
+<a href="Home.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21H3z"></path></svg>Today</a>
+<a href="Orders.dc.html" style="flex:1;height:54px;border-radius:22px;background:#FFFFFF;color:#141210;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v13H3z"></path><path d="M3 7 6 3h12l3 4"></path></svg>Orders</a>
+<a href="Closet.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7a2 2 0 1 1 2 2c-1.2.4-2 1-2 2v1"></path><path d="M2.5 19 12 12l9.5 7z"></path></svg>Closet</a>
+<a href="Friends.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"></circle><path d="M3 20a6 6 0 0 1 12 0"></path><path d="M16 5.5a3.2 3.2 0 0 1 0 6"></path><path d="M18 14.5a5.5 5.5 0 0 1 3 5.5"></path></svg>Feed</a>
+<a href="Earn.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"></rect><path d="M12 8v13M3 12.5h18"></path><path d="M12 8C10 4 6 4 6 6.5S12 8 12 8s6-1 6-1.5S14 4 12 8z"></path></svg>Earn</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const k = '#141210', g = '#E5E0DA';
+    return { steps: [
+      { t: 'Ordered', d: 'Sep 14', dot: k, line: k },
+      { t: 'Shipped', d: 'Sep 15 · UPS', dot: k, line: k },
+      { t: 'Out for delivery', d: 'Sep 18, morning', dot: k, line: k },
+      { t: 'Delivered', d: 'Sep 18, 2:14 pm · front door', dot: k, line: 'transparent' }
+    ] };
+  }
+}
+</script>
+</body>
+</html>

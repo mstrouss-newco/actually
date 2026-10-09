@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>For you</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#141210}a:hover{color:#141210}
+.sc::-webkit-scrollbar{display:none}
+.sc{scrollbar-width:none}
+.feed{transition:transform .35s cubic-bezier(.2,.9,.25,1.2)}
+.feed:hover{transform:translateY(-4px)}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#FFFFFF;color:#141210;font-family:'DM Sans',sans-serif;position:relative;overflow:hidden">
+<div class="sc" style="height:100%;overflow-y:auto;padding:22px 0 120px;box-sizing:border-box">
+<div style="padding:0 20px">
+<a href="Home.dc.html" style="display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 12px 0 6px;border-radius:999px;background:#F4F1EE;font-size:13px;font-weight:700;text-decoration:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg>Today</a>
+<h1 style="font-family:'Fraunces',serif;font-weight:400;font-size:38px;line-height:1;letter-spacing:-0.02em;margin:16px 0 0">Picked for you</h1>
+<div style="font-size:14px;color:#7A746D;margin-top:6px">Based on what you've bought, shown in your sizes.</div>
+</div>
+<div class="sc" style="display:flex;gap:20px;overflow-x:auto;margin:16px 20px 0;border-bottom:1px solid #EFEBE6">
+<sc-for list="{{chips}}" as="c" hint-placeholder-count="4">
+<button type="button" onClick="{{c.pick}}" style="flex:none;border:0;background:transparent;padding:12px 0 12px;color:{{c.fg}};border-bottom:2px solid {{c.line}};margin-bottom:-1px;font:700 15px 'DM Sans',sans-serif;cursor:pointer">{{c.label}}</button>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:22px;padding:18px 16px 0">
+<sc-for list="{{items}}" as="p" hint-placeholder-count="3">
+<div class="feed" style="display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#5E5852;padding:0 4px 8px"><span style="background:{{p.tagBg}};border-radius:999px;padding:4px 10px;color:#141210">{{p.tag}}</span><span>{{p.why}}</span></div>
+<div style="height:300px;border-radius:28px;background:#F3F0EB;position:relative"><img src="{{p.img}}" alt="" style="display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:10%;box-sizing:border-box">
+<button type="button" aria-label="Save" style="position:absolute;top:14px;right:14px;width:44px;height:44px;border-radius:50%;border:0;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#141210" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"></path></svg></button>
+<div style="position:absolute;left:14px;bottom:14px;background:#fff;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700">Your size {{p.size}} in stock</div>
+</div>
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:12px 4px 0">
+<div><div style="font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7A746D">{{p.brand}}</div><div style="font-family:'Fraunces',serif;font-size:22px;margin-top:2px">{{p.name}}</div><div style="font-size:14px;color:#5E5852;margin-top:2px">{{p.price}}</div></div>
+<a href="#" style="flex:none;height:44px;padding:0 18px;border-radius:999px;background:#141210;color:#fff;display:flex;align-items:center;font-weight:700;font-size:14px;text-decoration:none">Shop</a>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+<nav style="position:absolute;z-index:10;left:12px;right:12px;bottom:16px;height:66px;background:#141210;border-radius:30px;display:flex;align-items:center;gap:2px;padding:0 6px;box-shadow:0 12px 30px rgba(20,18,16,.28)">
+<a href="Home.dc.html" style="flex:1;height:54px;border-radius:22px;background:#FFFFFF;color:#141210;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21H3z"></path></svg>Today</a>
+<a href="Orders.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v13H3z"></path><path d="M3 7 6 3h12l3 4"></path></svg>Orders</a>
+<a href="Closet.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7a2 2 0 1 1 2 2c-1.2.4-2 1-2 2v1"></path><path d="M2.5 19 12 12l9.5 7z"></path></svg>Closet</a>
+<a href="Friends.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"></circle><path d="M3 20a6 6 0 0 1 12 0"></path><path d="M16 5.5a3.2 3.2 0 0 1 0 6"></path><path d="M18 14.5a5.5 5.5 0 0 1 3 5.5"></path></svg>Feed</a>
+<a href="Earn.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"></rect><path d="M12 8v13M3 12.5h18"></path><path d="M12 8C10 4 6 4 6 6.5S12 8 12 8s6-1 6-1.5S14 4 12 8z"></path></svg>Earn</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { f: 'all' }; }
+  renderVals() {
+    const all = [
+      { k: 'restock', tag: 'Restock', tagBg: '#DCEFDF', why: 'You buy this tee every 4 months', img: 'https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/tops-crew-tee-sky.webp', brand: 'Everlane', name: 'Organic crew tee', size: 'M', price: '$30', bg: '#E7F0FF' },
+      { k: 'new', tag: 'New', tagBg: '#DCEBFF', why: 'From Nike, your most-ordered brand', img: 'https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/shoes-runner-sky.webp', brand: 'Nike', name: 'Pegasus 41, Sky', size: '10', price: '$140', bg: '#DCEBFF' },
+      { k: 'pairs', tag: 'Goes with', tagBg: '#FFE3CC', why: 'Pairs with the Aritzia sweater on its way', img: 'https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/bottoms-midi-skirt-peach.webp', brand: 'Aritzia', name: 'Pleated midi skirt', size: '4', price: '$128', bg: '#FFF0BF' },
+      { k: 'new', tag: 'New', tagBg: '#DCEBFF', why: 'You bought the 501 in a 28', img: 'https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/bottoms-jeans-lightwash.webp', brand: 'Levi’s', name: '501 Original, light wash', size: '28', price: '$98', bg: '#EBE3FF' }
+    ];
+    const f = this.state.f;
+    const opts = [['all', 'All'], ['restock', 'Restocks'], ['new', 'New from your brands'], ['pairs', 'Goes with']];
+    return {
+      chips: opts.map(o => ({ label: o[1], fg: o[0] === f ? '#141210' : '#7A746D', line: o[0] === f ? '#141210' : 'transparent', pick: () => this.setState({ f: o[0] }) })),
+      items: all.filter(i => f === 'all' || i.k === f)
+    };
+  }
+}
+</script>
+</body>
+</html>

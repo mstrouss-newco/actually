@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Levi’s</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#141210}a:hover{color:#141210}
+.sc::-webkit-scrollbar{display:none}
+.sc{scrollbar-width:none}
+.tilt:nth-child(odd){transform:rotate(-3deg)}
+.tilt:nth-child(even){transform:rotate(2.5deg) translateY(6px)}
+.tilt{transition:transform .4s cubic-bezier(.2,.9,.25,1.25)}
+.tilt:hover{transform:rotate(0) scale(1.06)}
+.pop{animation:pop .35s cubic-bezier(.2,.9,.25,1.15)}
+@keyframes pop{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#FFFFFF;color:#141210;font-family:'DM Sans',sans-serif;position:relative;overflow:hidden">
+<div class="sc" style="height:100%;overflow-y:auto;padding:0 0 120px;box-sizing:border-box">
+<div style="background:#EBE3FF;padding:20px 20px 64px;border-radius:0 0 36px 36px">
+<a href="Sizes.dc.html" style="display:inline-flex;align-items:center;gap:4px;height:40px;padding:0 14px 0 8px;border-radius:999px;background:#fff;font-size:14px;font-weight:700;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg>Brands</a>
+<h1 style="font-family:'Fraunces',serif;font-weight:400;font-size:64px;line-height:1;letter-spacing:-0.03em;margin:28px 0 0">Levi’s</h1>
+<div style="font-size:14px;color:#5B4A8A;margin-top:6px">4 orders since 2023 · last one in March</div>
+</div>
+<div style="display:flex;gap:10px;padding:0 20px;margin-top:-40px;position:relative">
+<sc-for list="{{fit}}" as="f" hint-placeholder-count="4">
+<button type="button" class="tilt" onClick="{{f.pick}}" style="flex:1;border:0;background:#fff;border-radius:20px;padding:10px 4px 12px;box-shadow:0 10px 24px rgba(20,18,16,.12);display:flex;flex-direction:column;align-items:center;cursor:pointer;font:inherit;color:#141210">
+<span style="font-weight:700;font-size:26px;line-height:1.1">{{f.v}}</span>
+<span style="font-size:11px;font-weight:700;color:#7A746D;margin-top:2px">{{f.k}}</span>
+</button>
+</sc-for>
+</div>
+<div style="padding:16px 20px 0;font-size:13px;color:#7A746D;text-align:center">Tap a size to change it</div>
+<div style="margin:22px 16px 0;background:#141210;color:#fff;border-radius:26px;padding:20px 18px;display:flex;flex-direction:column;gap:12px">
+<div style="font-family:'Fraunces',serif;font-size:24px">Returning to Levi’s</div>
+<div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#B9B3AC">Window</span><span style="font-weight:700">30 days</span></div>
+<div style="height:1px;background:#2E2B28"></div>
+<div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#B9B3AC">How</span><span style="font-weight:700">Free by mail or any Levi’s store</span></div>
+</div>
+<div style="padding:26px 20px 0;display:flex;justify-content:space-between;align-items:baseline"><div style="font-family:'Fraunces',serif;font-size:24px">Your Levi’s pieces</div><a href="Closet.dc.html" style="font-size:14px;font-weight:700;text-decoration:none">In closet</a></div>
+<div class="sc" style="display:flex;gap:12px;overflow-x:auto;padding:12px 20px 4px">
+<sc-for list="{{pieces}}" as="p" hint-placeholder-count="4">
+<div style="flex:none;width:132px;display:flex;flex-direction:column;gap:6px">
+<div style="height:164px;border-radius:22px;background:#F3F0EB"><img src="{{p.img}}" alt="" style="display:block;width:100%;height:100%;object-fit:contain;padding:10%;box-sizing:border-box"></div>
+<div style="font-weight:700;font-size:14px">{{p.name}}</div>
+<div style="font-size:12px;color:#7A746D">Size {{p.size}} · {{p.when}}</div>
+</div>
+</sc-for>
+</div>
+</div>
+<sc-if value="{{editing}}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;z-index:20;background:rgba(20,18,16,.45);display:flex;align-items:flex-end">
+<div class="pop" style="width:100%;background:#fff;border-radius:30px 30px 0 0;padding:14px 20px 32px;box-sizing:border-box">
+<div style="width:40px;height:5px;border-radius:3px;background:#E2DDD7;margin:0 auto"></div>
+<div style="font-family:'Fraunces',serif;font-size:28px;margin-top:16px">Your Levi’s {{cur.k}} size</div>
+<div style="font-size:14px;color:#7A746D;margin-top:4px">{{cur.why}}</div>
+<div class="sc" style="display:flex;gap:8px;overflow-x:auto;margin-top:18px">
+<sc-for list="{{opts}}" as="o" hint-placeholder-count="5">
+<button type="button" onClick="{{o.pick}}" style="flex:none;width:64px;height:64px;border-radius:18px;border:2px solid {{o.ring}};background:{{o.bg}};font:700 20px 'DM Sans',sans-serif;color:#141210;cursor:pointer">{{o.v}}</button>
+</sc-for>
+</div>
+<button type="button" onClick="{{done}}" style="margin-top:22px;width:100%;height:54px;border-radius:999px;border:0;background:#141210;color:#fff;font:700 16px 'DM Sans',sans-serif;cursor:pointer">Save</button>
+</div>
+</div>
+</sc-if>
+<nav style="position:absolute;z-index:10;left:12px;right:12px;bottom:16px;height:66px;background:#141210;border-radius:30px;display:flex;align-items:center;gap:2px;padding:0 6px;box-shadow:0 12px 30px rgba(20,18,16,.28)">
+<a href="Home.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21H3z"></path></svg>Today</a>
+<a href="Orders.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v13H3z"></path><path d="M3 7 6 3h12l3 4"></path></svg>Orders</a>
+<a href="Closet.dc.html" style="flex:1;height:54px;border-radius:22px;background:#FFFFFF;color:#141210;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7a2 2 0 1 1 2 2c-1.2.4-2 1-2 2v1"></path><path d="M2.5 19 12 12l9.5 7z"></path></svg>Closet</a>
+<a href="Friends.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"></circle><path d="M3 20a6 6 0 0 1 12 0"></path><path d="M16 5.5a3.2 3.2 0 0 1 0 6"></path><path d="M18 14.5a5.5 5.5 0 0 1 3 5.5"></path></svg>Feed</a>
+<a href="Earn.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"></rect><path d="M12 8v13M3 12.5h18"></path><path d="M12 8C10 4 6 4 6 6.5S12 8 12 8s6-1 6-1.5S14 4 12 8z"></path></svg>Earn</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { edit: null, vals: {"Waist": "28", "Length": "30"} }; }
+  renderVals() {
+    const why = {"Waist": "All 4 pairs were a 28 waist.", "Length": "All 4 pairs were a 30 length."};
+    const choices = {"Waist": ["26", "27", "28", "29", "30"], "Length": ["28", "30", "32", "34"]};
+    const v = this.state.vals, e = this.state.edit;
+    return {
+      fit: Object.keys(v).map(k => ({ k, v: v[k], pick: () => this.setState({ edit: k }) })),
+      editing: !!e,
+      cur: e ? { k: e.toLowerCase(), why: why[e] } : {},
+      opts: e ? choices[e].map(o => ({ v: o, ring: o === v[e] ? '#141210' : '#EFEBE6', bg: o === v[e] ? '#EBE3FF' : '#fff', pick: () => this.setState({ vals: { ...v, [e]: o } }) })) : [],
+      done: () => this.setState({ edit: null }),
+      pieces: [
+        { name: "501 Original", size: "28", when: "Mar 2026", img: 'https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/bottoms-jeans-midwash.webp' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Closet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#141210}a:hover{color:#141210}
+.sc::-webkit-scrollbar{display:none}
+.sc{scrollbar-width:none}
+.rail{scroll-snap-type:x mandatory}
+.hang{scroll-snap-align:start;transform-origin:50% 0;transition:transform .5s cubic-bezier(.2,.9,.25,1.25)}
+.hang:nth-child(odd){transform:rotate(-2.5deg)}
+.hang:nth-child(even){transform:rotate(2deg)}
+.hang:hover{transform:rotate(0deg) translateY(8px) scale(1.03)}
+.shelf{transition:background .2s}
+.shelf:hover{background:#FAF8F6}
+.shelf:hover .fan1{transform:rotate(-14deg) translateX(-10px)}
+.shelf:hover .fan3{transform:rotate(14deg) translateX(10px)}
+.fan1,.fan3{transition:transform .4s cubic-bezier(.2,.9,.25,1.3)}
+.pop{animation:pop .38s cubic-bezier(.2,.9,.25,1.15)}
+@keyframes pop{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
+.in{animation:in .4s cubic-bezier(.2,.8,.2,1)}
+@keyframes in{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#FFFFFF;color:#141210;font-family:'DM Sans',sans-serif;position:relative;overflow:hidden">
+<div class="sc" style="height:100%;overflow-y:auto;padding:22px 0 120px;box-sizing:border-box">
+<sc-if value="{{home}}" hint-placeholder-val="{{ true }}">
+<div style="padding:0 20px;display:flex;justify-content:space-between;align-items:center">
+<div style="display:flex;gap:18px;align-items:baseline;font-family:'Fraunces',serif">
+<span style="font-size:38px;letter-spacing:-0.02em;border-bottom:2px solid #141210;line-height:1.1">Pieces</span>
+<a href="Sizes.dc.html" style="font-size:38px;letter-spacing:-0.02em;color:#948C84;text-decoration:none;line-height:1.1">Brands</a>
+</div>
+</div>
+<div style="padding:10px 20px 0;font-size:14px;color:#7A746D">Everything you've bought</div>
+<div style="margin-top:14px;border-top:1px solid #EFEBE6">
+<sc-for list="{{shelves}}" as="r" hint-placeholder-count="5">
+<button type="button" class="shelf" onClick="{{r.open}}" style="width:100%;display:flex;align-items:center;gap:14px;padding:18px 20px;border:0;border-bottom:1px solid #EFEBE6;background:#fff;cursor:pointer;font:inherit;color:#141210;text-align:left">
+<div style="flex:1;min-width:0">
+<div style="font-family:'Fraunces',serif;font-size:28px;line-height:1.05;letter-spacing:-0.01em">{{r.name}}</div>
+<sc-if value="{{r.hasRet}}" hint-placeholder-val="{{ false }}"><div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;font-weight:700;color:#C9402F"><span style="width:7px;height:7px;border-radius:50%;background:#FF6159"></span>{{r.ret}}</div></sc-if>
+</div>
+<div style="position:relative;width:112px;height:92px;flex:none">
+<div class="fan1" style="position:absolute;left:4px;top:10px;width:56px;height:72px;border-radius:12px;background:#F3F0EB;transform:rotate(-9deg);box-shadow:0 4px 10px rgba(20,18,16,.08)"><img src="{{r.i1}}" alt="" style="display:block;width:100%;height:100%;object-fit:contain;padding:10%;box-sizing:border-box"></div>
+<div class="fan3" style="position:absolute;right:4px;top:10px;width:56px;height:72px;border-radius:12px;background:#F3F0EB;transform:rotate(9deg);box-shadow:0 4px 10px rgba(20,18,16,.08)"><img src="{{r.i3}}" alt="" style="display:block;width:100%;height:100%;object-fit:contain;padding:10%;box-sizing:border-box"></div>
+<div style="position:absolute;left:28px;top:2px;width:56px;height:76px;border-radius:12px;background:#F3F0EB;box-shadow:0 8px 16px rgba(20,18,16,.12)"><img src="{{r.i2}}" alt="" style="display:block;width:100%;height:100%;object-fit:contain;padding:10%;box-sizing:border-box"></div>
+</div>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B9B3AC" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg>
+</button>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{inCat}}" hint-placeholder-val="{{ false }}">
+<div class="in">
+<div style="padding:0 20px;display:flex;justify-content:space-between;align-items:center">
+<button type="button" onClick="{{back}}" style="display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 12px 0 6px;border-radius:999px;border:0;background:#F4F1EE;font:700 13px 'DM Sans',sans-serif;color:#141210;cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg>Closet</button>
+<button type="button" onClick="{{openSort}}" style="height:36px;padding:0 14px;border-radius:999px;border:1.5px solid #E2DDD7;background:#fff;font:700 13px 'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;cursor:pointer;color:#141210"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M7 12h10M10 17h4"></path></svg>{{sortLabel}}</button>
+</div>
+<h1 style="font-family:'Fraunces',serif;font-weight:400;font-size:44px;line-height:1;letter-spacing:-0.02em;margin:18px 20px 0">{{cur.name}}</h1>
+<div style="position:relative;margin-top:16px">
+<div style="position:absolute;left:12px;right:0;top:10px;height:5px;border-radius:3px;background:#D9D3CC"></div>
+<div class="sc rail" style="display:flex;gap:12px;overflow-x:auto;padding:0 40px 12px 20px;scroll-padding-left:20px;position:relative">
+<sc-for list="{{cur.items}}" as="it" hint-placeholder-count="5">
+<button type="button" class="hang" onClick="{{it.pick}}" style="opacity:{{it.op}};flex:none;width:140px;border:0;background:transparent;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;font:inherit;color:inherit">
+<svg width="44" height="26" viewBox="0 0 44 26" fill="none" stroke="#8C857D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4a3 3 0 1 1 3 3c-1.6.5-3 1.2-3 2.8V11"></path><path d="M4 24 22 11l18 13z"></path></svg>
+<div style="width:140px;height:178px;margin-top:-6px;border-radius:24px;background:#F3F0EB;position:relative;box-shadow:0 10px 20px rgba(20,18,16,.08)"><img src="{{it.img}}" alt="" style="display:block;width:100%;height:100%;object-fit:contain;padding:10%;box-sizing:border-box">
+<sc-if value="{{it.ret}}" hint-placeholder-val="{{ false }}"><div style="position:absolute;bottom:-8px;right:-6px;background:#FF6159;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:700;transform:rotate(-6deg)">Return by Fri</div></sc-if>
+<sc-if value="{{it.back}}" hint-placeholder-val="{{ false }}"><div style="position:absolute;bottom:-8px;right:-6px;background:#141210;color:#fff;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:700">Returned</div></sc-if>
+<sc-if value="{{it.isNew}}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:10px;left:10px;background:#fff;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:700">New</div></sc-if>
+</div>
+<div style="margin-top:12px;font-size:13px;font-weight:700">{{it.brand}}</div>
+<div style="font-size:12px;color:#7A746D">{{it.name}}</div>
+</button>
+</sc-for>
+</div>
+</div>
+<div style="padding:22px 20px 0;font-family:'Fraunces',serif;font-size:22px">All {{cur.lower}}</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:12px 16px 0">
+<sc-for list="{{cur.items}}" as="it" hint-placeholder-count="6">
+<button type="button" onClick="{{it.pick}}" style="opacity:{{it.op}};border:0;padding:0;background:transparent;cursor:pointer;display:flex;flex-direction:column;gap:5px;font:inherit;color:inherit;text-align:left">
+<div style="width:100%;aspect-ratio:4/5;border-radius:16px;background:#F3F0EB"><img src="{{it.img}}" alt="" style="display:block;width:100%;height:100%;object-fit:contain;padding:10%;box-sizing:border-box"></div>
+<div style="font-size:12px;font-weight:700">{{it.brand}}</div>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+</div>
+<sc-if value="{{sortOpen}}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;z-index:20;background:rgba(20,18,16,.45);display:flex;align-items:flex-end">
+<div class="pop" style="width:100%;background:#fff;border-radius:30px 30px 0 0;padding:14px 20px 34px;box-sizing:border-box">
+<div style="width:40px;height:5px;border-radius:3px;background:#E2DDD7;margin:0 auto"></div>
+<div style="font-family:'Fraunces',serif;font-size:28px;margin-top:16px">Sort</div>
+<div style="display:flex;flex-direction:column;margin-top:8px">
+<sc-for list="{{sorts}}" as="s" hint-placeholder-count="4">
+<button type="button" onClick="{{s.pick}}" style="display:flex;align-items:center;justify-content:space-between;height:58px;border:0;border-bottom:1px solid #EFEBE6;background:#fff;font:inherit;color:#141210;cursor:pointer;text-align:left;padding:0">
+<span><span style="display:block;font-weight:700;font-size:15px">{{s.label}}</span><span style="display:block;font-size:13px;color:#7A746D">{{s.hint}}</span></span>
+<span style="width:22px;height:22px;border-radius:50%;border:2px solid {{s.ring}};box-sizing:border-box;display:flex;align-items:center;justify-content:center"><span style="width:10px;height:10px;border-radius:50%;background:{{s.dot}}"></span></span>
+</button>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{hasSel}}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;z-index:20;background:rgba(20,18,16,.45);display:flex;align-items:flex-end">
+<div class="pop" style="width:100%;background:#fff;border-radius:30px 30px 0 0;padding:14px 20px 30px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+<div style="width:40px;height:5px;border-radius:3px;background:#E2DDD7"></div>
+<div style="margin-top:18px;width:170px;height:214px;border-radius:26px;background:#F3F0EB;transform:rotate(-3deg);box-shadow:0 14px 30px rgba(20,18,16,.12)"><img src="{{sel.img}}" alt="" style="display:block;width:100%;height:100%;object-fit:contain;padding:10%;box-sizing:border-box"></div>
+<div style="margin-top:20px;font-family:'Fraunces',serif;font-size:28px;letter-spacing:-0.01em">{{sel.name}}</div>
+<div style="margin-top:4px;font-size:14px;color:#7A746D">{{sel.brand}} · size {{sel.size}} · {{sel.status}}</div>
+<button type="button" onClick="{{toggleFeed}}" style="margin-top:18px;width:100%;height:50px;border-radius:999px;border:1.5px solid {{feedLine}};background:{{feedBg}};font:700 15px 'DM Sans',sans-serif;color:#141210;cursor:pointer">{{feedLabel}}</button>
+<div style="font-size:12px;color:#7A746D;margin-top:8px">{{shareNote}}</div>
+<div style="margin-top:14px;display:flex;gap:10px;width:100%">
+<button type="button" onClick="{{close}}" style="flex:1;height:52px;border-radius:999px;border:1.5px solid #141210;background:#fff;font:700 15px 'DM Sans',sans-serif">Close</button>
+<button type="button" style="flex:1;height:52px;border-radius:999px;border:0;background:#141210;color:#fff;font:700 15px 'DM Sans',sans-serif">{{sel.cta}}</button>
+</div>
+</div>
+</div>
+</sc-if>
+<nav style="position:absolute;z-index:10;left:12px;right:12px;bottom:16px;height:66px;background:#141210;border-radius:30px;display:flex;align-items:center;gap:2px;padding:0 6px;box-shadow:0 12px 30px rgba(20,18,16,.28)">
+<a href="Home.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21H3z"></path></svg>Today</a>
+<a href="Orders.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v13H3z"></path><path d="M3 7 6 3h12l3 4"></path></svg>Orders</a>
+<a href="Closet.dc.html" style="flex:1;height:54px;border-radius:22px;background:#FFFFFF;color:#141210;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7a2 2 0 1 1 2 2c-1.2.4-2 1-2 2v1"></path><path d="M2.5 19 12 12l9.5 7z"></path></svg>Closet</a>
+<a href="Friends.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"></circle><path d="M3 20a6 6 0 0 1 12 0"></path><path d="M16 5.5a3.2 3.2 0 0 1 0 6"></path><path d="M18 14.5a5.5 5.5 0 0 1 3 5.5"></path></svg>Feed</a>
+<a href="Earn.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"></rect><path d="M12 8v13M3 12.5h18"></path><path d="M12 8C10 4 6 4 6 6.5S12 8 12 8s6-1 6-1.5S14 4 12 8z"></path></svg>Earn</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { cat: null, sort: 'new', sortOpen: false, sel: null, feed: {} }; }
+  renderVals() {
+    const IMG = {"Wool overshirt": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/tops-overshirt-rose.webp", "Organic crew tee": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/tops-crew-tee-sky.webp", "Merino cardigan": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/tops-cardigan-sage.webp", "Ribbed turtleneck": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/tops-turtleneck-butter.webp", "Boxy tee": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/tops-boxy-tee-black.webp", "Cashmere crew": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/tops-cashmere-lilac.webp", "Striped tee": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/tops-striped-tee.webp", "501 Original": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/bottoms-jeans-midwash.webp", "Wide trouser": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/bottoms-trouser-black.webp", "Midi skirt": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/bottoms-midi-skirt-peach.webp", "Linen short": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/bottoms-linen-short-sage.webp", "90s Pinch": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/bottoms-jeans-lightwash.webp", "Linen slip dress": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/dresses-slip-apricot.webp", "Knit midi": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/dresses-knit-midi-black.webp", "Floral wrap": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/dresses-wrap-floral.webp", "Satin slip": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/dresses-satin-slip-blush.webp", "Pegasus 41": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/shoes-runner-sky.webp", "Samba OG": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/shoes-sneaker-black-gum.webp", "990v6": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/shoes-dad-sneaker-grey.webp", "Chelsea boot": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/shoes-chelsea-tan.webp", "Old Skool": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/shoes-canvas-butter.webp", "Transport tote": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/acc-tote-tan.webp", "Mini crossbody": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/acc-crossbody-blush.webp", "Aviator sunglasses": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/acc-sunglasses-black.webp", "Ball cap": "https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/acc-cap-sage.webp"};
+    const C = { blush: ['#FFE1DC', 0], peach: ['#FFE3CC', 1], butter: ['#FFF0BF', 2], sage: ['#DCEFDF', 3], sky: ['#DCEBFF', 4], lilac: ['#EBE3FF', 5], ink: ['#3A3632', 6] };
+    const raw = [
+      ['Tops','blush','Wool overshirt','Zara','S',202609,1],['Tops','sky','Organic crew tee','Everlane','M',202605],['Tops','sage','Merino cardigan','Uniqlo','M',202601],['Tops','butter','Ribbed turtleneck','Aritzia','M',202511],['Tops','ink','Boxy tee','COS','M',202608],['Tops','lilac','Cashmere crew','Quince','M',202610],['Tops','butter','Striped tee','J.Crew','M',202608,0,1],
+      ['Bottoms','sky','501 Original','Levi’s','28',202603],['Bottoms','ink','Wide trouser','J.Crew','30',202602],['Bottoms','peach','Midi skirt','Aritzia','4',202607],['Bottoms','sage','Linen short','Madewell','27',202606],['Bottoms','butter','90s Pinch','Agolde','27',202610],
+      ['Dresses','peach','Linen slip dress','Reformation','4',202607,1],['Dresses','ink','Knit midi','Aritzia','S',202512],['Dresses','lilac','Floral wrap','Faithfull','S',202604],['Dresses','blush','Satin slip','Vince','4',202509],
+      ['Shoes','sky','Pegasus 41','Nike','10',202610],['Shoes','ink','Samba OG','Adidas','9.5',202606],['Shoes','lilac','990v6','New Balance','10W',202511],['Shoes','peach','Chelsea boot','Blundstone','9',202510],['Shoes','butter','Old Skool','Vans','9.5',202504],
+      ['Accessories','peach','Transport tote','Madewell','One size',202610],['Accessories','blush','Mini crossbody','Polène','One size',202512],['Accessories','ink','Aviator sunglasses','Ray-Ban','One size',202606],['Accessories','sage','Ball cap','Abercrombie','One size',202605]
+    ];
+    const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const items = raw.map((r, i) => {
+      const [cat, c, name, brand, size, date, ret, back] = r;
+      return { id: i, cat, name, brand, size, date, img: IMG[name], bg: C[c][0], hue: C[c][1], ret: !!ret, back: !!back, op: back ? '0.4' : '1', isNew: date >= 202610,
+        when: M[date % 100 - 1] + ' ' + Math.floor(date / 100), pick: () => this.setState({ sel: i }) };
+    });
+    const s = this.state.sort;
+    const fns = { new: (a, b) => b.date - a.date, color: (a, b) => a.hue - b.hue, brand: (a, b) => a.brand.localeCompare(b.brand), ret: (a, b) => (b.ret - a.ret) || (b.date - a.date) };
+    const cats = ['Tops', 'Bottoms', 'Dresses', 'Shoes', 'Accessories'];
+    const counts = { Tops: '64 pieces', Bottoms: '31 pieces', Dresses: '20 pieces', Shoes: '23 pairs', Accessories: '17 pieces' };
+    const opts = [['new', 'Newest', 'What just came in'], ['color', 'By color', 'The rail turns into a rainbow'], ['brand', 'By brand', 'A to Z'], ['ret', 'Returnable first', 'Decide before the window closes']];
+    const cat = this.state.cat;
+    const list = cat ? items.filter(i => i.cat === cat).sort(fns[s]) : [];
+    const sel = items.find(i => i.id === this.state.sel);
+    const fd = sel ? !!this.state.feed[sel.id] : false;
+    return {
+      home: !cat, inCat: !!cat,
+      shelves: cats.map(n => {
+        const its = items.filter(i => i.cat === n).sort(fns.new);
+        const r = its.filter(i => i.ret).length;
+        return { name: n, count: counts[n], hasRet: r > 0, ret: r + ' can still go back', c1: its[1].bg, c2: its[0].bg, c3: its[2].bg, i1: its[1].img, i2: its[0].img, i3: its[2].img, open: () => this.setState({ cat: n }) };
+      }),
+      back: () => this.setState({ cat: null }),
+      cur: cat ? { name: cat, lower: cat.toLowerCase(), count: counts[cat], items: list } : { items: [] },
+      sortLabel: opts.find(o => o[0] === s)[1],
+      sortOpen: this.state.sortOpen, openSort: () => this.setState({ sortOpen: true }),
+      sorts: opts.map(o => ({ label: o[1], hint: o[2], ring: o[0] === s ? '#141210' : '#D9D3CC', dot: o[0] === s ? '#141210' : 'transparent', pick: () => this.setState({ sort: o[0], sortOpen: false }) })),
+      hasSel: !!sel,
+      sel: sel ? { ...sel, status: sel.ret ? 'return by Fri' : sel.back ? 'returned' : 'bought ' + sel.when, cta: sel.ret ? 'Start return' : 'Buy again' } : {},
+      feedLabel: fd ? 'On your feed' : 'Add to my feed', feedBg: fd ? '#DCEFDF' : '#fff', feedLine: fd ? '#DCEFDF' : '#E2DDD7',
+      shareNote: fd ? 'People who follow you can see this.' : 'Private. Only you can see this.',
+      toggleFeed: () => sel && this.setState({ feed: { ...this.state.feed, [sel.id]: !fd } }),
+      close: () => this.setState({ sel: null })
+    };
+  }
+}
+</script>
+</body>
+</html>

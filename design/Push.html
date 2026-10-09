@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Friend alert</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#141210}a:hover{color:#141210}
+.drop{animation:drop .6s cubic-bezier(.2,.9,.25,1.2) .3s both}
+@keyframes drop{from{transform:translateY(-40px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#3B4A43;color:#fff;font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;align-items:center;padding:70px 14px 0">
+<div style="font-size:18px;font-weight:500;opacity:.85">Thursday, October 8</div>
+<div style="font-size:88px;font-weight:500;line-height:1;letter-spacing:-0.03em;margin-top:4px">8:41</div>
+<a href="Home.dc.html" class="drop" style="margin-top:44px;width:100%;display:block;background:rgba(255,255,255,.88);border-radius:24px;padding:12px 14px 14px;box-sizing:border-box;text-decoration:none;color:#141210">
+<div style="display:flex;align-items:center;gap:8px">
+<div style="width:22px;height:22px;border-radius:6px;background:#141210;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:13px">a</div>
+<div style="flex:1;font-size:13px;font-weight:700;color:#5E5852">Actually</div>
+<div style="font-size:12px;color:#7A746D">now</div>
+</div>
+<div style="display:flex;gap:12px;margin-top:8px">
+<div style="flex:1;min-width:0">
+<div style="font-weight:700;font-size:15px">Alex just bought the Contour midi skirt</div>
+<div style="font-size:14px;color:#3A3632;margin-top:2px;line-height:1.35">Aritzia is one of your brands, and it's in stock in your size 4.</div>
+</div>
+<div style="width:52px;height:64px;border-radius:10px;background:#F3F0EB;flex:none"><img src="https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/bottoms-midi-skirt-peach.webp" alt="" style="display:block;width:100%;height:100%;object-fit:contain;padding:10%;box-sizing:border-box"></div>
+</div>
+</a>
+<div style="margin-top:8px;width:100%;background:rgba(255,255,255,.5);border-radius:24px;padding:12px 14px;box-sizing:border-box;color:#141210;transform:scale(.96);opacity:.8">
+<div style="display:flex;align-items:center;gap:8px"><div style="width:22px;height:22px;border-radius:6px;background:#141210;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:13px">a</div><div style="flex:1;font-size:13px;font-weight:700;color:#5E5852">Actually</div><div style="font-size:12px;color:#5E5852">7:58 am</div></div>
+<div style="font-weight:700;font-size:15px;margin-top:6px">Your Nike order is out for delivery</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

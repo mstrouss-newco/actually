@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Feed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#141210}a:hover{color:#141210}
+.sc::-webkit-scrollbar{display:none}
+.sc{scrollbar-width:none}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#FFFFFF;color:#141210;font-family:'DM Sans',sans-serif;position:relative;overflow:hidden">
+<div class="sc" style="height:100%;overflow-y:auto;padding:22px 0 120px;box-sizing:border-box">
+<div style="padding:0 20px;display:flex;gap:14px;align-items:baseline;white-space:nowrap">
+<button type="button" onClick="{{toFriends}}" style="border:0;background:transparent;padding:0;font-family:'Fraunces',serif;font-size:26px;letter-spacing:-0.02em;line-height:1.15;color:{{fWord}};border-bottom:2px solid {{fUnder}};cursor:pointer">Friends</button>
+<button type="button" onClick="{{toLike}}" style="border:0;background:transparent;padding:0;font-family:'Fraunces',serif;font-size:26px;letter-spacing:-0.02em;line-height:1.15;color:{{lWord}};border-bottom:2px solid {{lUnder}};cursor:pointer">Taste match</button>
+<a href="MyFeed.dc.html" style="font-family:'Fraunces',serif;font-size:26px;letter-spacing:-0.02em;line-height:1.15;color:#948C84;text-decoration:none">My feed</a>
+</div>
+<sc-if value="{{isFriends}}" hint-placeholder-val="{{ true }}">
+<div style="padding:10px 20px 0;font-size:14px;color:#7A746D">What people you follow just bought</div>
+<button type="button" onClick="{{toLike}}" style="margin:14px 16px 0;width:calc(100% - 32px);display:flex;align-items:center;gap:12px;border:0;border-radius:20px;background:#DCEFDF;padding:14px 16px;text-align:left;font:inherit;color:#141210;cursor:pointer"><span style="flex:1"><span style="display:block;font-weight:700;font-size:15px">See your taste matches</span><span style="display:block;font-size:13px;color:#3F5F4A;margin-top:2px">12 people shop the brands and looks you do</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#141210" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg></button>
+<div style="display:flex;flex-direction:column;gap:26px;padding:20px 16px 0">
+<sc-for list="{{posts}}" as="p" hint-placeholder-count="3">
+<div>
+<div style="display:flex;align-items:center;gap:10px;padding:0 4px 10px">
+<div style="width:38px;height:38px;border-radius:50%;background:{{p.av}};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">{{p.ini}}</div>
+<div style="flex:1"><div style="font-weight:700;font-size:14px">{{p.who}}</div><div style="font-size:12px;color:#7A746D">{{p.when}}</div></div>
+</div>
+<div style="height:300px;border-radius:28px;background:#F3F0EB;position:relative"><img src="{{p.img}}" alt="" style="display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:10%;box-sizing:border-box">
+<div style="position:absolute;left:14px;bottom:14px;background:#fff;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700">{{p.fit}}</div>
+</div>
+<div style="padding:12px 4px 0"><div style="font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7A746D">{{p.brand}}</div><div style="font-family:'Fraunces',serif;font-size:22px;margin-top:2px">{{p.name}}</div><div style="font-size:14px;color:#5E5852;margin-top:6px;font-style:italic">"{{p.note}}"</div></div>
+<div style="display:flex;gap:8px;padding:12px 4px 0">
+<button type="button" aria-label="Save" style="width:46px;height:46px;border-radius:50%;border:1.5px solid #E2DDD7;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#141210" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"></path></svg></button>
+<a href="#" style="flex:1;height:46px;border-radius:999px;background:#141210;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;text-decoration:none">Shop in my size</a>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{isLike}}" hint-placeholder-val="{{ false }}">
+<div style="padding:10px 20px 0;font-size:14px;color:#7A746D;line-height:1.4">People who shop the same brands and looks as you. See what's in their closet that isn't in yours.</div>
+<div style="display:flex;flex-direction:column;gap:14px;padding:18px 16px 0">
+<sc-for list="{{people}}" as="m" hint-placeholder-count="3">
+<div style="background:#FAF8F6;border-radius:26px;padding:16px">
+<div style="display:flex;align-items:center;gap:12px">
+<div style="width:48px;height:48px;border-radius:50%;background:{{m.av}};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex:none">{{m.ini}}</div>
+<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:16px">{{m.who}}</div><div style="font-size:13px;color:#5E5852">{{m.both}}</div></div>
+<button type="button" style="height:38px;padding:0 16px;border-radius:999px;border:0;background:#141210;color:#fff;font:700 13px 'DM Sans',sans-serif">Follow</button>
+</div>
+<div style="display:inline-block;margin-top:12px;background:#DCEFDF;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700">{{m.size}}</div>
+<div style="font-size:12px;font-weight:700;color:#7A746D;margin-top:14px">In her closet, not yours</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px">
+<sc-for list="{{m.picks}}" as="k" hint-placeholder-count="3">
+<div><div style="aspect-ratio:4/5;border-radius:16px;background:#F3F0EB"><img src="{{k.img}}" alt="" style="display:block;width:100%;height:100%;object-fit:contain;padding:10%;box-sizing:border-box"></div><div style="font-size:12px;font-weight:700;margin-top:6px">{{k.n}}</div></div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</div>
+<nav style="position:absolute;z-index:10;left:12px;right:12px;bottom:16px;height:66px;background:#141210;border-radius:30px;display:flex;align-items:center;gap:2px;padding:0 6px;box-shadow:0 12px 30px rgba(20,18,16,.28)">
+<a href="Home.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21H3z"></path></svg>Today</a>
+<a href="Orders.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v13H3z"></path><path d="M3 7 6 3h12l3 4"></path></svg>Orders</a>
+<a href="Closet.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7a2 2 0 1 1 2 2c-1.2.4-2 1-2 2v1"></path><path d="M2.5 19 12 12l9.5 7z"></path></svg>Closet</a>
+<a href="Friends.dc.html" style="flex:1;height:54px;border-radius:22px;background:#FFFFFF;color:#141210;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"></circle><path d="M3 20a6 6 0 0 1 12 0"></path><path d="M16 5.5a3.2 3.2 0 0 1 0 6"></path><path d="M18 14.5a5.5 5.5 0 0 1 3 5.5"></path></svg>Feed</a>
+<a href="Earn.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"></rect><path d="M12 8v13M3 12.5h18"></path><path d="M12 8C10 4 6 4 6 6.5S12 8 12 8s6-1 6-1.5S14 4 12 8z"></path></svg>Earn</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { v: 'friends' }; }
+  renderVals() {
+    const f = this.state.v === 'friends';
+    const on = { bg: '#141210', fg: '#fff', line: '#141210' }, off = { bg: '#fff', fg: '#141210', line: '#E7E2DC' };
+    const a = f ? on : off, b = f ? off : on;
+    return {
+      isFriends: f, isLike: !f,
+      toFriends: () => this.setState({ v: 'friends' }), toLike: () => this.setState({ v: 'like' }),
+      fWord: f ? '#141210' : '#948C84', fUnder: f ? '#141210' : 'transparent', lWord: f ? '#948C84' : '#141210', lUnder: f ? 'transparent' : '#141210',
+      posts: [
+        { who: 'Maya Chen', ini: 'MC', av: '#FFE1DC', when: 'Added 2 days ago', img: 'https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/bottoms-midi-skirt-peach.webp', brand: 'Aritzia', name: 'Contour midi skirt', note: 'Fits true to size, not see-through', fit: 'Your size 4 in stock', bg: '#FFF0BF' },
+        { who: 'Jess Park', ini: 'JP', av: '#DCEFDF', when: 'Added this week', img: 'https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/bottoms-jeans-lightwash.webp', brand: 'Everlane', name: 'The Way-High jean', note: 'Finally a jean that does not gap', fit: 'Your size 28 in stock', bg: '#DCEBFF' },
+        { who: 'Ana Ruiz', ini: 'AR', av: '#EBE3FF', when: 'Added last week', img: 'https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/shoes-runner-lavender.webp', brand: 'Nike', name: 'Vomero 18', note: 'Softer than the Pegasus', fit: 'Your size 10 in stock', bg: '#EBE3FF' }
+      ],
+      people: [
+        { who: 'Lauren K.', ini: 'LK', av: '#FFE3CC', both: 'You both shop Aritzia, Nike and Everlane', size: 'Same look: neutrals and soft knits', picks: [{ n: 'Striped tee', bg: '#DCEBFF', img: 'https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/tops-striped-tee.webp' }, { n: 'Terrace sneaker', bg: '#F4F1EE', img: 'https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/shoes-sneaker-black-gum.webp' }, { n: 'Linen short', bg: '#DCEFDF', img: 'https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/bottoms-linen-short-sage.webp' }] },
+        { who: 'Priya S.', ini: 'PS', av: '#DCEBFF', both: 'You both shop Reformation and Madewell', size: 'Same look: linen and slip dresses', picks: [{ n: 'Wrap dress', bg: '#EBE3FF', img: 'https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/dresses-wrap-floral.webp' }, { n: 'Mini bag', bg: '#FFE1DC', img: 'https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/acc-crossbody-blush.webp' }, { n: 'Satin slip', bg: '#FFE3CC', img: 'https://raw.githubusercontent.com/mstrouss-newco/actually/main/demo-art/dresses-satin-slip-blush.webp' }] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
