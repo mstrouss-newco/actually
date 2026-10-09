@@ -7,13 +7,14 @@ const ROUTES = {
   Orders: '/orders', OrderDetail: '/order', Closet: '/closet', Sizes: '/brands', Brand: '/brand/nike',
   BrandZara: '/brand/zara', BrandAritzia: '/brand/aritzia', BrandEverlane: '/brand/everlane',
   BrandLevis: '/brand/levis', ForYou: '/for-you', Earn: '/earn', Friends: '/feed', MyFeed: '/my-feed',
-  Push: '/alert',
+  Push: '/alert', Goal: '/goal', RevealEarn: '/reveal/earn', RevealShare: '/reveal/share',
+  HomeEarn: '/today/earn', HomeShare: '/today/share',
 };
 const BY_PATH = Object.fromEntries(Object.entries(ROUTES).map(([k, v]) => [v, k]));
 // Depth in the story: lower = earlier. Used to pick slide direction.
 const DEPTH = {
-  Push: 0, Main: 1, Claim: 2, Live: 3, Permission: 4, Import: 5, Reveal: 6, Remind: 7, Swipe: 8,
-  Home: 10, HomeEmpty: 10, Orders: 10, Closet: 10, Friends: 10, Earn: 10, ForYou: 11, MyFeed: 11,
+  Push: 0, Main: 1, Claim: 2, Goal: 2.5, Live: 3, Permission: 4, Import: 5, Reveal: 6, RevealEarn: 6, RevealShare: 6, Remind: 7, Swipe: 13,
+  Home: 10, HomeEmpty: 10, HomeEarn: 10, HomeShare: 10, Orders: 10, Closet: 10, Friends: 10, Earn: 10, ForYou: 11, MyFeed: 11,
   OrderDetail: 12, Sizes: 11, Brand: 12, BrandZara: 12, BrandAritzia: 12, BrandEverlane: 12, BrandLevis: 12,
 };
 const PRELOAD = Object.keys(ROUTES);
