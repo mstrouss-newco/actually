@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Actually</title>
+<meta name="description" content="All your orders in one place.">
+<meta name="theme-color" content="#EDEAE6">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;height:100%;background:#EDEAE6;-webkit-tap-highlight-color:transparent}
+#stage{min-height:100dvh;display:grid;place-items:center}
+#fit{position:relative}
+#phone{position:absolute;left:0;top:0;width:390px;height:844px;border-radius:48px;overflow:hidden;background:#fff;
+  box-shadow:0 30px 80px -20px rgba(40,34,28,.28),0 8px 24px -8px rgba(40,34,28,.16);transform-origin:top left;isolation:isolate}
+.layer{position:absolute;inset:0;background:#fff;overflow:hidden;will-change:transform,opacity}
+.scr{width:100%;height:100%}
+.dim{position:absolute;inset:0;background:#141210;pointer-events:none;opacity:0}
+#phone *{scrollbar-width:none}
+#phone *::-webkit-scrollbar{display:none}
+#phone a,#phone button{transition:scale .14s cubic-bezier(.2,.9,.25,1.3)}
+#phone a:active,#phone button:active{scale:.97}
+#phone nav a:active{scale:.94}
+/* forward: new slides in from right, old drifts left and dims */
+.in-fwd{animation:inFwd .38s cubic-bezier(.22,.8,.2,1) both;z-index:2;box-shadow:-12px 0 30px rgba(20,18,16,.12)}
+.out-fwd{animation:outFwd .38s cubic-bezier(.22,.8,.2,1) both;z-index:1}
+.out-fwd .dim{animation:dimIn .38s both}
+@keyframes inFwd{from{transform:translateX(100%)}to{transform:none}}
+@keyframes outFwd{to{transform:translateX(-28%)}}
+@keyframes dimIn{to{opacity:.18}}
+/* back: reverse */
+.in-back{animation:inBack .38s cubic-bezier(.22,.8,.2,1) both;z-index:1}
+.in-back .dim{animation:dimOut .38s both}
+.out-back{animation:outBack .38s cubic-bezier(.22,.8,.2,1) both;z-index:2;box-shadow:-12px 0 30px rgba(20,18,16,.12)}
+@keyframes inBack{from{transform:translateX(-28%)}to{transform:none}}
+@keyframes dimOut{from{opacity:.18}to{opacity:0}}
+@keyframes outBack{to{transform:translateX(100%)}}
+/* tab switch: crossfade */
+.in-fade{animation:fadeIn .22s ease-out both;z-index:2}
+.out-fade{z-index:1}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+/* first screen */
+.in-first{animation:fadeIn .5s ease-out both}
+@media (max-width:500px){
+  #stage{display:block}
+  #fit{width:100vw!important;height:100dvh!important}
+  #phone{width:100vw;height:100dvh;border-radius:0;box-shadow:none;transform:none!important}
+  .scr>div{width:100%!important;height:100%!important}
+}
+@media (prefers-reduced-motion:reduce){.in-fwd,.out-fwd,.in-back,.out-back,.in-fade,.in-first{animation-duration:1ms}}
+</style>
+</head>
+<body>
+<div id="stage"><div id="fit"><div id="phone"></div></div></div>
+<script type="module" src="/app.js"></script>
+</body>
+</html>

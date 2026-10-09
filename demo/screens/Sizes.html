@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Brands</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#141210}a:hover{color:#141210}
+.sc::-webkit-scrollbar{display:none}
+.sc{scrollbar-width:none}
+.card{transition:transform .35s cubic-bezier(.2,.9,.25,1.2)}
+.card:hover{transform:translateY(-4px)}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#FFFFFF;color:#141210;font-family:'DM Sans',sans-serif;position:relative;overflow:hidden">
+<div class="sc" style="height:100%;overflow-y:auto;padding:22px 0 120px;box-sizing:border-box">
+<div style="padding:0 20px">
+<div style="display:flex;gap:18px;align-items:baseline;font-family:'Fraunces',serif"><a href="Closet.dc.html" style="font-size:38px;letter-spacing:-0.02em;color:#948C84;text-decoration:none;line-height:1.1">Pieces</a><span style="font-size:38px;letter-spacing:-0.02em;border-bottom:2px solid #141210;line-height:1.1">Brands</span></div>
+<div style="font-size:14px;color:#7A746D;margin-top:6px">Your size and their return rules, ready while you shop.</div>
+</div>
+<label style="margin:16px 16px 0;height:50px;border-radius:999px;background:#F4F1EE;display:flex;align-items:center;gap:10px;padding:0 18px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A746D" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+<input placeholder="Find a brand" aria-label="Find a brand" style="border:0;outline:0;background:transparent;font:500 15px 'DM Sans',sans-serif;flex:1;color:#141210">
+</label>
+<div style="display:flex;gap:20px;margin:16px 20px 0;border-bottom:1px solid #EFEBE6">
+<sc-for list="{{chips}}" as="c" hint-placeholder-count="3">
+<button type="button" onClick="{{c.pick}}" style="border:0;background:transparent;padding:12px 0 12px;color:{{c.fg}};border-bottom:2px solid {{c.line}};margin-bottom:-1px;font:700 15px 'DM Sans',sans-serif;cursor:pointer">{{c.label}}</button>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;padding:16px 16px 0">
+<sc-for list="{{brands}}" as="b" hint-placeholder-count="4">
+<a href="{{b.href}}" class="card" style="display:block;text-decoration:none;color:#141210;background:{{b.bg}};border-radius:28px;padding:18px">
+<div style="display:flex;align-items:flex-start;gap:12px">
+<div style="flex:1;min-width:0"><div style="font-family:'Fraunces',serif;font-size:32px;line-height:1;letter-spacing:-0.02em">{{b.name}}</div><div style="font-size:13px;color:#5E5852;margin-top:4px">{{b.meta}}</div></div>
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#141210" stroke-width="2" stroke-linecap="round" style="margin-top:6px"><path d="M9 6l6 6-6 6"></path></svg>
+</div>
+<div class="sc" style="display:flex;gap:8px;margin-top:14px;overflow-x:auto">
+<sc-for list="{{b.sizes}}" as="s" hint-placeholder-count="2">
+<div style="flex:none;background:#fff;border-radius:18px;padding:8px 14px;display:flex;flex-direction:column;align-items:center;min-width:64px"><div style="font-weight:700;font-size:24px;line-height:1.1;letter-spacing:-0.01em">{{s.v}}</div><div style="font-size:11px;font-weight:700;color:#7A746D">{{s.k}}</div></div>
+</sc-for>
+</div>
+<div style="margin-top:12px;background:rgba(255,255,255,.65);border-radius:18px;padding:10px 14px;display:flex;flex-direction:column;gap:6px;font-size:13px">
+<div style="display:flex;gap:8px;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#141210" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"></path><path d="M4 9h11a5 5 0 0 1 0 10h-3"></path></svg><span>{{b.ret}}</span></div>
+<sc-if value="{{b.hasOpen}}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:8px;align-items:center;font-weight:700"><span style="width:8px;height:8px;border-radius:50%;background:{{b.openDot}};margin:0 4px"></span><span>{{b.open}}</span></div></sc-if>
+</div>
+</a>
+</sc-for>
+</div>
+</div>
+<nav style="position:absolute;z-index:10;left:12px;right:12px;bottom:16px;height:66px;background:#141210;border-radius:30px;display:flex;align-items:center;gap:2px;padding:0 6px;box-shadow:0 12px 30px rgba(20,18,16,.28)">
+<a href="Home.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21H3z"></path></svg>Today</a>
+<a href="Orders.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v13H3z"></path><path d="M3 7 6 3h12l3 4"></path></svg>Orders</a>
+<a href="Closet.dc.html" style="flex:1;height:54px;border-radius:22px;background:#FFFFFF;color:#141210;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7a2 2 0 1 1 2 2c-1.2.4-2 1-2 2v1"></path><path d="M2.5 19 12 12l9.5 7z"></path></svg>Closet</a>
+<a href="Friends.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"></circle><path d="M3 20a6 6 0 0 1 12 0"></path><path d="M16 5.5a3.2 3.2 0 0 1 0 6"></path><path d="M18 14.5a5.5 5.5 0 0 1 3 5.5"></path></svg>Feed</a>
+<a href="Earn.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"></rect><path d="M12 8v13M3 12.5h18"></path><path d="M12 8C10 4 6 4 6 6.5S12 8 12 8s6-1 6-1.5S14 4 12 8z"></path></svg>Earn</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { sort: 'most' }; }
+  renderVals() {
+    const list = [
+      { name: 'Nike', n: 11, last: 202610, meta: '11 orders · last one this week', bg: '#DCEBFF', href: 'Brand.dc.html', sizes: [{ k: 'Shoes', v: '10' }, { k: 'Tops', v: 'M' }, { k: 'Leggings', v: 'S' }], ret: '60 days, free by mail or in store', open: 'Pegasus 41 arriving Thu', openDot: '#4F7FD1' },
+      { name: 'Zara', n: 8, last: 202609, meta: '8 orders · last one Sep 14', bg: '#FFE1DC', href: 'BrandZara.dc.html', sizes: [{ k: 'Tops', v: 'S' }, { k: 'Pants', v: '28' }], ret: '30 days, free in store, $3.95 by mail', open: 'Overshirt return closes Fri', openDot: '#FF6159' },
+      { name: 'Aritzia', n: 9, last: 202610, meta: '9 orders · last one Oct 1', bg: '#FFF0BF', href: 'BrandAritzia.dc.html', sizes: [{ k: 'Tops', v: 'M' }, { k: 'Skirts', v: '4' }, { k: 'Dresses', v: 'S' }], ret: '30 days, free by mail', open: 'Sweater arriving Mon', openDot: '#D9A520' },
+      { name: 'Everlane', n: 6, last: 202605, meta: '6 orders · last one in May', bg: '#DCEFDF', href: 'BrandEverlane.dc.html', sizes: [{ k: 'Tees', v: 'M' }, { k: 'Denim', v: '28' }], ret: '30 days, free by mail', open: '' },
+      { name: 'Levi’s', n: 4, last: 202603, meta: '4 orders · last one in March', bg: '#EBE3FF', href: 'BrandLevis.dc.html', sizes: [{ k: 'Waist', v: '28' }, { k: 'Length', v: '30' }], ret: '30 days, free by mail', open: '' }
+    ].map(b => ({ ...b, hasOpen: !!b.open }));
+    const s = this.state.sort;
+    const sorted = list.slice().sort(s === 'most' ? (a, b) => b.n - a.n : s === 'az' ? (a, b) => a.name.localeCompare(b.name) : (a, b) => b.last - a.last);
+    const opts = [['most', 'Most ordered'], ['recent', 'Recent'], ['az', 'A to Z']];
+    return {
+      chips: opts.map(o => ({ label: o[1], fg: o[0] === s ? '#141210' : '#7A746D', line: o[0] === s ? '#141210' : 'transparent', pick: () => this.setState({ sort: o[0] }) })),
+      brands: sorted
+    };
+  }
+}
+</script>
+</body>
+</html>

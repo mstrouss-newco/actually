@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Orders</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#141210}a:hover{color:#141210}
+.sc::-webkit-scrollbar{display:none}
+.row{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.row:hover{transform:translateX(4px)}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#FFFFFF;color:#141210;font-family:'DM Sans',sans-serif;position:relative;overflow:hidden">
+<div class="sc" style="height:100%;overflow-y:auto;padding:22px 0 110px;box-sizing:border-box">
+<div style="padding:0 20px"><h1 style="font-family:'Fraunces',serif;font-weight:400;font-size:36px;line-height:1;letter-spacing:-0.02em;margin:0">Orders</h1></div>
+<label style="margin:16px 16px 0;height:50px;border-radius:999px;background:#F4F1EE;display:flex;align-items:center;gap:10px;padding:0 18px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A746D" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+<input placeholder="Find any order or receipt" aria-label="Find any order or receipt" style="border:0;outline:0;background:transparent;font:500 15px 'DM Sans',sans-serif;flex:1;color:#141210">
+</label>
+<div style="display:flex;gap:22px;padding:18px 20px 0;border-bottom:1px solid #EFEBE6">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+<button type="button" onClick="{{t.pick}}" style="border:0;background:transparent;padding:10px 0 12px;font:700 15px 'DM Sans',sans-serif;color:{{t.fg}};border-bottom:3px solid {{t.line}};cursor:pointer">{{t.label}} <span style="font-size:11px;margin-left:2px;vertical-align:super">{{t.n}}</span></button>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;padding:16px 16px 0">
+<sc-for list="{{rows}}" as="o" hint-placeholder-count="4">
+<a href="OrderDetail.dc.html" class="row" style="text-decoration:none;color:#141210;display:flex;gap:14px;align-items:center;background:#FAF8F6;border-radius:24px;padding:10px 14px 10px 10px">
+<div style="width:78px;height:96px;border-radius:18px;background:#F3F0EB;display:flex;align-items:center;justify-content:center;flex:none"><img src="{{o.img}}" alt="" style="display:block;width:100%;height:100%;object-fit:contain;padding:10%;box-sizing:border-box"></div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px">
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7A746D">{{o.store}}</div>
+<div style="font-weight:700;font-size:15px">{{o.name}}</div>
+<div style="font-size:13px;color:#5E5852">{{o.status}}</div>
+<sc-if value="{{o.track}}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;gap:4px;margin-top:2px"><span style="flex:1;height:5px;border-radius:3px;background:#141210"></span><span style="flex:1;height:5px;border-radius:3px;background:{{o.s2}}"></span><span style="flex:1;height:5px;border-radius:3px;background:{{o.s3}}"></span><span style="flex:1;height:5px;border-radius:3px;background:#E5E0DA"></span></div>
+</sc-if>
+</div>
+<div style="align-self:flex-start;margin-top:4px;background:{{o.chipBg}};border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;white-space:nowrap">{{o.chip}}</div>
+</a>
+</sc-for>
+</div>
+</div>
+<nav style="position:absolute;z-index:10;left:12px;right:12px;bottom:16px;height:66px;background:#141210;border-radius:30px;display:flex;align-items:center;gap:2px;padding:0 6px;box-shadow:0 12px 30px rgba(20,18,16,.28)">
+<a href="Home.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21H3z"></path></svg>Today</a>
+<a href="Orders.dc.html" style="flex:1;height:54px;border-radius:22px;background:#FFFFFF;color:#141210;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v13H3z"></path><path d="M3 7 6 3h12l3 4"></path></svg>Orders</a>
+<a href="Closet.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7a2 2 0 1 1 2 2c-1.2.4-2 1-2 2v1"></path><path d="M2.5 19 12 12l9.5 7z"></path></svg>Closet</a>
+<a href="Friends.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"></circle><path d="M3 20a6 6 0 0 1 12 0"></path><path d="M16 5.5a3.2 3.2 0 0 1 0 6"></path><path d="M18 14.5a5.5 5.5 0 0 1 3 5.5"></path></svg>Feed</a>
+<a href="Earn.dc.html" style="flex:1;height:54px;border-radius:22px;background:transparent;color:#B9B3AC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;font-size:11px;font-weight:700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"></rect><path d="M12 8v13M3 12.5h18"></path><path d="M12 8C10 4 6 4 6 6.5S12 8 12 8s6-1 6-1.5S14 4 12 8z"></path></svg>Earn</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { tab: 'Arriving' }; }
+  renderVals() {
+    const S = {
+      shoe: 'M6 40Q6 31 13 31L23 31L30 24L37 26Q41 32 49 33Q55 34 55 40L55 43L6 43Z',
+      sweater: 'M18 12L26 9Q30 13 34 9L42 12L52 40L46 42L40 24L40 50L20 50L20 24L14 42L8 40Z',
+      bag: 'M14 24H46V47Q46 50 43 50H17Q14 50 14 47Z',
+      jacket: 'M20 10L30 14L40 10L50 18L48 50L34 50L30 22L26 50L12 50L10 18Z',
+      dress: 'M24 8L36 8L35 20L46 52L14 52L25 20Z',
+      tee: 'M18 14L26 10Q30 14 34 10L42 14L50 22L44 28L40 25L40 50L20 50L20 25L16 28L10 22Z',
+      lip: 'M26 30H34V50H26ZM27 18L33 14V30H27Z'
+    };
+    const H = 'M22 24Q22 12 30 12Q38 12 38 24';
+    const k = '#141210', g = '#E5E0DA';
+    const data = {
+      Arriving: [
+        { store: 'Nike', name: 'Pegasus 41, size 10', status: 'Out for delivery', s: 'shoe', bg: '#DCEBFF', ink: '#4F7FD1', track: true, s2: k, s3: k, chip: 'Today', chipBg: '#FFF0BF' },
+        { store: 'Aritzia', name: 'Ribbed sweater, M', status: 'Shipped from Vancouver', s: 'sweater', bg: '#DCEFDF', ink: '#4E9468', track: true, s2: k, s3: g, chip: 'Mon', chipBg: '#F1EDE8' },
+        { store: 'Madewell', name: 'Transport tote', status: 'Order placed', s: 'bag', bg: '#FFE3CC', ink: '#E58A3E', track: true, s2: g, s3: g, chip: 'Next wk', chipBg: '#F1EDE8' }
+      ],
+      Delivered: [
+        { store: 'Everlane', name: 'Organic crew tee, M', status: 'Delivered Oct 2', s: 'tee', bg: '#DCEBFF', ink: '#4F7FD1', track: false, chip: 'Kept', chipBg: '#DCEFDF' },
+        { store: 'Sephora', name: 'Lip oil, Rose', status: 'Delivered Sep 28', s: 'lip', bg: '#FFF0BF', ink: '#D9A520', track: false, chip: 'Kept', chipBg: '#DCEFDF' },
+        { store: 'Zara', name: 'Wool overshirt, S', status: 'Delivered Sep 18', s: 'jacket', bg: '#FFE1DC', ink: '#E8705F', track: false, chip: 'Return by Fri', chipBg: '#FF6159' }
+      ],
+      Returns: [
+        { store: 'Zara', name: 'Wool overshirt, S', status: 'Free drop-off at any store', s: 'jacket', bg: '#FFE1DC', ink: '#E8705F', track: false, chip: '2 days', chipBg: '#FF6159' },
+        { store: 'Reformation', name: 'Linen slip dress, 4', status: 'Label ready', s: 'dress', bg: '#FFE3CC', ink: '#E58A3E', track: false, chip: '9 days', chipBg: '#F1EDE8' },
+        { store: 'J.Crew', name: 'Chinos, 30', status: 'Refund on its way', s: 'tee', bg: '#EBE3FF', ink: '#8A6FD6', track: false, chip: 'Sent', chipBg: '#DCEFDF' }
+      ]
+    };
+    const tab = this.state.tab;
+    const OI = {'Pegasus 41, size 10': '/art/shoes-runner-sky.webp', 'Ribbed sweater, M': '/art/tops-turtleneck-butter.webp', 'Transport tote': '/art/acc-tote-tan.webp', 'Organic crew tee, M': '/art/tops-crew-tee-sky.webp', 'Lip oil, Rose': '/art/beauty-lip-oil-rose.webp', 'Wool overshirt, S': '/art/tops-overshirt-rose.webp', 'Linen slip dress, 4': '/art/dresses-slip-apricot.webp', 'Chinos, 30': '/art/bottoms-trouser-black.webp'};
+    return {
+      tabs: Object.keys(data).map(t => ({ label: t, n: data[t].length, fg: t === tab ? '#141210' : '#7A746D', line: t === tab ? '#141210' : 'transparent', pill: t === tab ? '#FFE1DC' : '#F1EDE8', pick: () => this.setState({ tab: t }) })),
+      rows: data[tab].map(o => ({ ...o, img: OI[o.name], d: S[o.s], d2: o.s === 'bag' ? H : '' }))
+    };
+  }
+}
+</script>
+</body>
+</html>

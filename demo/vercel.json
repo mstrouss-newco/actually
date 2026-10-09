@@ -1,0 +1,3 @@
+{
+  "rewrites": [{ "source": "/((?!art/|screens/|vendor/|app\\.js|favicon).*)", "destination": "/index.html" }]
+}
