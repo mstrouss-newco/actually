@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Art, Back } from "@/lib/ui";
-import { type Goal, loadProfile, saveProfile } from "@/lib/profile";
+import { type Goal, loadProfile, saveProfile, syncProfile } from "@/lib/profile";
 
 const OPTS: { k: Goal; t: string; s: string; img: string; tint: string }[] = [
   { k: "org", t: "Keep my orders organized", s: "Returns, deliveries and sizes, all in one place.", img: "acc-tote-tan", tint: "#FFF6F3" },
@@ -19,6 +19,7 @@ export default function GoalPage() {
     const next = { ...on, [k]: !on[k] };
     setOn(next);
     saveProfile({ goals: next });
+    syncProfile();
   };
 
   return (

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Back, Check } from "@/lib/ui";
-import { DOMAIN, cleanHandle, handleOk, loadProfile, saveProfile } from "@/lib/profile";
+import { DOMAIN, cleanHandle, handleOk, loadProfile, saveProfile, syncProfile } from "@/lib/profile";
+import { supabase } from "@/lib/supabase";
 
 const STEPS = [
   "Every order lands here, sorted by store.",
@@ -14,6 +15,8 @@ const STEPS = [
 export default function Claim() {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [free, setFree] = useState<Record<string, boolean>>({});
+  const [busy, setBusy] = useState(false);
   const input = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -21,11 +24,31 @@ export default function Claim() {
     input.current?.focus();
   }, []);
 
-  const ok = handleOk(name);
-  const go = () => {
-    if (!ok) return;
+  // Check the name a moment after she stops typing.
+  useEffect(() => {
+    if (!handleOk(name) || name in free) return;
+    const t = setTimeout(async () => {
+      const { data } = await supabase().rpc("handle_available", { name });
+      setFree(f => ({ ...f, [name]: data !== false }));
+    }, 300);
+    return () => clearTimeout(t);
+  }, [name, free]);
+
+  const ok = handleOk(name) && free[name] === true;
+  const taken = handleOk(name) && free[name] === false;
+  const go = async () => {
+    if (!ok || busy) return;
+    setBusy(true);
     saveProfile({ handle: name });
-    router.push("/goal");
+    const sb = supabase();
+    const { data } = await sb.auth.getSession();
+    if (data.session) {
+      const res = await syncProfile();
+      setBusy(false);
+      if (res === "taken") return setFree(f => ({ ...f, [name]: false }));
+      return router.push("/goal");
+    }
+    await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${location.origin}/auth?next=/goal` } });
   };
 
   return (
@@ -51,10 +74,11 @@ export default function Claim() {
         {ok && (
           <div key={name} className="ok" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 700, color: "#2F7A4F" }}>
             <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#DCEFDF", display: "flex", alignItems: "center", justifyContent: "center" }}><Check /></span>
-            {name}@ looks good
+            {name}@ is available
           </div>
         )}
-        {!ok && name.length > 0 && (
+        {taken && <div style={{ fontSize: 14, fontWeight: 700, color: "#C9402F" }}>{name}@ is taken. Try another.</div>}
+        {!handleOk(name) && name.length > 0 && (
           <div style={{ fontSize: 14, color: "var(--muted)" }}>Use 3 or more letters or numbers.</div>
         )}
       </div>
@@ -70,7 +94,7 @@ export default function Claim() {
 
       <div className="spacer" />
       <button className="btn" disabled={!ok} onClick={go}>
-        {ok ? `Get ${name}@${DOMAIN}` : "Pick a name first"}
+        {busy ? "One sec" : ok ? `Get ${name}@${DOMAIN}` : "Pick a name first"}
       </button>
       <div className="note">Sign in with Google next. No password.</div>
     </main>

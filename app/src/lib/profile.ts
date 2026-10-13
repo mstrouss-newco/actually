@@ -34,3 +34,15 @@ export function cleanHandle(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9.]/g, "").slice(0, 30);
 }
 export const handleOk = (s: string) => /^[a-z0-9](?:[a-z0-9.]{1,28})[a-z0-9]$/.test(s) && !s.includes("..");
+
+// Copy what's on this device to her account. "taken" means someone else has that name.
+export async function syncProfile(): Promise<"ok" | "taken" | "signed-out"> {
+  const { supabase } = await import("./supabase");
+  const sb = supabase();
+  const { data } = await sb.auth.getUser();
+  if (!data.user) return "signed-out";
+  const p = loadProfile();
+  const row = { id: data.user.id, goals: p.goals, updated_at: new Date().toISOString(), ...(p.handle ? { handle: p.handle } : {}) };
+  const { error } = await sb.from("profiles").upsert(row);
+  return error?.code === "23505" ? "taken" : "ok";
+}
