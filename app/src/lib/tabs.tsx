@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 const TABS = [
   { href: "/today", label: "Today", icon: <path d="M3 10.5 12 3l9 7.5V21H3z" /> },
@@ -40,6 +41,24 @@ export function Progress({ step, h = 4 }: { step: number; h?: number }) {
   return (
     <div style={{ display: "flex", gap: 4 }}>
       {[0, 1, 2, 3].map(i => <span key={i} style={{ flex: 1, height: h, borderRadius: h, background: i <= step ? "var(--ink)" : "#EAE6E1" }} />)}
+    </div>
+  );
+}
+
+// Product photo from the order email, or the store letter if there isn't one or it won't load.
+export function ItemImage({ src, store, w, h, radius = 18, size = 28 }: { src: string | null; store: string; w: number | string; h: number | string; radius?: number; size?: number }) {
+  const [bad, setBad] = useState(false);
+  if (!src || bad) {
+    return (
+      <div className="serif" style={{ width: w, height: h, borderRadius: radius, background: tint(store), flex: "none", display: "flex", alignItems: "center", justifyContent: "center", fontSize: size, fontStyle: "italic" }}>
+        {store.charAt(0).toUpperCase()}
+      </div>
+    );
+  }
+  return (
+    <div style={{ width: w, height: h, borderRadius: radius, background: "var(--tile)", flex: "none", overflow: "hidden" }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt="" referrerPolicy="no-referrer" onError={() => setBad(true)} style={{ display: "block", width: "100%", height: "100%", objectFit: "contain", padding: "8%", mixBlendMode: "multiply" }} />
     </div>
   );
 }
