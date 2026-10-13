@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { type Order, listIds, readOne } from "@/lib/gmail";
+import { ReadItems } from "@/lib/read-items";
 
 const TAGS: Record<string, [string, string]> = {
   order: ["Order", "#DCEBFF"], receipt: ["Receipt", "#DCEFDF"], shipping: ["Shipping", "#FFF0BF"],
@@ -111,6 +112,12 @@ export default function Import() {
 
       <div className="spacer" />
       {working && <p style={{ margin: "0 0 14px", fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>Keep this screen open for a minute while we read.</p>}
+      {stage === "done" && orders > 0 && (
+        <div style={{ margin: "0 0 16px" }}>
+          <div className="serif" style={{ fontSize: 20, marginBottom: 8 }}>Now finding what you bought</div>
+          <ReadItems auto />
+        </div>
+      )}
       {stage === "done" && orders === 0 && <p style={{ margin: "0 0 14px", fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>No orders found in this inbox. Try another email you shop with.</p>}
       <Link href="/reveal" className="btn" style={working ? { opacity: 0.4, pointerEvents: "none" } : undefined}>See my orders</Link>
     </main>
