@@ -84,7 +84,9 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
           <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--muted)" }}>Ordered</span><span style={{ fontWeight: 700 }}>{new Date(order.ordered_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span></div>
           {order.order_no && <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--muted)" }}>Order number</span><span style={{ fontWeight: 700 }}>{order.order_no}</span></div>}
           {order.amount != null && <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--muted)" }}>Total</span><span style={{ fontWeight: 700 }}>${order.amount.toFixed(2)}</span></div>}
-          <a href={gmailLink(first.gmail_id)} target="_blank" rel="noreferrer" style={{ marginTop: 6, display: "flex", alignItems: "center", justifyContent: "center", height: 46, borderRadius: 999, border: "1.5px solid var(--ink)", fontWeight: 700, textDecoration: "none" }}>Open the original email</a>
+          {first.gmail_id.startsWith("rs_")
+            ? <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center", marginTop: 6 }}>Came in through your shopping email. A copy is in your inbox.</div>
+            : <a href={gmailLink(first.gmail_id)} target="_blank" rel="noreferrer" style={{ marginTop: 6, display: "flex", alignItems: "center", justifyContent: "center", height: 46, borderRadius: 999, border: "1.5px solid var(--ink)", fontWeight: 700, textDecoration: "none" }}>Open the original email</a>}
         </div>
       </div>
       <TabBar />
