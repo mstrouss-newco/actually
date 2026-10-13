@@ -4,11 +4,32 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Art } from "@/lib/ui";
 import { type Goal, loadProfile, mainGoal } from "@/lib/profile";
+import { type Summary, loadSummary } from "@/lib/orders";
 
 type Card = { n: string; nBg: string; bg: string; t: string; s: string; sColor: string };
 type View = { big: string; line: React.ReactNode; size: number; cards: Card[]; next: [string, string]; alt: [string, string] };
 
-// Sample results until Gmail is connected. One version per goal.
+// Built from her real orders. The last card follows the goal she picked.
+function realView(s: Summary, goal: Goal): View {
+  const top = s.top.map(t => `${t.store} ${t.n}`).join(", ");
+  const last: Record<Goal, Card> = {
+    org: { n: String(s.onTheWay), nBg: "#fff", bg: "#FFF0BF", t: s.onTheWay === 1 ? "Order on the way" : "Orders on the way", s: "Shipped in the last 10 days, not delivered yet.", sColor: "#7A6A3A" },
+    earn: { n: `$${s.spent >= 1000 ? `${Math.round(s.spent / 100) / 10}k` : s.spent}`, nBg: "#fff", bg: "#FFF0BF", t: "Spent where we could find a total", s: "Cash back at these stores is coming next.", sColor: "#7A6A3A" },
+    share: { n: String(s.stores), nBg: "#fff", bg: "#EBE3FF", t: "Stores to show off", s: "Pick favorites to share with friends next.", sColor: "#5B4A8A" },
+  };
+  return {
+    big: String(s.orders), size: 32,
+    line: <>past orders from {s.stores} {s.stores === 1 ? "store" : "stores"}{s.since ? <>, since <em>{s.since}.</em></> : "."}</>,
+    cards: [
+      { n: String(s.recent), nBg: "#FF6159", bg: "#FFE1DC", t: "Ordered in the last 30 days", s: "Most of these can still be returned.", sColor: "#6B4A44" },
+      { n: String(s.top.length), nBg: "#fff", bg: "#DCEBFF", t: "Stores you buy from most", s: top || "Nothing yet.", sColor: "#3E5C8E" },
+      last[goal],
+    ],
+    next: ["/today", "Continue"], alt: ["/permission", "Add another email you shop with"],
+  };
+}
+
+// Example results, shown only when she has no orders saved yet.
 const VIEWS: Record<Goal, View> = {
   org: {
     big: "214", size: 32, line: <>past orders from 38 stores, since <em>2023.</em></>,
@@ -41,8 +62,12 @@ const VIEWS: Record<Goal, View> = {
 
 export default function Reveal() {
   const [goal, setGoal] = useState<Goal>("org");
-  useEffect(() => setGoal(mainGoal(loadProfile())), []);
-  const v = VIEWS[goal];
+  const [real, setReal] = useState<Summary | null>(null);
+  useEffect(() => {
+    setGoal(mainGoal(loadProfile()));
+    loadSummary().then(setReal);
+  }, []);
+  const v = real ? realView(real, goal) : VIEWS[goal];
 
   return (
     <main className="screen">
@@ -54,7 +79,8 @@ export default function Reveal() {
       <div className="serif" style={{ fontSize: 96, lineHeight: 0.9, letterSpacing: "-0.04em", marginTop: 22 }}>{v.big}</div>
       <h1 className="h1" style={{ fontSize: v.size, lineHeight: 1.06, marginTop: 10 }}>{v.line}</h1>
 
-      <div key={goal} style={{ marginTop: 22, display: "flex", flexDirection: "column", gap: 10 }}>
+      {!real && <div style={{ marginTop: 16, alignSelf: "flex-start", background: "var(--chip)", borderRadius: 999, padding: "4px 10px", fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>Example</div>}
+      <div key={`${goal}${real ? 1 : 0}`} style={{ marginTop: 22, display: "flex", flexDirection: "column", gap: 10 }}>
         {v.cards.map(c => (
           <div key={c.t} className="card" style={{ background: c.bg, borderRadius: 24, padding: "14px 16px", display: "flex", gap: 14, alignItems: "center" }}>
             <div style={{ minWidth: 42, height: 42, padding: "0 6px", borderRadius: 999, background: c.nBg, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: c.n.length > 2 ? 15 : 18, flex: "none" }}>{c.n}</div>

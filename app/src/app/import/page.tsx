@@ -1,55 +1,118 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Art } from "@/lib/ui";
+import { supabase } from "@/lib/supabase";
+import { type Order, listIds, readOne } from "@/lib/gmail";
 
-// Sample results until Gmail is connected.
-const TOTAL = 214;
-const FOUND = [
-  { img: "shoes-runner-sky", at: 12, t: "Size 10 at Nike", tag: "Size", bg: "#DCEBFF" },
-  { img: "tops-overshirt-rose", at: 45, t: "Zara overshirt, return still open", tag: "Return", bg: "#FF6159" },
-  { img: "shoes-sneaker-black-gum", at: 90, t: "Size 9.5 at Adidas", tag: "Size", bg: "#DCEBFF" },
-  { img: "tops-turtleneck-butter", at: 140, t: "Aritzia sweater on the way", tag: "Shipping", bg: "#FFF0BF" },
-  { img: "beauty-lip-oil-rose", at: 190, t: "Sephora points expiring", tag: "Points", bg: "#EBE3FF" },
-];
+const TAGS: Record<string, [string, string]> = {
+  order: ["Order", "#DCEBFF"], receipt: ["Receipt", "#DCEFDF"], shipping: ["Shipping", "#FFF0BF"],
+  delivered: ["Delivered", "#DCEFDF"], return: ["Return", "#FF6159"], refund: ["Refund", "#EBE3FF"],
+};
+
+type Stage = "start" | "scan" | "done" | "reconnect" | "error";
 
 export default function Import() {
-  const [n, setN] = useState(0);
+  const [stage, setStage] = useState<Stage>("start");
+  const [orders, setOrders] = useState(0);
+  const [read, setRead] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [latest, setLatest] = useState<Order[]>([]);
+  const ran = useRef(false);
+
   useEffect(() => {
-    const t = setInterval(() => setN(v => (v >= TOTAL ? (clearInterval(t), v) : Math.min(TOTAL, v + 3))), 70);
-    return () => clearInterval(t);
+    if (ran.current) return;
+    ran.current = true;
+    (async () => {
+      const sb = supabase();
+      const { data } = await sb.auth.getSession();
+      const token = data.session?.provider_token;
+      if (!token) return setStage("reconnect");
+      setStage("scan");
+      try {
+        const ids = await listIds(token);
+        setTotal(ids.length);
+        const batch: Order[] = [];
+        const keys = new Set<string>();
+        const save = async () => {
+          if (!batch.length) return;
+          const rows = batch.splice(0);
+          await sb.from("orders").upsert(rows, { onConflict: "user_id,gmail_id", ignoreDuplicates: true });
+        };
+        let next = 0;
+        const worker = async () => {
+          while (next < ids.length) {
+            const id = ids[next++];
+            const o = await readOne(id, token).catch(e => { if (e.message === "expired") throw e; return null; });
+            setRead(r => r + 1);
+            if (!o) continue;
+            batch.push(o);
+            const key = o.order_no ? `${o.store}|${o.order_no}` : o.gmail_id;
+            if ((o.kind === "order" || o.kind === "receipt" || o.order_no) && !keys.has(key)) {
+              keys.add(key);
+              setOrders(keys.size);
+              setLatest(l => [o, ...l.filter(x => x.store !== o.store)].slice(0, 4));
+            }
+            if (batch.length >= 50) await save();
+          }
+        };
+        await Promise.all(Array.from({ length: 8 }, worker));
+        await save();
+        setStage("done");
+      } catch (e) {
+        setStage((e as Error).message === "expired" ? "reconnect" : "error");
+      }
+    })();
   }, []);
 
-  const working = n < TOTAL;
-  const shown = FOUND.filter(f => n >= f.at).reverse().slice(0, 4);
+  const working = stage === "scan" || stage === "start";
+  const pct = total ? Math.round((read / total) * 100) : 0;
+
+  if (stage === "reconnect" || stage === "error") {
+    return (
+      <main className="screen">
+        <h1 className="h1">{stage === "error" ? <>Something went <em>wrong.</em></> : <>Let&apos;s connect <em>Gmail.</em></>}</h1>
+        <p className="lead">{stage === "error" ? "We couldn't finish reading your inbox. Try again in a minute." : "We need a quick okay from Google to find your past orders."}</p>
+        <div className="spacer" />
+        <Link href="/permission" className="btn">Connect Gmail</Link>
+        <Link href="/today" className="btn btn-ghost">Not now</Link>
+      </main>
+    );
+  }
 
   return (
     <main className="screen" style={{ overflow: "hidden" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>
         {working && <svg className="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6159" strokeWidth="3" strokeLinecap="round"><path d="M12 3a9 9 0 1 1-9 9" /></svg>}
-        {working ? "Finding your past orders" : "All done"}
+        {working ? (total ? `Reading ${read} of ${total} shopping emails` : "Finding your shopping emails") : "All done"}
       </div>
-      <div className="serif" style={{ fontSize: 120, lineHeight: 0.9, letterSpacing: "-0.04em", marginTop: 18 }}>{n}</div>
+      <div className="serif" style={{ fontSize: 120, lineHeight: 0.9, letterSpacing: "-0.04em", marginTop: 18 }}>{orders}</div>
       <div style={{ fontSize: 17, marginTop: 6 }}>past orders found</div>
       <div style={{ marginTop: 18, height: 6, borderRadius: 3, background: "#F1EDE8", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${Math.round((n / TOTAL) * 100)}%`, background: "var(--ink)", borderRadius: 3, transition: "width .2s" }} />
+        <div style={{ height: "100%", width: `${stage === "done" ? 100 : pct}%`, background: "var(--ink)", borderRadius: 3, transition: "width .2s" }} />
       </div>
 
-      <div className="serif" style={{ marginTop: 24, fontSize: 22 }}>Just found</div>
+      {latest.length > 0 && <div className="serif" style={{ marginTop: 24, fontSize: 22 }}>Just found</div>}
       <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
-        {shown.map(f => (
-          <div key={f.img} className="found" style={{ display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", borderRadius: 20, padding: "10px 14px 10px 10px" }}>
-            <Art src={f.img} w={42} h={52} />
-            <div style={{ flex: 1, fontWeight: 700, fontSize: 14 }}>{f.t}</div>
-            <div style={{ background: f.bg, borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 700 }}>{f.tag}</div>
-          </div>
-        ))}
+        {latest.map(o => {
+          const [tag, bg] = TAGS[o.kind] ?? TAGS.order;
+          return (
+            <div key={o.gmail_id} className="found" style={{ display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", borderRadius: 20, padding: "10px 14px 10px 10px" }}>
+              <div className="art serif" style={{ width: 42, height: 52, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontStyle: "italic" }}>{o.store.charAt(0)}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>{o.store}</div>
+                <div style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{o.subject}</div>
+              </div>
+              <div style={{ background: bg, borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 700 }}>{tag}</div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="spacer" />
-      {working && <p style={{ margin: "0 0 14px", fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>This keeps going if you leave. We&apos;ll tell you when it&apos;s done.</p>}
-      <Link href="/reveal" className="btn">See my orders</Link>
+      {working && <p style={{ margin: "0 0 14px", fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>Keep this screen open for a minute while we read.</p>}
+      {stage === "done" && orders === 0 && <p style={{ margin: "0 0 14px", fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>No orders found in this inbox. Try another email you shop with.</p>}
+      <Link href="/reveal" className="btn" style={working ? { opacity: 0.4, pointerEvents: "none" } : undefined}>See my orders</Link>
     </main>
   );
 }
