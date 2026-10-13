@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { type OrderGroup, isArriving, loadOrders, orderTitle, returnDaysLeft, fmtDate, isReturn } from "@/lib/orders";
 import { loadProfile } from "@/lib/profile";
+import { type Reward, daysUntil, fmtDay, loadRewards, money } from "@/lib/earn";
 import { Progress, StoreTile, TabBar } from "@/lib/tabs";
 
 const STEP = { placed: 0, shipped: 1, delivered: 3, returning: 3, refunded: 3 };
@@ -11,10 +12,15 @@ const STEP = { placed: 0, shipped: 1, delivered: 3, returning: 3, refunded: 3 };
 export default function Today() {
   const [orders, setOrders] = useState<OrderGroup[] | null | undefined>(undefined);
   const [name, setName] = useState("");
+  const [rewards, setRewards] = useState<Reward[]>([]);
   useEffect(() => {
     setName(loadProfile().handle);
-    loadOrders().then(setOrders);
+    loadOrders().then(list => {
+      setOrders(list);
+      if (list) loadRewards().then(setRewards);
+    });
   }, []);
+  const expiring = rewards.filter(r => r.expires_on && daysUntil(r.expires_on) <= 30);
 
   const arriving = (orders ?? []).filter(isArriving);
   const returnable = (orders ?? []).filter(g => returnDaysLeft(g) != null).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!);
@@ -65,6 +71,19 @@ export default function Today() {
               <div className="serif" style={{ fontWeight: 600, fontSize: 22, lineHeight: 1 }}>{left}</div>
               <div style={{ fontSize: 10, fontWeight: 700 }}>{left === 1 ? "day" : "days"}</div>
             </div>
+          </Link>
+        )}
+
+        {expiring.length > 0 && (
+          <Link href="/earn/points" style={{ margin: "14px 16px 0", background: "#FFF0BF", borderRadius: 24, padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, textDecoration: "none" }}>
+            <div style={{ flex: 1 }}>
+              <div className="kicker" style={{ color: "#8A6D1E" }}>Expiring soon</div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginTop: 4 }}>
+                {expiring[0].value != null ? `${money(expiring[0].value)} in ` : ""}{expiring[0].store} {expiring[0].kind === "points" ? "points" : "credit"}
+              </div>
+              <div style={{ fontSize: 13, color: "#7A6A3A" }}>Gone after {fmtDay(expiring[0].expires_on!)}{expiring.length > 1 ? `, plus ${expiring.length - 1} more` : ""}</div>
+            </div>
+            <span style={{ height: 40, padding: "0 14px", borderRadius: 999, border: "1.5px solid var(--ink)", display: "flex", alignItems: "center", fontSize: 13, fontWeight: 700 }}>See</span>
           </Link>
         )}
 

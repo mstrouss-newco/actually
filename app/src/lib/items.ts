@@ -4,10 +4,11 @@ import { readFullText } from "./gmail";
 export type Item = {
   id: string; store: string; name: string; brand: string | null; size: string | null; color: string | null;
   price: number | null; image_url: string | null; category: string; ordered_at: string; pick: "share" | "sell" | "private" | null;
+  resale_low?: number | null; resale_high?: number | null; resale_note?: string | null;
 };
 
 export async function loadItems(): Promise<Item[]> {
-  const { data } = await supabase().from("items").select("id, store, name, brand, size, color, price, image_url, category, ordered_at, pick").order("ordered_at", { ascending: false }).limit(3000);
+  const { data } = await supabase().from("items").select("id, store, name, brand, size, color, price, image_url, category, ordered_at, pick, resale_low, resale_high, resale_note").order("ordered_at", { ascending: false }).limit(3000);
   return (data ?? []) as Item[];
 }
 

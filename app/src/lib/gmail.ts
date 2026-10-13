@@ -71,14 +71,14 @@ export function parse(id: string, from: string, subject: string, snippet: string
   };
 }
 
-function rootDomain(d: string) {
+export function rootDomain(d: string) {
   const parts = d.split(".");
   const two = /\.(co|com)\.[a-z]{2}$/.test(d) ? 3 : 2;
   return parts.slice(-two).join(".");
 }
 
 // "Nike <nike@official.nike.com>" -> "Nike". Falls back to the web address.
-function storeName(from: string, domain: string) {
+export function storeName(from: string, domain: string) {
   let name = from.replace(/<[^>]*>/, "").replace(/["']/g, "").trim();
   name = name.replace(/\b(customer (service|care)|orders?|order updates|shipping|no-?reply|team|store|shop|online|support|notifications?)\b/gi, "").replace(/[|·,:-]+\s*$/, "").replace(/\s{2,}/g, " ").trim();
   if (!name || name.includes("@") || name.length > 40) {
@@ -126,4 +126,34 @@ export function emailToText(html: string | null, plain: string | null) {
 export async function readFullText(id: string, token: string) {
   const m = await get<{ payload?: Part }>(`${API}/${id}?format=full`, token);
   return emailToText(findPart(m.payload, "text/html"), findPart(m.payload, "text/plain"));
+}
+
+// ---------- rewards emails (points, store credit, gift cards) ----------
+
+const REWARDS_QUERY = '(subject:(points OR rewards OR "store credit" OR "gift card" OR balance OR expiring OR expire) OR "points balance" OR "reward balance") newer_than:1y';
+const REWARD_SUBJECT = /point|reward|credit|gift card|balance|expir|certificate/i;
+
+export type RewardEmail = { gmail_id: string; store: string; store_domain: string; subject: string; sent_at: string };
+
+// Finds rewards emails from stores. Skips banks, apps and personal mail.
+export async function listRewardEmails(token: string, skip: Set<string>): Promise<RewardEmail[]> {
+  const q = new URLSearchParams({ q: REWARDS_QUERY, maxResults: "300" });
+  const res = await get<{ messages?: { id: string }[] }>(`${API}?${q}`, token);
+  const ids = (res.messages ?? []).map(m => m.id).filter(id => !skip.has(id));
+  const out: RewardEmail[] = [];
+  let next = 0;
+  const worker = async () => {
+    while (next < ids.length) {
+      const id = ids[next++];
+      const m = await get<Msg>(`${API}/${id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject`, token).catch(() => null);
+      if (!m) continue;
+      const h = (n: string) => m.payload?.headers?.find(x => x.name.toLowerCase() === n.toLowerCase())?.value ?? "";
+      const from = h("From"), subject = h("Subject");
+      const domain = ((from.match(/<([^>]+)>/)?.[1] ?? from).trim().toLowerCase().split("@")[1]) ?? "";
+      if (!domain || SKIP.test(domain) || FREE_MAIL.test(domain) || !REWARD_SUBJECT.test(subject)) continue;
+      out.push({ gmail_id: id, store: storeName(from, domain), store_domain: rootDomain(domain), subject, sent_at: new Date(Number(m.internalDate)).toISOString() });
+    }
+  };
+  await Promise.all(Array.from({ length: 8 }, worker));
+  return out;
 }

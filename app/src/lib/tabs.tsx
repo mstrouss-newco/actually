@@ -8,6 +8,7 @@ const TABS = [
   { href: "/today", label: "Today", icon: <path d="M3 10.5 12 3l9 7.5V21H3z" /> },
   { href: "/orders", label: "Orders", icon: <><path d="M3 7h18v13H3z" /><path d="M3 7 6 3h12l3 4" /></> },
   { href: "/closet", label: "Closet", icon: <><path d="M12 7a2 2 0 1 1 2 2c-1.2.4-2 1-2 2v1" /><path d="M2.5 19 12 12l9.5 7z" /></> },
+  { href: "/earn", label: "Earn", icon: <><rect x="3" y="8" width="18" height="13" rx="2" /><path d="M12 8v13M3 12.5h18" /><path d="M12 8C10 4 6 4 6 6.5S12 8 12 8s6-1 6-1.5S14 4 12 8z" /></> },
 ];
 
 export function TabBar() {
