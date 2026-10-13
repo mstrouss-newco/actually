@@ -27,7 +27,8 @@ export function mainGoal(p: Profile): Goal {
   return p.goals.earn ? "earn" : p.goals.share ? "share" : "org";
 }
 
-export const DOMAIN = "actually.shop";
+// Test address domain until the real one is bought.
+export const DOMAIN = process.env.NEXT_PUBLIC_SHOPPING_DOMAIN || "shop.myocto.co";
 
 // Lowercase letters, numbers and dots. 3 to 30 long.
 export function cleanHandle(s: string) {
