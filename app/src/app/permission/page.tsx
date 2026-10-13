@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Back } from "@/lib/ui";
+import { ConnectGmail } from "./connect";
 
 export default function Permission() {
   return (
@@ -22,8 +23,7 @@ export default function Permission() {
       <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 14, lineHeight: 1.45 }}>Disconnect anytime. Your past orders stay, the connection goes.</div>
 
       <div className="spacer" />
-      {/* Gmail sign-in plugs in here once the Google app is set up. */}
-      <Link href="/import" className="btn">Continue with Gmail</Link>
+      <ConnectGmail />
       <Link href="/today" className="btn btn-ghost" style={{ fontSize: 14, height: 44 }}>Not now</Link>
     </main>
   );
