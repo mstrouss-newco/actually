@@ -1,0 +1,98 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { DOMAIN } from "@/lib/profile";
+import { clearData, deleteAccount, disconnectGmail, signOut } from "@/lib/account";
+import { TabBar } from "@/lib/tabs";
+
+type Ask = "gmail" | "data" | "account" | null;
+const COPY: Record<Exclude<Ask, null>, [string, string, string]> = {
+  gmail: ["Disconnect Gmail?", "Actually stops reading your email. What's already here stays. You can connect again any time.", "Disconnect"],
+  data: ["Delete your orders and closet?", "Orders, closet, points and hidden stores are deleted. Your account and shopping email stay, so you can bring everything in again.", "Delete my data"],
+  account: ["Delete your account?", "Your account, shopping email name and everything in Actually are deleted for good. Your Gmail isn't touched.", "Delete everything"],
+};
+
+export default function Settings() {
+  const router = useRouter();
+  const [me, setMe] = useState<{ email: string; handle: string | null } | null>(null);
+  const [ask, setAsk] = useState<Ask>(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      const sb = supabase();
+      const { data } = await sb.auth.getSession();
+      if (!data.session) return router.replace("/login");
+      const { data: p } = await sb.from("profiles").select("handle").eq("id", data.session.user.id).maybeSingle();
+      setMe({ email: data.session.user.email ?? "", handle: (p?.handle as string | null) ?? null });
+    })();
+  }, [router]);
+
+  const run = async () => {
+    if (!ask) return;
+    setBusy(true);
+    if (ask === "gmail") { await disconnectGmail(); setNote("Gmail disconnected."); }
+    if (ask === "data") setNote((await clearData()) ? "Your orders and closet are deleted." : "That didn't work. Try again in a minute.");
+    if (ask === "account") {
+      if (await deleteAccount()) return router.replace("/");
+      setNote("That didn't work. Try again in a minute.");
+    }
+    setBusy(false);
+    setAsk(null);
+  };
+
+  const row = (label: string, sub: string, onClick: () => void, red = false) => (
+    <button onClick={onClick} style={{ display: "block", width: "100%", textAlign: "left", border: "1.5px solid var(--line)", background: "#fff", borderRadius: 20, padding: "14px 16px", font: "inherit", color: red ? "#C9402F" : "var(--ink)", cursor: "pointer" }}>
+      <div style={{ fontWeight: 700, fontSize: 15 }}>{label}</div>
+      <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2, lineHeight: 1.4 }}>{sub}</div>
+    </button>
+  );
+  const head = (t: string) => <div className="kicker" style={{ padding: "22px 20px 8px" }}>{t}</div>;
+
+  return (
+    <main className="tabscreen">
+      <div className="scroll">
+        <div style={{ padding: "0 20px" }}>
+          <Link href="/today" className="back">← Today</Link>
+          <h1 className="serif" style={{ fontWeight: 400, fontSize: 36, lineHeight: 1, letterSpacing: "-0.02em", margin: "18px 0 0" }}>Settings</h1>
+          {me && <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 8 }}>Signed in as {me.email}{me.handle ? <><br />Shopping email: {me.handle}@{DOMAIN}</> : null}</div>}
+        </div>
+
+        {note && <div style={{ margin: "16px 16px 0", background: "#DCEFDF", borderRadius: 16, padding: "10px 14px", fontSize: 14 }}>{note}</div>}
+
+        {ask ? (
+          <div style={{ margin: "18px 16px 0", background: "#FFE1DC", borderRadius: 22, padding: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>{COPY[ask][0]}</div>
+            <div style={{ fontSize: 13, color: "#6B4A44", marginTop: 4, lineHeight: 1.4 }}>{COPY[ask][1]}</div>
+            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <button className="btn btn-line" disabled={busy} style={{ marginTop: 0, height: 44, fontSize: 14 }} onClick={() => setAsk(null)}>Cancel</button>
+              <button className="btn" disabled={busy} style={{ height: 44, fontSize: 14, background: "#C9402F" }} onClick={run}>{busy ? "Working…" : COPY[ask][2]}</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {head("Gmail")}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+              {row("Look for new orders", "Checks your Gmail for anything new.", () => router.push("/import"))}
+              {row("Disconnect Gmail", "Stop Actually from reading your email.", () => setAsk("gmail"))}
+            </div>
+            {head("Your data")}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+              {row("Delete my orders and closet", "Start fresh. Keeps your account and shopping email.", () => setAsk("data"), true)}
+            </div>
+            {head("Account")}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+              {row("Sign out", "On this device.", async () => { await signOut(); router.replace("/"); })}
+              {row("Delete my account", "Deletes your account and everything in Actually.", () => setAsk("account"), true)}
+            </div>
+          </>
+        )}
+      </div>
+      <TabBar />
+    </main>
+  );
+}
