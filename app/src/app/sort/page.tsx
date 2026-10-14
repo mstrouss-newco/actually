@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { type Item, loadItems, setPick, whoFor } from "@/lib/items";
+import { type Item, loadItems, setPick, toSort } from "@/lib/items";
 import { ItemImage, tint } from "@/lib/tabs";
 
 type Pick = NonNullable<Item["pick"]>;
@@ -16,7 +16,7 @@ export default function Sort() {
   const [d, setD] = useState({ x: 0, y: 0, drag: false, fly: false });
   const start = useRef<{ x: number; y: number } | null>(null);
 
-  useEffect(() => { loadItems().then(all => setDeck(all.filter(x => !x.pick && x.image_url && whoFor(x, all) === "me"))); }, []);
+  useEffect(() => { loadItems().then(all => setDeck(toSort(all))); }, []);
 
   const card = deck?.[i];
   const total = deck?.length ?? 0;

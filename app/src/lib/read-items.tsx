@@ -28,7 +28,7 @@ export function Job({ run, label, working, noun, auto = false, onDone }: {
   useEffect(() => { if (auto) go(); });
 
   if (state === "expired") {
-    return <div style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>Google asks us to check in every hour. <button onClick={() => signIn(location.pathname, true)} style={{ border: 0, background: "none", padding: 0, font: "inherit", fontWeight: 700, color: "var(--ink)", textDecoration: "underline", cursor: "pointer" }}>Reconnect Gmail</button></div>;
+    return <div style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>Gmail needs a quick okay from Google. <button onClick={() => signIn(location.pathname, true)} style={{ border: 0, background: "none", padding: 0, font: "inherit", fontWeight: 700, color: "var(--ink)", textDecoration: "underline", cursor: "pointer" }}>Reconnect Gmail</button></div>;
   }
   if (state === "not-ready") return <div style={{ fontSize: 14, color: "var(--muted)" }}>This isn&apos;t switched on yet. Check back soon.</div>;
   if (state === "running" || state === "done") {

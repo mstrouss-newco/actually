@@ -13,6 +13,7 @@ export async function disconnectGmail() {
       method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
     }).catch(() => null);
   }
+  await supabase().functions.invoke("gmail-token", { body: { forget: true } }).catch(() => null);
   try { localStorage.removeItem("actually-gmail"); } catch {}
 }
 

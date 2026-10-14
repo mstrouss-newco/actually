@@ -17,8 +17,10 @@ export default function Earn() {
   const soon = (rewards ?? []).find(r => r.expires_on && daysUntil(r.expires_on) <= 30);
   const priced = (items ?? []).filter(i => i.resale_high != null);
   const unpriced = (items ?? []).length - priced.length;
-  const [lo, hi] = worth(priced);
-  const top = [...priced].sort((a, b) => (b.resale_high ?? 0) - (a.resale_high ?? 0))[0];
+  // Pieces worth under $10 (socks, cases) aren't worth listing, so they don't count.
+  const valued = priced.filter(i => (i.resale_high ?? 0) >= 10);
+  const [lo, hi] = worth(valued);
+  const top = [...valued].sort((a, b) => (b.resale_high ?? 0) - (a.resale_high ?? 0))[0];
 
   return (
     <main className="tabscreen">
@@ -54,7 +56,7 @@ export default function Earn() {
             <Link href="/earn/worth" style={{ textDecoration: "none", display: "block" }}>
               <div className="serif" style={{ fontSize: 44, lineHeight: 1, marginTop: 8 }}>{money(lo)}–{money(hi)}</div>
               <div style={{ fontSize: 14, color: "#5B4A8A", marginTop: 6, lineHeight: 1.4 }}>
-                Estimated resale value of {priced.length} pieces.{top && top.resale_high ? ` Your ${top.brand || top.store} ${top.name} could sell for up to ${money(top.resale_high)}.` : ""}
+                Estimated resale value of {valued.length} pieces.{top && top.resale_high ? ` Your ${top.brand || top.store} ${top.name} could sell for up to ${money(top.resale_high)}.` : ""}
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, marginTop: 12 }}>See what sells →</div>
             </Link>
