@@ -19,8 +19,10 @@ async function get<T>(url: string, token: string): Promise<T> {
     const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     if (r.ok) return r.json();
     if (r.status === 401) throw new Error("expired");
-    if (r.status === 403) throw new Error("no-access");
-    if ((r.status === 429 || r.status >= 500) && tries < 4) { await new Promise(res => setTimeout(res, 500 * 2 ** tries)); continue; }
+    // Gmail answers "slow down" with 403 too. Only a missing permission means no access.
+    const slowDown = r.status === 429 || r.status >= 500 || (r.status === 403 && /rateLimit|quota/i.test(await r.text()));
+    if (r.status === 403 && !slowDown) throw new Error("no-access");
+    if (slowDown && tries < 6) { await new Promise(res => setTimeout(res, 1000 * 2 ** tries + Math.random() * 500)); continue; }
     throw new Error(`gmail ${r.status}`);
   }
 }
@@ -155,6 +157,6 @@ export async function listRewardEmails(token: string, skip: Set<string>): Promis
       out.push({ gmail_id: id, store: storeName(from, domain), store_domain: rootDomain(domain), subject, sent_at: new Date(Number(m.internalDate)).toISOString() });
     }
   };
-  await Promise.all(Array.from({ length: 8 }, worker));
+  await Promise.all(Array.from({ length: 4 }, worker));
   return out;
 }
