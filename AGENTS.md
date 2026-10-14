@@ -131,8 +131,6 @@ SQL to `supabase/migrations/<version>_<name>.sql`. Run the security advisor afte
 
 ## Known gaps and next steps
 
-- `inbound-email` in this repo has a newer AI prompt (pet supplies, Autoship) than the
-  deployed version, and lacks the `SENSITIVE_BRAND` name check. Deploy it next.
 - Import only runs while the app is open. True background sync needs a server job with
   `GOOGLE_CLIENT_SECRET` and stored refresh tokens.
 - Cash back is "coming soon". Partner research done (Wildfire recommended); on hold.
