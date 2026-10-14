@@ -19,8 +19,10 @@ export default function Claim() {
   const [busy, setBusy] = useState(false);
   const input = useRef<HTMLInputElement>(null);
 
+  const [wasTaken, setWasTaken] = useState(false);
   useEffect(() => {
     setName(loadProfile().handle);
+    setWasTaken(location.search.includes("taken"));
     input.current?.focus();
   }, []);
 
@@ -40,15 +42,13 @@ export default function Claim() {
     if (!ok || busy) return;
     setBusy(true);
     saveProfile({ handle: name });
-    const sb = supabase();
-    const { data } = await sb.auth.getSession();
+    const { data } = await supabase().auth.getSession();
     if (data.session) {
       const res = await syncProfile();
       setBusy(false);
       if (res === "taken") return setFree(f => ({ ...f, [name]: false }));
-      return router.push("/goal");
     }
-    await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${location.origin}/auth?next=/goal` } });
+    router.push("/goal");
   };
 
   return (
@@ -70,6 +70,7 @@ export default function Claim() {
         </span>
       </label>
 
+      {wasTaken && !name && <div style={{ marginTop: 12, fontSize: 14, fontWeight: 700, color: "#C9402F" }}>Someone grabbed that name first. Pick another.</div>}
       <div style={{ minHeight: 22, marginTop: 12 }}>
         {ok && (
           <div key={name} className="ok" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 700, color: "#2F7A4F" }}>
@@ -96,7 +97,7 @@ export default function Claim() {
       <button className="btn" disabled={!ok} onClick={go}>
         {busy ? "One sec" : ok ? `Get ${name}@${DOMAIN}` : "Pick a name first"}
       </button>
-      <div className="note">Sign in with Google next. No password.</div>
+      <div className="note">You&apos;ll sign in with Google once, a couple of steps from now.</div>
     </main>
   );
 }

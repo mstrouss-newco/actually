@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { Back } from "@/lib/ui";
-import { ConnectGmail } from "./connect";
+import { ConnectGmail, SkipGmail } from "./connect";
 
 export default function Permission() {
   return (
@@ -24,7 +23,7 @@ export default function Permission() {
 
       <div className="spacer" />
       <ConnectGmail />
-      <Link href="/today" className="btn btn-ghost" style={{ fontSize: 14, height: 44 }}>Not now</Link>
+      <SkipGmail />
     </main>
   );
 }
