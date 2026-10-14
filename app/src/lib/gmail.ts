@@ -19,6 +19,7 @@ async function get<T>(url: string, token: string): Promise<T> {
     const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     if (r.ok) return r.json();
     if (r.status === 401) throw new Error("expired");
+    if (r.status === 403) throw new Error("no-access");
     if ((r.status === 429 || r.status >= 500) && tries < 4) { await new Promise(res => setTimeout(res, 500 * 2 ** tries)); continue; }
     throw new Error(`gmail ${r.status}`);
   }

@@ -11,7 +11,7 @@ const TAGS: Record<string, [string, string]> = {
   delivered: ["Delivered", "#DCEFDF"], return: ["Return", "#FF6159"], refund: ["Refund", "#EBE3FF"],
 };
 
-type Stage = "start" | "scan" | "done" | "reconnect" | "error";
+type Stage = "start" | "scan" | "done" | "reconnect" | "no-access" | "error";
 
 export default function Import() {
   const [stage, setStage] = useState<Stage>("start");
@@ -44,7 +44,7 @@ export default function Import() {
         const worker = async () => {
           while (next < ids.length) {
             const id = ids[next++];
-            const o = await readOne(id, token).catch(e => { if (e.message === "expired") throw e; return null; });
+            const o = await readOne(id, token).catch(e => { if (e.message === "expired" || e.message === "no-access") throw e; return null; });
             setRead(r => r + 1);
             if (!o) continue;
             batch.push(o);
@@ -61,7 +61,8 @@ export default function Import() {
         await save();
         setStage("done");
       } catch (e) {
-        setStage((e as Error).message === "expired" ? "reconnect" : "error");
+        const m = (e as Error).message;
+        setStage(m === "expired" ? "reconnect" : m === "no-access" ? "no-access" : "error");
       }
     })();
   }, []);
@@ -69,11 +70,13 @@ export default function Import() {
   const working = stage === "scan" || stage === "start";
   const pct = total ? Math.round((read / total) * 100) : 0;
 
-  if (stage === "reconnect" || stage === "error") {
+  if (stage === "reconnect" || stage === "error" || stage === "no-access") {
     return (
       <main className="screen">
-        <h1 className="h1">{stage === "error" ? <>Something went <em>wrong.</em></> : <>Let&apos;s connect <em>Gmail.</em></>}</h1>
-        <p className="lead">{stage === "error" ? "We couldn't finish reading your inbox. Try again in a minute." : "We need a quick okay from Google to find your past orders."}</p>
+        <h1 className="h1">{stage === "error" ? <>Something went <em>wrong.</em></> : stage === "no-access" ? <>One box to <em>tick.</em></> : <>Let&apos;s connect <em>Gmail.</em></>}</h1>
+        <p className="lead">{stage === "error" ? "We couldn't finish reading your inbox. Try again in a minute."
+          : stage === "no-access" ? "You're signed in, but Google didn't give us permission to read your email. Try again and tick the box that says Actually can read your email."
+          : "We need a quick okay from Google to find your past orders."}</p>
         <div className="spacer" />
         <Link href="/permission" className="btn">Connect Gmail</Link>
         <Link href="/today" className="btn btn-ghost">Not now</Link>

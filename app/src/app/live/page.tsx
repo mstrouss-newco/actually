@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check } from "@/lib/ui";
 import { DOMAIN, loadProfile } from "@/lib/profile";
+import { signIn } from "@/lib/signin";
 
 const ROWS: [string, boolean][] = [
   ["New orders", true],
@@ -61,7 +62,7 @@ export default function Live() {
 
       <div className="spacer" />
       <Link href="/permission" className="btn">Connect my inbox</Link>
-      <Link href="/today" className="btn btn-ghost">Just use my shopping email for now</Link>
+      <button onClick={() => signIn("/today")} className="btn btn-ghost">Just use my shopping email for now</button>
     </main>
   );
 }

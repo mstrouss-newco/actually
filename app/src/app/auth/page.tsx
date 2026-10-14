@@ -29,6 +29,12 @@ export default function Auth() {
         router.replace("/claim?taken=1");
         return;
       }
+      const { data: me } = await sb.from("profiles").select("handle").eq("id", data.session.user.id).maybeSingle();
+      if (!me?.handle) {
+        router.replace("/claim");
+        return;
+      }
+      saveProfile({ handle: me.handle });
       router.replace(next);
     })();
   }, [router]);
