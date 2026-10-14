@@ -12,7 +12,7 @@ const TABS: [Tab, string][] = [["most", "Worth the most"], ["sell", "Marked to s
 export default function Worth() {
   const [items, setItems] = useState<Item[] | null>(null);
   const [tab, setTab] = useState<Tab>("most");
-  useEffect(() => { loadItems().then(all => setItems(all.filter(i => i.resale_high != null && i.resale_high > 0))); }, []);
+  useEffect(() => { loadItems().then(all => setItems(all.filter(i => i.resale_high != null && i.resale_high >= 10))); }, []);
 
   const list = items ?? [];
   const [lo, hi] = worth(list);

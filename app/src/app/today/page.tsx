@@ -25,7 +25,7 @@ export default function Today() {
   const expiring = rewards.filter(r => r.expires_on && daysUntil(r.expires_on) <= 30);
 
   const arriving = (orders ?? []).filter(isArriving);
-  const returnable = (orders ?? []).filter(g => returnDaysLeft(g) != null).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!);
+  const returnable = (orders ?? []).filter(g => g.wear && returnDaysLeft(g) != null).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!);
   const returns = (orders ?? []).filter(g => g.stage === "returning");
   const hero = returnable[0];
   const left = hero ? returnDaysLeft(hero)! : 0;

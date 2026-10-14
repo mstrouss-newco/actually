@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CATS, type Item, type Who, hideItem, loadItems, needsAsk, setPick, setWho, sizesByBrand, whoFor } from "@/lib/items";
+import { CATS, type Item, type Who, hideItem, loadItems, needsAsk, setPick, setWho, sizesByBrand, toSort, whoFor } from "@/lib/items";
 import { fmtDate } from "@/lib/orders";
 import { ReadItems } from "@/lib/read-items";
 import { ItemImage, TabBar } from "@/lib/tabs";
@@ -35,7 +35,7 @@ export default function Closet() {
     setSel(null);
     setItems(list => list?.filter(x => x.id !== i.id) ?? null);
     setUndo(i);
-    setTimeout(() => setUndo(u => (u?.id === i.id ? null : u)), 5000);
+    setTimeout(() => setUndo(u => (u?.id === i.id ? null : u)), 8000);
     await hideItem(i.id);
   };
   const restore = async () => {
@@ -69,7 +69,7 @@ export default function Closet() {
   const toAsk = who === "me" ? list.filter(i => needsAsk(i, everything)) : [];
   const shelves = CATS.map(([k, label]) => ({ k, label, items: list.filter(i => i.category === k) })).filter(s => s.items.length);
   const cur = shelves.find(s => s.k === cat);
-  const unsorted = list.filter(i => !i.pick).length;
+  const unsorted = toSort(everything).length;
 
   return (
     <main className="tabscreen">
@@ -200,9 +200,9 @@ export default function Closet() {
                 <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>Bought {fmtDate(sel.ordered_at)} from {sel.store}</div>
               </div>
             </div>
-            <div style={{ marginTop: 16, fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>Who is this for?</div>
+            <div style={{ marginTop: 16, fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>Who is this for?{!sel.for_whom ? " Our guess is dashed." : ""}</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-              {WHO.map(([k, label]) => <button key={k} onClick={() => answer(sel, k)} style={chip(whoFor(sel, everything) === k)}>{label}</button>)}
+              {WHO.map(([k, label]) => <button key={k} onClick={() => answer(sel, k)} style={sel.for_whom ? chip(sel.for_whom === k) : { ...chip(false), ...(whoFor(sel, everything) === k ? { borderStyle: "dashed" } : {}) }}>{label}</button>)}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 18 }}>
               {PICKS.map(([k, label]) => (

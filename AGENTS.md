@@ -73,12 +73,16 @@ design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPAB
 3. **Shopping email:** mail to name@shop.myocto.co → Resend → `inbound-email` forwards
    it to the user's inbox, screens it and saves orders and items.
 4. **Grouping:** `groupOrders()` in `lib/orders.ts` turns emails into orders in the
-   browser: by store name key + order number, else store + contents within 21 days, else an
-   unnumbered shipping/delivered email joins the store's one open order. Relay senders
-   (`RELAY`, e.g. Narvar) don't count as the store's address. Quiet for 30 days = arrived.
-5. **Gmail pass:** Google's token lasts about an hour and Supabase drops it on refresh, so
-   `gmailToken()` in `lib/supabase.ts` keeps a copy on the device until it runs out. The
-   import also scans points while the pass is fresh.
+   browser: store key (web address, or name for relay senders) + order number, else store +
+   contents within 21 days (Amazon), else an email with neither joins the store's latest
+   open order from the last 10 days. A numbered email can adopt an open unnumbered order.
+   "Out for delivery" 2+ days ago = delivered. Relay senders
+   (`RELAY`, e.g. Narvar) don't count as the store's address. Quiet for 30 days = arrived (`assumed`, shown as "Last update").
+5. **Gmail pass:** Google's token lasts about an hour and Supabase drops it on refresh.
+   `/auth` hands Google's refresh token to `gmail-token` (stored in `gmail_tokens`, server
+   only). `gmailToken()` in `lib/supabase.ts` uses the session token, then a device copy,
+   then asks `gmail-token` for a new one. Needs `GOOGLE_CLIENT_SECRET`; GET on the function
+   says `{ ready }`. Users who signed in before this must reconnect once.
 
 ## Server functions (`supabase/functions/`)
 
@@ -89,6 +93,7 @@ design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPAB
 | `read-reward` | Yes | AI reads a points / credit / gift card email. |
 | `value-items` | Yes | AI estimates resale ranges, 40 items at a time. |
 | `inbound-email` | No (checks Resend signature) | Shopping email receiver. |
+| `gmail-token` | Own check (GET is public, says only ready or not) | Saves Google's refresh token, hands out fresh Gmail passes, forgets on disconnect. |
 | `delete-account` | Yes | `data`: deletes orders, items, rewards, blocked stores (keeps account). `account`: deletes the user; every table cascades. |
 
 All AI calls use `claude-haiku-5-5` with structured output, chosen for cost (about
@@ -99,7 +104,7 @@ from this repo. Keep repo and deployed code identical.
 
 ## Database
 
-Tables: `profiles`, `orders`, `items`, `rewards`, `follows`, `blocked_stores`.
+Tables: `profiles`, `orders`, `items`, `rewards`, `follows`, `blocked_stores`, `gmail_tokens` (no policies; server only).
 `items.for_whom` (me / kids / partner / other, guessed by `whoFor()` in `lib/items.ts` when empty)
 and `items.hidden` (removed from closet; kept so imports don't bring it back).
 Every table has row level security: people only see their own rows. Shared pieces
@@ -145,8 +150,8 @@ SQL to `supabase/migrations/<version>_<name>.sql`. Run the security advisor afte
 
 ## Known gaps and next steps
 
-- Import only runs while the app is open. True background sync needs a server job with
-  `GOOGLE_CLIENT_SECRET` and stored refresh tokens.
+- Import only runs while the app is open. Refresh tokens are now stored, so a server job
+  for true background sync is the next step once `GOOGLE_CLIENT_SECRET` is set.
 - Cash back is "coming soon". Partner research done (Wildfire recommended); on hold.
 - Shopping email uses `shop.myocto.co` for testing. Real domain (e.g. actually.shop)
   not bought yet.

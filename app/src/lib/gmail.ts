@@ -17,7 +17,7 @@ const MAX = 1500;
 const SKIP = /(amctheatres|fandango|ticketmaster|livenation|stubhub|seatgeek|eventbrite|cinemark|regmovies|olo\.com|order\.online|toasttab|chownow|mcdonalds|chick-fil-a|wendys|dominos|jerseymikes|baskinrobbins|starbucks|grubhub|postmates|paypal|venmo|chase|amex|americanexpress|bankofamerica|wellsfargo|capitalone|citi\.com|square|intuit|irs\.gov|doordash|ubereats|uber\.com|lyft|grubhub|instacart|apple\.com|google\.com|linkedin|github|netflix|spotify)/i;
 const FREE_MAIL = /^(gmail|yahoo|outlook|hotmail|icloud|aol|me)\./i;
 // Carriers (they hide the real store), phone and cable bills, restaurants, kids' sports and school sign-ups.
-const NOT_STORE = /(^|\.)(ups|fedex|usps|dhl|ontrac|lasership|verizon|verizonwireless|vzw|att|t-mobile|tmobile|xfinity|comcast|spectrum|cox|chipotle|sweetgreen|cava|panera|tacobell|sportsengine|leagueapps|teamsnap|playmetrics|gotsport|ottosportmail|active|signupgenius|jotform|campminder|schoolpay|myschoolbucks)\.(com|ai|net|org)$/i;
+const NOT_STORE = /(^|\.)(ups|fedex|usps|dhl|ontrac|lasership|verizon|verizonwireless|vzw|att|t-mobile|tmobile|xfinity|comcast|spectrum|cox|chipotle|sweetgreen|cava|panera|tacobell|sportsengine|leagueapps|teamsnap|playmetrics|gotsport|ottosportmail|active|signupgenius|jotform|campminder|schoolpay|myschoolbucks|educationalproducts|schoolkidz|owner|popmenu|bentobox|slicelife)\.(com|ai|net|org)$/i;
 // Kids' teams, camps and school sign-ups: never saved, even when the email says "order".
 const KIDS_FROM = /\byouth\b|\bsoccer\b|little league|\bacademy\b|\bschool\b|\bpta\b|preschool|daycare|\bcamps?\b/i;
 const KIDS_SUBJECT = /\bregistration\b|\benroll(ment|ed)?\b|\btryouts?\b|\bsummer camp\b/i;
@@ -60,7 +60,7 @@ export async function readOne(id: string, token: string): Promise<Order | null> 
 
 // Marketing and follow-ups that mention an order but aren't one.
 // Order contents that point to health. Never saved, even from regular stores.
-const SENSITIVE_SUBJECT = /health ?care|medical|pharmacy|prescription|vitamin|\bhealth|wellness|eye ?glasses|contact lens|supplement|sexual|incontinence|pregnan|ovulation|fertility|covid|test kit|first aid/i;
+const SENSITIVE_SUBJECT = /health ?care|medical|pharmacy|prescription|vitamin|\bhealth|hair (loss|fiber|regrowth)|minoxidil|rogaine|toppik|wellness|eye ?glasses|contact lens|supplement|sexual|incontinence|pregnan|ovulation|fertility|covid|test kit|first aid/i;
 const NOT_ORDER = /order (today|now|by)\b|last chance|don't miss|ends (soon|tonight|today)|reminder|time to review|review it|meet your expectations|rate (your|us)|how did we do|survey|feedback|tell us what you think|write a review|recommended for you/i;
 // Invisible direction marks some stores put around order numbers.
 const INVISIBLE = /[\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g;
@@ -108,7 +108,7 @@ export function storeName(from: string, domain: string, subject = "") {
   // "Receipt from itch.io" sent by Stripe: the store is in the subject.
   const via = /(^|\.)(stripe\.com)$/.test(domain) ? subject.match(/(?:receipt|order|payment) from ([^#(\[]+)/i)?.[1]?.trim() : null;
   if (via) return via.slice(0, 40);
-  let name = from.replace(/<[^>]*>/, "").replace(/["']/g, "").trim();
+  let name = from.replace(/<[^>]*>/, "").replace(/"/g, "").trim();
   name = name.replace(/\b(customer (service|care)|orders?|order updates|confirmations?|shipping|no-?reply|team|store|shop|online|support|notifications?)\b/gi, "").replace(/[|·,:-]+\s*$/, "").replace(/\s{2,}/g, " ").trim();
   if (!name || name.includes("@") || name.length > 40) {
     const base = rootDomain(domain).split(".")[0];

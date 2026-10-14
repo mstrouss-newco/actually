@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type OrderGroup, blockStore, fmtDate, gmailLink, loadOrders, orderTitle, removeOrder, returnDaysLeft } from "@/lib/orders";
@@ -15,6 +15,17 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
   const router = useRouter();
   const [order, setOrder] = useState<OrderGroup | null | undefined>(undefined);
   const [confirm, setConfirm] = useState<"remove" | "block" | null>(null);
+  const [removed, setRemoved] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const box = useRef<HTMLDivElement>(null);
+  // Keep the confirm buttons in view, above the menu.
+  useEffect(() => { if (confirm) box.current?.scrollIntoView({ behavior: "smooth", block: "center" }); }, [confirm]);
+  // Removing waits 8 seconds so Undo can catch a slip.
+  const removeSoon = (g: OrderGroup) => {
+    setRemoved(true);
+    timer.current = setTimeout(async () => { await removeOrder(g); router.replace("/orders"); }, 8000);
+  };
+  const undoRemove = () => { if (timer.current) clearTimeout(timer.current); setRemoved(false); setConfirm(null); };
   useEffect(() => {
     const k = decodeURIComponent(key);
     loadOrders().then(list => setOrder(list?.find(g => g.key === k) ?? null));
@@ -92,17 +103,23 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
             : <a href={gmailLink(first.gmail_id)} target="_blank" rel="noreferrer" style={{ marginTop: 6, display: "flex", alignItems: "center", justifyContent: "center", height: 46, borderRadius: 999, border: "1.5px solid var(--ink)", fontWeight: 700, textDecoration: "none" }}>Open the original email</a>}
         </div>
 
-        <div style={{ margin: "22px 16px 0", display: "flex", flexDirection: "column", gap: 8 }}>
-          {confirm ? (
+        <div ref={box} style={{ margin: "22px 16px 0", display: "flex", flexDirection: "column", gap: 8 }}>
+          {removed ? (
+            <div style={{ background: "var(--ink)", color: "#fff", borderRadius: 22, padding: "12px 12px 12px 18px", display: "flex", alignItems: "center", gap: 10, fontSize: 14 }}>
+              <span style={{ flex: 1 }}>Removed. Taking you back to Orders.</span>
+              <button onClick={undoRemove} style={{ border: 0, background: "#fff", color: "var(--ink)", borderRadius: 999, padding: "8px 16px", font: "inherit", fontWeight: 700, cursor: "pointer" }}>Undo</button>
+            </div>
+          ) : confirm ? (
             <div style={{ background: "#FFE1DC", borderRadius: 22, padding: 16 }}>
               <div style={{ fontWeight: 700, fontSize: 15 }}>{confirm === "remove" ? "Remove this order?" : `Never show ${order.store}?`}</div>
               <div style={{ fontSize: 13, color: "#6B4A44", marginTop: 4, lineHeight: 1.4 }}>
-                {confirm === "remove" ? "It's deleted from Actually. Your email stays in your inbox." : `Everything from ${order.store} is deleted, and future emails from them are skipped.`}
+                {confirm === "remove" ? "It's removed from Actually. Your email stays in your inbox. You'll have 8 seconds to undo." : `Everything from ${order.store} is deleted, and future emails from them are skipped.`}
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                 <button className="btn btn-line" style={{ marginTop: 0, height: 44, fontSize: 14 }} onClick={() => setConfirm(null)}>Cancel</button>
                 <button className="btn" style={{ height: 44, fontSize: 14, background: "#C9402F" }} onClick={async () => {
-                  await (confirm === "remove" ? removeOrder(order) : blockStore(order));
+                  if (confirm === "remove") return removeSoon(order);
+                  await blockStore(order);
                   router.replace("/orders");
                 }}>{confirm === "remove" ? "Remove" : "Never show"}</button>
               </div>

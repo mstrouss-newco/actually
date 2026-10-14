@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { saveGmailRefresh, supabase } from "@/lib/supabase";
 import { saveProfile, syncProfile } from "@/lib/profile";
 
 // Google sends her back here after sign-in.
@@ -23,6 +23,7 @@ export default function Auth() {
         setTimeout(() => router.replace("/claim"), 1600);
         return;
       }
+      await saveGmailRefresh();
       const res = await syncProfile();
       if (res === "taken") {
         saveProfile({ handle: "" });
