@@ -13,6 +13,9 @@ const Result = z.object({
   })),
 });
 
+// Only things you wear are priced. Same list as WEAR in app/src/lib/items.ts.
+const WEAR = ["tops", "bottoms", "dresses", "outerwear", "shoes", "bags", "accessories"];
+
 const SYSTEM = `You estimate what clothing, shoes and accessories sell for on resale sites like Poshmark, eBay, Depop and ThredUp.
 Assume good used condition. Consider brand demand, how old the purchase is and the original price.
 Beauty products, underwear and opened consumables usually have no resale value: give 0 to 0.
@@ -31,7 +34,7 @@ Deno.serve(async req => {
   if (!Deno.env.get("ANTHROPIC_API_KEY")) return json({ error: "ai not set up" }, 503);
 
   const { data: items } = await admin.from("items").select("id, store, brand, name, size, color, price, category, ordered_at")
-    .eq("user_id", auth.user.id).is("resale_at", null).limit(40);
+    .eq("user_id", auth.user.id).is("resale_at", null).in("category", WEAR).limit(40);
   if (!items?.length) return json({ valued: 0, remaining: 0 });
 
   const list = items.map((i, n) =>
@@ -60,6 +63,6 @@ Deno.serve(async req => {
     return admin.from("items").update({ resale_low: low, resale_high: high, resale_note: e?.note.slice(0, 200) ?? null, resale_at: now }).eq("id", i.id);
   }));
 
-  const { count } = await admin.from("items").select("id", { count: "exact", head: true }).eq("user_id", auth.user.id).is("resale_at", null);
+  const { count } = await admin.from("items").select("id", { count: "exact", head: true }).eq("user_id", auth.user.id).is("resale_at", null).in("category", WEAR);
   return json({ valued: items.length, remaining: count ?? 0 });
 });

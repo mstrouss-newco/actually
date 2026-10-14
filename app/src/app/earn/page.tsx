@@ -67,6 +67,7 @@ export default function Earn() {
           {items !== null && unpriced > 0 && (
             <div style={{ marginTop: 14 }}>
               <Job run={valueItems} label={priced.length ? `Price ${unpriced} new pieces` : "Price my closet"} working="Pricing" noun={["piece priced", "pieces priced"]} onDone={load} />
+              <div style={{ fontSize: 12, color: "#5B4A8A", marginTop: 8 }}>Takes about a minute. Clothes, shoes, bags and accessories only.</div>
             </div>
           )}
         </div>

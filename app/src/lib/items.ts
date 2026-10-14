@@ -7,8 +7,11 @@ export type Item = {
   resale_low?: number | null; resale_high?: number | null; resale_note?: string | null;
 };
 
+// Closet, Sort and Worth only show things you wear. Same list as the value-items function.
+export const WEAR = ["tops", "bottoms", "dresses", "outerwear", "shoes", "bags", "accessories"];
+
 export async function loadItems(): Promise<Item[]> {
-  const { data } = await supabase().from("items").select("id, store, name, brand, size, color, price, image_url, category, ordered_at, pick, resale_low, resale_high, resale_note").order("ordered_at", { ascending: false }).limit(3000);
+  const { data } = await supabase().from("items").select("id, store, name, brand, size, color, price, image_url, category, ordered_at, pick, resale_low, resale_high, resale_note").in("category", WEAR).order("ordered_at", { ascending: false }).limit(3000);
   return (data ?? []) as Item[];
 }
 
@@ -56,7 +59,7 @@ export async function readItems(token: string, onProgress: Progress): Promise<"d
 
 export const CATS: [string, string][] = [
   ["tops", "Tops"], ["bottoms", "Bottoms"], ["dresses", "Dresses"], ["outerwear", "Outerwear"], ["shoes", "Shoes"],
-  ["bags", "Bags"], ["accessories", "Accessories"], ["beauty", "Beauty"], ["home", "Home"], ["other", "Other"],
+  ["bags", "Bags"], ["accessories", "Accessories"],
 ];
 
 // Her usual size at each brand: the size she bought most often there, per category.

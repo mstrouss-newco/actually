@@ -2,9 +2,10 @@
 
 // The Gmail import, as one shared job. It keeps running while she moves around the app,
 // and any screen can show its progress.
-import { supabase } from "./supabase";
+import { gmailToken, supabase } from "./supabase";
 import { type Order, listIds, readOne } from "./gmail";
 import { readItems } from "./items";
+import { scanRewards } from "./earn";
 
 export type ImportState = {
   stage: "idle" | "scan" | "items" | "done" | "reconnect" | "no-access" | "error";
@@ -25,7 +26,7 @@ export async function startImport() {
   set({ stage: "scan", read: 0, total: 0, orders: 0, skipped: 0, latest: [], itemsDone: 0, itemsTotal: 0, itemsFound: 0 });
   const sb = supabase();
   const { data } = await sb.auth.getSession();
-  const token = data.session?.provider_token;
+  const token = await gmailToken();
   if (!token || !data.session) return set({ stage: "reconnect" });
   const uid = data.session.user.id;
   const { data: me } = await sb.from("profiles").select("last_import_at").eq("id", uid).maybeSingle();
@@ -80,6 +81,8 @@ export async function startImport() {
     // Then read what was in each new order.
     set({ stage: "items" });
     await readItems(token, (done, total, found) => set({ itemsDone: done, itemsTotal: total, itemsFound: found }));
+    // Points and credit too, while Google's pass is still fresh.
+    await scanRewards(() => {}).catch(() => null);
     set({ stage: "done" });
   } catch (e) {
     const m = (e as Error).message;

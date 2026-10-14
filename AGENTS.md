@@ -73,7 +73,12 @@ design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPAB
 3. **Shopping email:** mail to name@shop.myocto.co → Resend → `inbound-email` forwards
    it to the user's inbox, screens it and saves orders and items.
 4. **Grouping:** `groupOrders()` in `lib/orders.ts` turns emails into orders in the
-   browser (by order number, else by store + contents within 21 days).
+   browser: by store name key + order number, else store + contents within 21 days, else an
+   unnumbered shipping/delivered email joins the store's one open order. Relay senders
+   (`RELAY`, e.g. Narvar) don't count as the store's address. Quiet for 30 days = arrived.
+5. **Gmail pass:** Google's token lasts about an hour and Supabase drops it on refresh, so
+   `gmailToken()` in `lib/supabase.ts` keeps a copy on the device until it runs out. The
+   import also scans points while the pass is fresh.
 
 ## Server functions (`supabase/functions/`)
 
@@ -107,6 +112,12 @@ SQL to `supabase/migrations/<version>_<name>.sql`. Run the security advisor afte
   mail. Layers: sender domains (`SENSITIVE` in `lib/sensitive.ts` and the functions),
   brand names (`SENSITIVE_BRAND`, for mail sent through shipping services like Narvar),
   subject words (`SENSITIVE_SUBJECT`), then the AI screen.
+- Also never saved: eyewear (glasses, contacts), carrier notices (UPS, FedEx, USPS, DHL),
+  phone and cable bills, restaurants, kids' teams, camps and school sign-ups (`NOT_STORE`,
+  `KIDS_FROM`, `KIDS_SUBJECT` in `lib/gmail.ts`, plus the AI prompt).
+- Closet, Sort and Worth show only wearables (`WEAR` in `lib/items.ts` and `value-items`).
+  Other items stay saved for Orders and future points or cash back.
+- Sort and sharing are private by default.
 - When unsure, drop it. A missed order is fine; a saved prescription is not.
 - Never show price, size or order details on anything shared.
 - Only read the sender, subject and preview to decide; full emails are read only for

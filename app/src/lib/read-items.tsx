@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { supabase } from "./supabase";
+import { signIn } from "./signin";
+import { gmailToken } from "./supabase";
 import { readItems } from "./items";
 
 type Outcome = "done" | "expired" | "not-ready";
@@ -28,7 +28,7 @@ export function Job({ run, label, working, noun, auto = false, onDone }: {
   useEffect(() => { if (auto) go(); });
 
   if (state === "expired") {
-    return <div style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>Gmail needs a quick reconnect first. <Link href="/permission" style={{ fontWeight: 700 }}>Reconnect</Link></div>;
+    return <div style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>Google asks us to check in every hour. <button onClick={() => signIn(location.pathname, true)} style={{ border: 0, background: "none", padding: 0, font: "inherit", fontWeight: 700, color: "var(--ink)", textDecoration: "underline", cursor: "pointer" }}>Reconnect Gmail</button></div>;
   }
   if (state === "not-ready") return <div style={{ fontSize: 14, color: "var(--muted)" }}>This isn&apos;t switched on yet. Check back soon.</div>;
   if (state === "running" || state === "done") {
@@ -51,8 +51,7 @@ export function Job({ run, label, working, noun, auto = false, onDone }: {
 // Reads item names, sizes and photos from her order emails.
 export function ReadItems({ auto = false, onDone }: { auto?: boolean; onDone?: () => void }) {
   const run: Run = async onProgress => {
-    const { data } = await supabase().auth.getSession();
-    const token = data.session?.provider_token;
+    const token = await gmailToken();
     return token ? readItems(token, onProgress) : "expired";
   };
   return <Job run={run} label="Read my items" working="Reading order" noun={["item found", "items found"]} auto={auto} onDone={onDone} />;

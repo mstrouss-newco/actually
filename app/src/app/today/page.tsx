@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { type OrderGroup, cleanupOnce, isArriving, loadOrders, orderTitle, returnDaysLeft, fmtDate, isReturn } from "@/lib/orders";
+import { type OrderGroup, cleanupOnce, isArriving, loadOrders, orderTitle, returnDaysLeft, fmtDate } from "@/lib/orders";
 import { loadProfile } from "@/lib/profile";
 import { type Reward, daysUntil, fmtDay, loadRewards, money } from "@/lib/earn";
 import { Progress, StoreTile, TabBar } from "@/lib/tabs";
@@ -26,7 +26,7 @@ export default function Today() {
 
   const arriving = (orders ?? []).filter(isArriving);
   const returnable = (orders ?? []).filter(g => returnDaysLeft(g) != null).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!);
-  const returns = (orders ?? []).filter(isReturn);
+  const returns = (orders ?? []).filter(g => g.stage === "returning");
   const hero = returnable[0];
   const left = hero ? returnDaysLeft(hero)! : 0;
   const greet = name ? name.split(".")[0].replace(/^./, c => c.toUpperCase()) : "";
