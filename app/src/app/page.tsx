@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Art } from "@/lib/ui";
-import { SignInLink } from "./signin-link";
 
 const MAILS = [
   ["Zara", "Your order has shipped #48213"],
@@ -63,7 +62,7 @@ export default function Welcome() {
 
       <div className="spacer" />
       <Link href="/claim" className="btn">Get my free shopping email</Link>
-      <div className="note">Free. Takes ten seconds. <SignInLink /></div>
+      <div className="note">Free. Takes ten seconds. <Link href="/login" style={{ fontWeight: 700 }}>Already joined? Sign in</Link></div>
     </main>
   );
 }

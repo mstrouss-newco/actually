@@ -38,7 +38,7 @@ export default function Feed() {
         {handle === null && (
           <div style={{ padding: "18px 20px 0" }}>
             <p className="lead">Sign in to follow friends and share what you love.</p>
-            <Link href="/claim" className="btn" style={{ marginTop: 16 }}>Sign in</Link>
+            <Link href="/login" className="btn" style={{ marginTop: 16 }}>Sign in</Link>
           </div>
         )}
 

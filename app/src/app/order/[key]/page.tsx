@@ -2,7 +2,8 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { type OrderGroup, fmtDate, gmailLink, loadOrders, orderTitle, returnDaysLeft } from "@/lib/orders";
+import { useRouter } from "next/navigation";
+import { type OrderGroup, blockStore, fmtDate, gmailLink, loadOrders, orderTitle, removeOrder, returnDaysLeft } from "@/lib/orders";
 import { StoreTile, TabBar, tint } from "@/lib/tabs";
 
 const LABEL: Record<string, string> = {
@@ -11,7 +12,9 @@ const LABEL: Record<string, string> = {
 
 export default function OrderDetail({ params }: { params: Promise<{ key: string }> }) {
   const { key } = use(params);
+  const router = useRouter();
   const [order, setOrder] = useState<OrderGroup | null | undefined>(undefined);
+  const [confirm, setConfirm] = useState<"remove" | "block" | null>(null);
   useEffect(() => {
     const k = decodeURIComponent(key);
     loadOrders().then(list => setOrder(list?.find(g => g.key === k) ?? null));
@@ -87,6 +90,29 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
           {first.gmail_id.startsWith("rs_")
             ? <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center", marginTop: 6 }}>Came in through your shopping email. A copy is in your inbox.</div>
             : <a href={gmailLink(first.gmail_id)} target="_blank" rel="noreferrer" style={{ marginTop: 6, display: "flex", alignItems: "center", justifyContent: "center", height: 46, borderRadius: 999, border: "1.5px solid var(--ink)", fontWeight: 700, textDecoration: "none" }}>Open the original email</a>}
+        </div>
+
+        <div style={{ margin: "22px 16px 0", display: "flex", flexDirection: "column", gap: 8 }}>
+          {confirm ? (
+            <div style={{ background: "#FFE1DC", borderRadius: 22, padding: 16 }}>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>{confirm === "remove" ? "Remove this order?" : `Never show ${order.store}?`}</div>
+              <div style={{ fontSize: 13, color: "#6B4A44", marginTop: 4, lineHeight: 1.4 }}>
+                {confirm === "remove" ? "It's deleted from Actually. Your email stays in your inbox." : `Everything from ${order.store} is deleted, and future emails from them are skipped.`}
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                <button className="btn btn-line" style={{ marginTop: 0, height: 44, fontSize: 14 }} onClick={() => setConfirm(null)}>Cancel</button>
+                <button className="btn" style={{ height: 44, fontSize: 14, background: "#C9402F" }} onClick={async () => {
+                  await (confirm === "remove" ? removeOrder(order) : blockStore(order));
+                  router.replace("/orders");
+                }}>{confirm === "remove" ? "Remove" : "Never show"}</button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn btn-ghost" style={{ marginTop: 0, fontSize: 14, color: "var(--soft)" }} onClick={() => setConfirm("remove")}>Not an order? Remove</button>
+              <button className="btn btn-ghost" style={{ marginTop: 0, fontSize: 14, color: "var(--soft)" }} onClick={() => setConfirm("block")}>Never show {order.store}</button>
+            </div>
+          )}
         </div>
       </div>
       <TabBar />

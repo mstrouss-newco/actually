@@ -10,6 +10,34 @@ const DOMAIN = Deno.env.get("SHOPPING_DOMAIN") ?? "shop.myocto.co";
 const anthropic = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") });
 const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
+// Known health, pharmacy, telehealth, testing and adult senders. Blocked without asking the AI.
+const SENSITIVE = /(^|\.)(ro\.co|getroman\.com|hims\.com|forhers\.com|hers\.com|nurx\.com|keeps\.com|thirtymadison\.com|cove\.com|picnicallergy\.com|curology\.com|apostrophe\.com|musely\.com|agencyskincare\.com|cerebral\.com|donefirst\.com|done\.com|betterhelp\.com|talkspace\.com|brightline\.com|lemonaidhealth\.com|plushcare\.com|teladoc\.com|mdlive\.com|amwell\.com|onemedical\.com|zocdoc\.com|goodrx\.com|cvs\.com|caremark\.com|walgreens\.com|riteaid\.com|capsule\.com|alto\.com|altopharmacy\.com|pillpack\.com|truepill\.com|expressscripts\.com|express-scripts\.com|optumrx\.com|optum\.com|honeybeehealth\.com|costplusdrugs\.com|blinkhealth\.com|everlywell\.com|letsgetchecked\.com|myLAB(box)?\.com|mylabbox\.com|labcorp\.com|questdiagnostics\.com|23andme\.com|natalist\.com|modernfertility\.com|proovtest\.com|kindbody\.com|plannedparenthood\.org|pandiahealth\.com|thepill\.com|wisp\.com|hellowisp\.com|lovehoney\.com|adameve\.com|dameproducts\.com|lelo\.com|babeland\.com|hims-hers\.com|weightwatchers\.com|noom\.com|found\.com|joinfound\.com|calibrate\.com|henrymeds\.com|ivim\.com|sesamecare\.com|1800contacts\.com|kaiserpermanente\.org|mychart\.com|pharmacy\.amazon\.com|healthequity\.com|hsastore\.com|fsastore\.com)$/i;
+
+// ---------- is it a real shopping order? (same rules as screen-emails) ----------
+
+const SCREEN_SYSTEM = `You sort emails for a personal shopping app. For the email, answer with one verdict:
+- "shopping": an order, shipping, delivery, return, refund or receipt for physical goods bought from a store. Clothing, shoes, bags, accessories, jewelry, beauty and cosmetics, home goods, furniture, electronics, toys, gifts, sports gear, books.
+- "sensitive": anything about health or privacy, even if it is an order. Pharmacy, prescriptions, medicine, vitamins sold for a condition, telehealth, doctors, labs and tests, mental health, fertility, pregnancy, birth control, sexual health or adult products, weight-loss programs, hair-loss treatment, medical devices, insurance, legal, debt or banking.
+- "other": everything else. Software and online services, app and cloud bills, subscriptions, utilities, phone bills, school or kids' activity notices, events and tickets, travel, rides, food delivery and restaurants, groceries, donations, newsletters, marketing and promotions without a purchase.
+If unsure between shopping and sensitive, choose sensitive. If unsure whether it is a purchase at all, choose other.`;
+
+const Verdict = z.object({ verdict: z.enum(["shopping", "sensitive", "other"]) });
+
+async function isShopping(from: string, subject: string, text: string) {
+  try {
+    const res = await anthropic.messages.parse({
+      model: "claude-haiku-5-5",
+      max_tokens: 200,
+      output_config: { effort: "low", format: zodOutputFormat(Verdict) },
+      system: SCREEN_SYSTEM,
+      messages: [{ role: "user", content: `From: ${from.slice(0, 120)} | Subject: ${subject.slice(0, 200)} | Preview: ${text.slice(0, 300)}` }],
+    });
+    return res.stop_reason !== "refusal" && res.parsed_output?.verdict === "shopping";
+  } catch {
+    return false;
+  }
+}
+
 // ---------- sorting an email (same rules as the Gmail import) ----------
 
 type Kind = "order" | "shipping" | "delivered" | "return" | "refund" | "receipt";
@@ -136,6 +164,12 @@ Deno.serve(async req => {
   const domain = ((from.match(/<([^>]+)>/)?.[1] ?? from).trim().toLowerCase().split("@")[1]) ?? "";
   const kind = classify(subject, text);
   if (!kind || !domain) return new Response("not a shopping email");
+
+  // Never save sensitive senders, stores she blocked, or anything that isn't a real shopping order.
+  if (SENSITIVE.test(domain)) return new Response("sensitive, not saved");
+  const { data: blocks } = await admin.from("blocked_stores").select("store_domain").eq("user_id", profile.id);
+  if ((blocks ?? []).some(b => domain === b.store_domain || domain.endsWith(`.${b.store_domain}`))) return new Response("blocked store");
+  if (!Deno.env.get("ANTHROPIC_API_KEY") || !(await isShopping(from, subject, text))) return new Response("not a shopping order");
 
   const store = storeName(from, domain);
   const all = `${subject} ${text.slice(0, 2000)}`;
