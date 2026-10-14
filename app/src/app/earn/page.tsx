@@ -66,21 +66,21 @@ export default function Earn() {
         </div>
 
         <div style={{ margin: "12px 16px 0", background: "#EBE3FF", borderRadius: 28, padding: "20px 18px" }}>
-          <div className="kicker" style={{ color: "#5B44B0" }}>What your closet is worth</div>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+            <div className="kicker" style={{ color: "#5B44B0", paddingTop: 4 }}>What your closet is worth</div>
+            {priced.length > 0 && fan.length > 0 && (
+              <div style={{ display: "flex", flex: "none", marginTop: -4 }}>
+                {fan.map((i, n) => (
+                  <div key={i.id} style={{ marginLeft: n ? -14 : 0, transform: `rotate(${[-6, 3, -2][n]}deg)`, borderRadius: 12, boxShadow: "0 4px 10px rgba(20,18,16,.14)" }}>
+                    <ItemImage src={i.image_url} store={i.store} w={44} h={56} radius={12} size={18} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           {priced.length > 0 ? (
             <Link href="/earn/worth" style={{ textDecoration: "none", display: "block" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 8 }}>
-                <div className="serif" style={{ fontSize: 40, lineHeight: 1, minWidth: 0 }}>{money(lo)}–{money(hi)}</div>
-                {fan.length > 0 && (
-                  <div style={{ display: "flex", flex: "none" }}>
-                    {fan.map((i, n) => (
-                      <div key={i.id} style={{ marginLeft: n ? -14 : 0, transform: `rotate(${[-6, 3, -2][n]}deg)`, borderRadius: 12, boxShadow: "0 4px 10px rgba(20,18,16,.14)" }}>
-                        <ItemImage src={i.image_url} store={i.store} w={46} h={58} radius={12} size={18} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <div className="serif" style={{ fontSize: 40, lineHeight: 1, marginTop: 8, whiteSpace: "nowrap" }}>{money(lo)}–{money(hi)}</div>
               <div style={{ fontSize: 14, color: "#5B4A8A", marginTop: 6, lineHeight: 1.4 }}>
                 Estimated resale value of {valued.length} pieces.{top && top.resale_high ? ` Your ${top.brand || top.store} ${top.name} could sell for up to ${money(top.resale_high)}.` : ""}
               </div>

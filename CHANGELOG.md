@@ -4,6 +4,7 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-14
 
+- Earn: closet photo fan sits beside the heading so the dollar range stays on one line.
 - Design pass to match the design board: product photos instead of store logos on Today, Orders and the order page (logos now sit small on a soft colored tile when there's no photo), order page lists each item with its photo, order rows keep long names on two lines with the date chip up top, Earn shows fanned item photos on the closet worth card and store logos on points, welcome alerts stay put and the button no longer squishes, gray text darkened for easier reading. Gray-arrow logo source dropped.
 - QA round 4: stores matched across shipping services (Rawlings, Bouqs), Amazon delay notices fold into their order, shipped a week ago with no news = "Likely arrived", every order is in a tab, timeline says "Out for delivery" and "Delivery date changed". Item reader also reads shipping emails for orders with no order email (Chewy, Huckberry) so they get real names. Closet: "Is all of this yours?" quick check, "(our guess)" label, keeps the more specific item name. Points: newest email per store only (much faster), no credit cards or app credit, no empty balances. Import strip says "Checking points and credit".
 - Settings shows whether Gmail is connected, with a "Connect Gmail" button that saves Google's pass on the server (Google secret now set).
