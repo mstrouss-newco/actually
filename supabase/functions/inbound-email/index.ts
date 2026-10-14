@@ -13,12 +13,16 @@ const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE
 // Known health, pharmacy, telehealth, testing and adult senders. Blocked without asking the AI.
 const SENSITIVE = /(^|\.)(ro\.co|getroman\.com|hims\.com|forhers\.com|hers\.com|nurx\.com|keeps\.com|thirtymadison\.com|cove\.com|picnicallergy\.com|curology\.com|apostrophe\.com|musely\.com|agencyskincare\.com|cerebral\.com|donefirst\.com|done\.com|betterhelp\.com|talkspace\.com|brightline\.com|lemonaidhealth\.com|plushcare\.com|teladoc\.com|mdlive\.com|amwell\.com|onemedical\.com|zocdoc\.com|goodrx\.com|cvs\.com|caremark\.com|walgreens\.com|riteaid\.com|capsule\.com|alto\.com|altopharmacy\.com|pillpack\.com|truepill\.com|expressscripts\.com|express-scripts\.com|optumrx\.com|optum\.com|honeybeehealth\.com|costplusdrugs\.com|blinkhealth\.com|everlywell\.com|letsgetchecked\.com|myLAB(box)?\.com|mylabbox\.com|labcorp\.com|questdiagnostics\.com|23andme\.com|natalist\.com|modernfertility\.com|proovtest\.com|kindbody\.com|plannedparenthood\.org|pandiahealth\.com|thepill\.com|wisp\.com|hellowisp\.com|lovehoney\.com|adameve\.com|dameproducts\.com|lelo\.com|babeland\.com|hims-hers\.com|weightwatchers\.com|noom\.com|found\.com|joinfound\.com|calibrate\.com|henrymeds\.com|ivim\.com|sesamecare\.com|1800contacts\.com|kaiserpermanente\.org|mychart\.com|pharmacy\.amazon\.com|healthequity\.com|hsastore\.com|fsastore\.com)$/i;
 
+// Health brands by name, for mail sent through shipping services (Ro via Narvar).
+const SENSITIVE_BRAND = /^(ro|roman|hims|hers|hims ?& ?hers|nurx|keeps|cove|curology|apostrophe|musely|cerebral|done|talkspace|betterhelp|lemonaid|plushcare|teladoc|goodrx|cvs( pharmacy)?|walgreens|rite ?aid|capsule|alto( pharmacy)?|pillpack|truepill|amazon pharmacy|everlywell|letsgetchecked|23andme|wisp|thirty madison|noom|found|calibrate|henry ?meds|lovehoney|adam ?& ?eve|1-?800 ?contacts)$/i;
+
 // ---------- is it a real shopping order? (same rules as screen-emails) ----------
 
 const SCREEN_SYSTEM = `You sort emails for a personal shopping app. For the email, answer with one verdict:
 - "shopping": an order, shipping, delivery, return, refund or receipt for physical goods bought from a store. Clothing, shoes, bags, accessories, jewelry, beauty and cosmetics, home goods, furniture, electronics, toys, gifts, sports gear, books, pet food and pet supplies, garden and household supplies. Repeat deliveries of physical goods (Autoship, Subscribe & Save) count as shopping.
 - "sensitive": anything about health or privacy, even if it is an order. Pharmacy, prescriptions, medicine, vitamins sold for a condition, telehealth, doctors, labs and tests, mental health, fertility, pregnancy, birth control, sexual health or adult products, weight-loss programs, hair-loss treatment, medical devices, insurance, legal, debt or banking.
 - "other": everything else. Software and online services, app and cloud bills, digital subscriptions and memberships, in-game or account credit, news, utilities, phone bills, school or kids' activity notices, events and tickets, school or team forms and photo-day reminders, travel, rides, food delivery and restaurants, groceries, donations, newsletters, work emails, marketing and promotions without a confirmed purchase.
+Telehealth and pharmacy brands are always sensitive, even when a shipping service sends the email: Ro, Roman, Hims, Hers, Nurx, Keeps, Curology, Cerebral, Wisp, GoodRx, Capsule, CVS, Walgreens and similar.
 If unsure between shopping and sensitive, choose sensitive. If unsure whether it is a purchase at all, choose other.`;
 
 const Verdict = z.object({ verdict: z.enum(["shopping", "sensitive", "other"]) });
@@ -166,7 +170,7 @@ Deno.serve(async req => {
   if (!kind || !domain) return new Response("not a shopping email");
 
   // Never save sensitive senders, stores she blocked, or anything that isn't a real shopping order.
-  if (SENSITIVE.test(domain)) return new Response("sensitive, not saved");
+  if (SENSITIVE.test(domain) || SENSITIVE_BRAND.test(from.replace(/<[^>]*>/, "").replace(/["']/g, "").trim())) return new Response("sensitive, not saved");
   const { data: blocks } = await admin.from("blocked_stores").select("store_domain").eq("user_id", profile.id);
   if ((blocks ?? []).some(b => domain === b.store_domain || domain.endsWith(`.${b.store_domain}`))) return new Response("blocked store");
   if (!Deno.env.get("ANTHROPIC_API_KEY") || !(await isShopping(from, subject, text))) return new Response("not a shopping order");
