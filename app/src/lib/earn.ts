@@ -1,6 +1,6 @@
-import { supabase } from "./supabase";
+import { gmailToken, supabase } from "./supabase";
 import { listRewardEmails, readFullText } from "./gmail";
-import type { Item } from "./items";
+import { type Item, WEAR } from "./items";
 
 export type Reward = { store: string; store_domain: string | null; kind: string; points: number | null; value: number | null; expires_on: string | null; sent_at: string };
 
@@ -28,8 +28,7 @@ type Outcome = "done" | "expired" | "not-ready";
 // Finds rewards emails in Gmail and has the AI read each new one.
 export async function scanRewards(onProgress: Progress): Promise<Outcome> {
   const sb = supabase();
-  const { data: s } = await sb.auth.getSession();
-  const token = s.session?.provider_token;
+  const token = await gmailToken();
   if (!token) return "expired";
   const { data: done } = await sb.from("rewards").select("gmail_id").limit(5000);
   let emails;
@@ -58,7 +57,7 @@ export async function scanRewards(onProgress: Progress): Promise<Outcome> {
 // Asks the AI to price every item that has no estimate yet, 40 at a time.
 export async function valueItems(onProgress: Progress): Promise<Outcome> {
   const sb = supabase();
-  const { count } = await sb.from("items").select("id", { count: "exact", head: true }).is("resale_at", null);
+  const { count } = await sb.from("items").select("id", { count: "exact", head: true }).is("resale_at", null).in("category", WEAR);
   const total = count ?? 0;
   let done = 0;
   onProgress(0, total, 0);

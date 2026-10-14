@@ -106,12 +106,10 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
                   router.replace("/orders");
                 }}>{confirm === "remove" ? "Remove" : "Never show"}</button>
               </div>
+              {confirm === "remove" && <button onClick={() => setConfirm("block")} style={{ border: 0, background: "none", padding: 0, marginTop: 12, font: "inherit", fontSize: 13, color: "#6B4A44", textDecoration: "underline", cursor: "pointer" }}>Hide everything from {order.store} instead</button>}
             </div>
           ) : (
-            <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn btn-ghost" style={{ marginTop: 0, fontSize: 14, color: "var(--soft)" }} onClick={() => setConfirm("remove")}>Not an order? Remove</button>
-              <button className="btn btn-ghost" style={{ marginTop: 0, fontSize: 14, color: "var(--soft)" }} onClick={() => setConfirm("block")}>Never show {order.store}</button>
-            </div>
+            <button className="btn btn-ghost" style={{ marginTop: 0, fontSize: 14, color: "var(--soft)" }} onClick={() => setConfirm("remove")}>Not an order? Remove it</button>
           )}
         </div>
       </div>

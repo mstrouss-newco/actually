@@ -16,7 +16,7 @@ export default function Sort() {
   const [d, setD] = useState({ x: 0, y: 0, drag: false, fly: false });
   const start = useRef<{ x: number; y: number } | null>(null);
 
-  useEffect(() => { loadItems().then(all => setDeck(all.filter(x => !x.pick))); }, []);
+  useEffect(() => { loadItems().then(all => setDeck(all.filter(x => !x.pick && x.image_url))); }, []);
 
   const card = deck?.[i];
   const total = deck?.length ?? 0;
@@ -108,11 +108,11 @@ export default function Sort() {
           </div>
 
           <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
-            <button onClick={() => decide("private")} className="btn btn-line" style={{ marginTop: 0, height: 52, fontSize: 15 }}>Private</button>
+            <button onClick={() => decide("private")} className="btn" style={{ marginTop: 0, height: 52, fontSize: 15 }}>Keep private</button>
             <button onClick={() => decide("sell")} className="btn btn-line" style={{ marginTop: 0, height: 52, fontSize: 15 }}>Sell</button>
-            <button onClick={() => decide("share")} className="btn" style={{ height: 52, fontSize: 15 }}>Share</button>
+            <button onClick={() => decide("share")} className="btn btn-line" style={{ marginTop: 0, height: 52, fontSize: 15 }}>Share</button>
           </div>
-          <div className="note">Swipe right to share, left to keep private, up to sell.</div>
+          <div className="note">Everything stays private unless you share it. Swipe right to share, left to keep private, up to sell.</div>
         </>
       )}
 

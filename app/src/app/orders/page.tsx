@@ -16,6 +16,7 @@ const FILTER: Record<Tab, (g: OrderGroup) => boolean> = {
 const STEP = { placed: 0, shipped: 1, delivered: 3, returning: 3, refunded: 3 };
 
 function status(g: OrderGroup) {
+  if (g.inStore) return `Bought in store ${fmtDate(g.ordered_at)}`;
   switch (g.stage) {
     case "placed": return `Ordered ${fmtDate(g.ordered_at)}`;
     case "shipped": return `Shipped ${fmtDate(g.last_at)}`;

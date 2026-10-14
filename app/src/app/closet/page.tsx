@@ -12,7 +12,19 @@ const PICKS: [NonNullable<Item["pick"]>, string][] = [["share", "Show on my feed
 export default function Closet() {
   const [items, setItems] = useState<Item[] | null>(null);
   const [view, setView] = useState<"pieces" | "sizes">("pieces");
-  const [cat, setCat] = useState<string | null>(null);
+  const [cat, setCatState] = useState<string | null>(null);
+  // Opening a shelf adds a step to the browser history, so Back returns to the closet.
+  const setCat = (k: string | null) => {
+    if (k && !cat) history.pushState({ shelf: k }, "");
+    else if (!k && cat && history.state?.shelf) return history.back();
+    setCatState(k);
+    document.querySelector(".tabscreen > .scroll")?.scrollTo(0, 0);
+  };
+  useEffect(() => {
+    const pop = () => setCatState(null);
+    addEventListener("popstate", pop);
+    return () => removeEventListener("popstate", pop);
+  }, []);
   const [sel, setSel] = useState<Item | null>(null);
 
   const load = useCallback(() => { loadItems().then(setItems); }, []);
@@ -108,7 +120,7 @@ export default function Closet() {
 
         {cur && (
           <>
-            <div style={{ padding: "0 20px" }}>
+            <div style={{ padding: "0 20px", position: "sticky", top: -22, zIndex: 5, background: "#fff", paddingTop: 22, marginTop: -22, paddingBottom: 6 }}>
               <button onClick={() => setCat(null)} className="back" style={{ border: 0, cursor: "pointer", font: "inherit", fontSize: 13, fontWeight: 700 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>Closet
               </button>

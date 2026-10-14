@@ -16,6 +16,11 @@ const MAX = 1500;
 // Senders that aren't stores.
 const SKIP = /(amctheatres|fandango|ticketmaster|livenation|stubhub|seatgeek|eventbrite|cinemark|regmovies|olo\.com|order\.online|toasttab|chownow|mcdonalds|chick-fil-a|wendys|dominos|jerseymikes|baskinrobbins|starbucks|grubhub|postmates|paypal|venmo|chase|amex|americanexpress|bankofamerica|wellsfargo|capitalone|citi\.com|square|intuit|irs\.gov|doordash|ubereats|uber\.com|lyft|grubhub|instacart|apple\.com|google\.com|linkedin|github|netflix|spotify)/i;
 const FREE_MAIL = /^(gmail|yahoo|outlook|hotmail|icloud|aol|me)\./i;
+// Carriers (they hide the real store), phone and cable bills, restaurants, kids' sports and school sign-ups.
+const NOT_STORE = /(^|\.)(ups|fedex|usps|dhl|ontrac|lasership|verizon|verizonwireless|vzw|att|t-mobile|tmobile|xfinity|comcast|spectrum|cox|chipotle|sweetgreen|cava|panera|tacobell|sportsengine|leagueapps|teamsnap|playmetrics|gotsport|ottosportmail|active|signupgenius|jotform|campminder|schoolpay|myschoolbucks)\.(com|ai|net|org)$/i;
+// Kids' teams, camps and school sign-ups: never saved, even when the email says "order".
+const KIDS_FROM = /\byouth\b|\bsoccer\b|little league|\bacademy\b|\bschool\b|\bpta\b|preschool|daycare|\bcamps?\b/i;
+const KIDS_SUBJECT = /\bregistration\b|\benroll(ment|ed)?\b|\btryouts?\b|\bsummer camp\b/i;
 
 async function get<T>(url: string, token: string): Promise<T> {
   for (let tries = 0; ; tries++) {
@@ -55,7 +60,7 @@ export async function readOne(id: string, token: string): Promise<Order | null> 
 
 // Marketing and follow-ups that mention an order but aren't one.
 // Order contents that point to health. Never saved, even from regular stores.
-const SENSITIVE_SUBJECT = /health ?care|medical|pharmacy|prescription|vitamin|supplement|sexual|incontinence|pregnan|ovulation|fertility|covid|test kit|first aid/i;
+const SENSITIVE_SUBJECT = /health ?care|medical|pharmacy|prescription|vitamin|\bhealth|wellness|eye ?glasses|contact lens|supplement|sexual|incontinence|pregnan|ovulation|fertility|covid|test kit|first aid/i;
 const NOT_ORDER = /order (today|now|by)\b|last chance|don't miss|ends (soon|tonight|today)|reminder|time to review|review it|meet your expectations|rate (your|us)|how did we do|survey|feedback|tell us what you think|write a review|recommended for you/i;
 // Invisible direction marks some stores put around order numbers.
 const INVISIBLE = /[\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g;
@@ -66,7 +71,8 @@ export function parse(id: string, from: string, subjectRaw: string, snippetRaw: 
   if (NOT_ORDER.test(subject) || SENSITIVE_SUBJECT.test(subject) || SENSITIVE_IN_SUBJECT.test(subject)) return null;
   const email = (from.match(/<([^>]+)>/)?.[1] ?? from).trim().toLowerCase();
   const domain = email.split("@")[1] ?? "";
-  if (!domain || SKIP.test(domain) || FREE_MAIL.test(domain) || SENSITIVE.test(domain)) return null;
+  if (!domain || SKIP.test(domain) || NOT_STORE.test(domain) || FREE_MAIL.test(domain) || SENSITIVE.test(domain)) return null;
+  if (KIDS_FROM.test(from.replace(/<[^>]*>/, "")) || KIDS_SUBJECT.test(subject)) return null;
 
   const text = `${subject} ${snippet}`;
   const kind: Kind =
@@ -103,7 +109,7 @@ export function storeName(from: string, domain: string, subject = "") {
   const via = /(^|\.)(stripe\.com)$/.test(domain) ? subject.match(/(?:receipt|order|payment) from ([^#(\[]+)/i)?.[1]?.trim() : null;
   if (via) return via.slice(0, 40);
   let name = from.replace(/<[^>]*>/, "").replace(/["']/g, "").trim();
-  name = name.replace(/\b(customer (service|care)|orders?|order updates|shipping|no-?reply|team|store|shop|online|support|notifications?)\b/gi, "").replace(/[|·,:-]+\s*$/, "").replace(/\s{2,}/g, " ").trim();
+  name = name.replace(/\b(customer (service|care)|orders?|order updates|confirmations?|shipping|no-?reply|team|store|shop|online|support|notifications?)\b/gi, "").replace(/[|·,:-]+\s*$/, "").replace(/\s{2,}/g, " ").trim();
   if (!name || name.includes("@") || name.length > 40) {
     const base = rootDomain(domain).split(".")[0];
     name = base.charAt(0).toUpperCase() + base.slice(1);
@@ -173,7 +179,7 @@ export async function listRewardEmails(token: string, skip: Set<string>): Promis
       const h = (n: string) => m.payload?.headers?.find(x => x.name.toLowerCase() === n.toLowerCase())?.value ?? "";
       const from = h("From"), subject = h("Subject");
       const domain = ((from.match(/<([^>]+)>/)?.[1] ?? from).trim().toLowerCase().split("@")[1]) ?? "";
-      if (!domain || SKIP.test(domain) || FREE_MAIL.test(domain) || SENSITIVE.test(domain) || !REWARD_SUBJECT.test(subject)) continue;
+      if (!domain || SKIP.test(domain) || NOT_STORE.test(domain) || FREE_MAIL.test(domain) || SENSITIVE.test(domain) || !REWARD_SUBJECT.test(subject)) continue;
       out.push({ gmail_id: id, store: storeName(from, domain), store_domain: rootDomain(domain), subject, sent_at: new Date(Number(m.internalDate)).toISOString() });
     }
   };
