@@ -53,7 +53,7 @@ No secrets in this file or in the repo. Ever.
 | Anthropic | API key "actually-app", $25/month limit | Stored only as a Supabase secret. |
 
 Supabase edge function secrets (names only): `ANTHROPIC_API_KEY`, `RESEND_API_KEY`,
-`RESEND_WEBHOOK_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (may not be set yet).
+`RESEND_WEBHOOK_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (set 2026-10-14).
 
 The browser Supabase URL and publishable key live in `app/src/lib/supabase.ts` (public by
 design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPABASE_URL`,
@@ -82,7 +82,7 @@ design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPAB
    `/auth` hands Google's refresh token to `gmail-token` (stored in `gmail_tokens`, server
    only). `gmailToken()` in `lib/supabase.ts` uses the session token, then a device copy,
    then asks `gmail-token` for a new one. Needs `GOOGLE_CLIENT_SECRET`; GET on the function
-   says `{ ready }`. Users who signed in before this must reconnect once.
+   says `{ ready }`. Users who signed in before this must tap "Connect Gmail" in Settings once (`/login` doesn't ask for Gmail).
 
 ## Server functions (`supabase/functions/`)
 
@@ -151,7 +151,7 @@ SQL to `supabase/migrations/<version>_<name>.sql`. Run the security advisor afte
 ## Known gaps and next steps
 
 - Import only runs while the app is open. Refresh tokens are now stored, so a server job
-  for true background sync is the next step once `GOOGLE_CLIENT_SECRET` is set.
+  for true background sync is the next step.
 - Cash back is "coming soon". Partner research done (Wildfire recommended); on hold.
 - Shopping email uses `shop.myocto.co` for testing. Real domain (e.g. actually.shop)
   not bought yet.
