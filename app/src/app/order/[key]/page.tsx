@@ -4,7 +4,7 @@ import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type OrderGroup, blockStore, fmtDate, gmailLink, loadOrders, orderTitle, removeOrder, returnDaysLeft } from "@/lib/orders";
-import { StoreTile, TabBar, tint } from "@/lib/tabs";
+import { ItemImage, TabBar, tint } from "@/lib/tabs";
 
 const LABEL: Record<string, string> = {
   order: "Ordered", receipt: "Receipt", shipping: "Shipped", delivered: "Delivered", return: "Return started", refund: "Refunded",
@@ -66,7 +66,7 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
           </Link>
           <div style={{ display: "flex", gap: 16, alignItems: "flex-end", marginTop: 20 }}>
             <div style={{ transform: "rotate(-3deg)", boxShadow: "0 10px 24px rgba(20,18,16,.12)", borderRadius: 22 }}>
-              <StoreTile store={order.store} domain={order.store_domain} w={104} h={130} radius={22} size={52} />
+              <ItemImage src={order.photo} store={order.store} domain={order.store_domain} w={110} h={138} radius={22} size={52} />
             </div>
             <div style={{ flex: 1, minWidth: 0, paddingBottom: 4 }}>
               <div className="kicker">{order.store}</div>
@@ -84,6 +84,20 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
             </div>
             <div style={{ fontSize: 14, color: "#C9C3BC", marginTop: 8, lineHeight: 1.45 }}>Delivered {fmtDate(order.last_at)}. Most stores allow 30 days. Check {order.store}&apos;s policy to be sure.</div>
           </div>
+        )}
+
+        {order.pieces.length > 0 && (
+          <>
+            <div style={{ padding: "26px 20px 0" }} className="serif"><span style={{ fontSize: 24 }}>In this order</span></div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "12px 16px 0" }}>
+              {order.pieces.map(p => (
+                <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", borderRadius: 20, padding: "8px 14px 8px 8px" }}>
+                  <ItemImage src={p.img} store={order.store} domain={order.store_domain} w={52} h={64} radius={14} size={20} />
+                  <div style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{p.name}</div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         <div style={{ padding: "26px 20px 0" }} className="serif"><span style={{ fontSize: 24 }}>Updates</span></div>

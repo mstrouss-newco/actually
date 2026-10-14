@@ -59,7 +59,11 @@ export type OrderGroup = {
   assumed: boolean;
   // Has clothes, shoes, bags or accessories in it.
   wear: boolean;
+  // Product photo for the order (clothes first), and each piece with its photo.
+  photo: string | null;
+  pieces: Piece[];
 };
+export type Piece = { name: string; img: string | null; wear: boolean };
 
 type FullRow = Row & { subject: string | null; store_domain: string | null };
 const STAGE: Record<string, number> = { order: 0, receipt: 0, shipping: 1, delivered: 2, return: 3, refund: 4 };
@@ -94,7 +98,7 @@ const isDelay = (e: { subject: string | null }) => /delivery estimate|delayed/i.
 const kindOf = (e: { kind: string; subject: string | null }) =>
   e.kind === "shipping" && isDelay(e) ? "order" : e.kind === "order" && /picked up|ready to ship|has shipped/i.test(e.subject ?? "") ? "shipping" : e.kind;
 
-export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = new Map(), wearIds: Set<string> = new Set()): OrderGroup[] {
+export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = new Map(), wearIds: Set<string> = new Set(), itemPieces: Map<string, Piece[]> = new Map()): OrderGroup[] {
   const byKey = new Map<string, OrderGroup>();
   const byWhat = new Map<string, OrderGroup[]>();
   const all: OrderGroup[] = [];
@@ -128,7 +132,7 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
     }
     if (!g) {
       g = { key: r.order_no ? `${sk}|${r.order_no}` : r.gmail_id, store: r.store, store_domain: sk.includes(".") ? sk : null,
-        order_no: r.order_no, amount: null, ordered_at: r.sent_at, last_at: r.sent_at, events: [], stage: "placed", what, items: [], inStore: false, assumed: false, wear: false };
+        order_no: r.order_no, amount: null, ordered_at: r.sent_at, last_at: r.sent_at, events: [], stage: "placed", what, items: [], inStore: false, assumed: false, wear: false, photo: null, pieces: [] };
       all.push(g);
       keyOf.set(g, sk);
       if (r.order_no) byKey.set(g.key, g);
@@ -140,6 +144,7 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
     if (r.sent_at > g.last_at) g.last_at = r.sent_at;
     g.items.push(...(itemNames.get(r.gmail_id) ?? []));
     if (wearIds.has(r.gmail_id)) g.wear = true;
+    g.pieces.push(...(itemPieces.get(r.gmail_id) ?? []));
   }
   // Amazon sends "Delivery estimate update" with only an order number. Fold it into the store's
   // order with contents that was moving in the two weeks around it.
@@ -148,7 +153,7 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
     const at = Date.parse(g.events[0].at);
     const near = all.filter(o => o !== g && keyOf.get(o) === keyOf.get(g) && (o.what || o.items.length) && Math.abs(Date.parse(o.ordered_at) - at) < 14 * DAY_MS)
       .sort((a, b) => Math.abs(Date.parse(a.ordered_at) - at) - Math.abs(Date.parse(b.ordered_at) - at))[0];
-    if (near) { near.events.push(...g.events); near.order_no ??= g.order_no; all.splice(all.indexOf(g), 1); }
+    if (near) { near.events.push(...g.events); near.pieces.push(...g.pieces); near.order_no ??= g.order_no; all.splice(all.indexOf(g), 1); }
   }
   const now = Date.now();
   for (const g of all) {
@@ -166,6 +171,10 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
     // Shipped a week ago, or ordered two weeks ago, with no news since: it most likely arrived.
     else if ((g.stage === "shipped" && quiet > 7 * DAY_MS) || (g.stage === "placed" && quiet > 14 * DAY_MS)) { g.stage = "delivered"; g.assumed = true; }
     g.items = dedupeNames(g.items);
+    const seen = new Set<string>();
+    g.pieces = g.pieces.filter(p => { const k = baseName(p.name); if (seen.has(k)) return false; seen.add(k); return true; })
+      .sort((a, b) => Number(b.wear) - Number(a.wear) || Number(!!b.img) - Number(!!a.img));
+    g.photo = g.pieces.find(p => p.img)?.img ?? null;
   }
   return all.sort((a, b) => b.last_at.localeCompare(a.last_at));
 }
@@ -187,15 +196,17 @@ export async function loadOrders(): Promise<OrderGroup[] | null> {
   if (!auth.session) return null;
   const [{ data }, { data: items }] = await Promise.all([
     sb.from("orders").select("store, store_domain, kind, order_no, amount, sent_at, gmail_id, subject").neq("kind", "other").order("sent_at", { ascending: false }).limit(5000),
-    sb.from("items").select("gmail_id, name, category").limit(5000),
+    sb.from("items").select("gmail_id, name, category, image_url").limit(5000),
   ]);
   const names = new Map<string, string[]>();
   const wear = new Set<string>();
-  for (const i of (items ?? []) as { gmail_id: string; name: string; category: string }[]) {
+  const pieces = new Map<string, Piece[]>();
+  for (const i of (items ?? []) as { gmail_id: string; name: string; category: string; image_url: string | null }[]) {
     names.set(i.gmail_id, [...(names.get(i.gmail_id) ?? []), i.name]);
     if (WEAR.includes(i.category)) wear.add(i.gmail_id);
+    pieces.set(i.gmail_id, [...(pieces.get(i.gmail_id) ?? []), { name: i.name, img: i.image_url, wear: WEAR.includes(i.category) }]);
   }
-  return groupOrders((data ?? []) as FullRow[], names, wear);
+  return groupOrders((data ?? []) as FullRow[], names, wear, pieces);
 }
 
 const DAY = 86400000;

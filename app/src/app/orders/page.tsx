@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { type OrderGroup, fmtDate, isArriving, isReturn, loadOrders, orderTitle, returnDaysLeft } from "@/lib/orders";
-import { Progress, StoreTile, TabBar } from "@/lib/tabs";
+import { Progress, ItemImage, TabBar } from "@/lib/tabs";
 
 type Tab = "arriving" | "delivered" | "returns" | "all";
 const TABS: [Tab, string][] = [["arriving", "Arriving"], ["delivered", "Delivered"], ["returns", "Returns"], ["all", "All"]];
@@ -84,14 +84,16 @@ export default function Orders() {
             const c = chip(g);
             return (
               <Link key={g.key} href={`/order/${encodeURIComponent(g.key)}`} className="orow" style={{ textDecoration: "none", display: "flex", gap: 14, alignItems: "center", background: "#FAF8F6", borderRadius: 24, padding: "10px 14px 10px 10px" }}>
-                <StoreTile store={g.store} domain={g.store_domain} w={70} h={86} />
+                <ItemImage src={g.photo} store={g.store} domain={g.store_domain} w={78} h={96} radius={18} size={30} />
                 <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 5 }}>
-                  <div className="kicker">{g.store}</div>
-                  <div style={{ fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{orderTitle(g)}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div className="kicker" style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{g.store}</div>
+                    {c && <div style={{ flex: "none", background: c[1], borderRadius: 999, padding: "4px 9px", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{c[0]}</div>}
+                  </div>
+                  <div style={{ fontWeight: 700, fontSize: 15, lineHeight: 1.25, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{orderTitle(g)}</div>
                   <div style={{ fontSize: 13, color: "var(--soft)" }}>{status(g)}{g.amount != null ? ` · $${g.amount.toFixed(2)}` : ""}</div>
                   {isArriving(g) && <div style={{ marginTop: 2 }}><Progress step={STEP[g.stage]} h={5} /></div>}
                 </div>
-                {c && <div style={{ alignSelf: "flex-start", marginTop: 4, background: c[1], borderRadius: 999, padding: "6px 10px", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>{c[0]}</div>}
               </Link>
             );
           })}
