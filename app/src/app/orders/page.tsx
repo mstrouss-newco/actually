@@ -82,7 +82,7 @@ export default function Orders() {
             const c = chip(g);
             return (
               <Link key={g.key} href={`/order/${encodeURIComponent(g.key)}`} className="orow" style={{ textDecoration: "none", display: "flex", gap: 14, alignItems: "center", background: "#FAF8F6", borderRadius: 24, padding: "10px 14px 10px 10px" }}>
-                <StoreTile store={g.store} w={70} h={86} />
+                <StoreTile store={g.store} domain={g.store_domain} w={70} h={86} />
                 <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 5 }}>
                   <div className="kicker">{g.store}</div>
                   <div style={{ fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{orderTitle(g)}</div>

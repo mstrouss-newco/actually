@@ -29,8 +29,21 @@ export function TabBar() {
 const TINTS = ["#DCEBFF", "#DCEFDF", "#FFE3CC", "#FFE1DC", "#EBE3FF", "#FFF0BF"];
 export const tint = (s: string) => TINTS[[...s].reduce((n, c) => n + c.charCodeAt(0), 0) % TINTS.length];
 
-// Stand-in picture for an order until we have product photos: the store's first letter.
-export function StoreTile({ store, w, h, radius = 18, size = 28 }: { store: string; w: number; h: number; radius?: number; size?: number }) {
+// The store's logo, looked up by its web address. Falls back to its first letter.
+export const logoUrl = (domain: string) => `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
+
+export function StoreTile({ store, domain, w, h, radius = 18, size = 28 }: { store: string; domain?: string | null; w: number; h: number; radius?: number; size?: number }) {
+  const [bad, setBad] = useState(false);
+  if (domain && !bad) {
+    const logo = Math.round(Math.min(w, h) * 0.5);
+    return (
+      <div style={{ width: w, height: h, borderRadius: radius, background: "#fff", border: "1.5px solid var(--line)", flex: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={logoUrl(domain)} alt={store} width={logo} height={logo} referrerPolicy="no-referrer" onError={() => setBad(true)}
+          onLoad={e => { if ((e.target as HTMLImageElement).naturalWidth <= 16) setBad(true); }} style={{ borderRadius: 8 }} />
+      </div>
+    );
+  }
   return (
     <div className="serif" style={{ width: w, height: h, borderRadius: radius, background: tint(store), flex: "none", display: "flex", alignItems: "center", justifyContent: "center", fontSize: size, fontStyle: "italic" }}>
       {store.charAt(0).toUpperCase()}
