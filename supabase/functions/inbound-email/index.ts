@@ -16,9 +16,9 @@ const SENSITIVE = /(^|\.)(ro\.co|getroman\.com|hims\.com|forhers\.com|hers\.com|
 // ---------- is it a real shopping order? (same rules as screen-emails) ----------
 
 const SCREEN_SYSTEM = `You sort emails for a personal shopping app. For the email, answer with one verdict:
-- "shopping": an order, shipping, delivery, return, refund or receipt for physical goods bought from a store. Clothing, shoes, bags, accessories, jewelry, beauty and cosmetics, home goods, furniture, electronics, toys, gifts, sports gear, books.
+- "shopping": an order, shipping, delivery, return, refund or receipt for physical goods bought from a store. Clothing, shoes, bags, accessories, jewelry, beauty and cosmetics, home goods, furniture, electronics, toys, gifts, sports gear, books, pet food and pet supplies, garden and household supplies. Repeat deliveries of physical goods (Autoship, Subscribe & Save) count as shopping.
 - "sensitive": anything about health or privacy, even if it is an order. Pharmacy, prescriptions, medicine, vitamins sold for a condition, telehealth, doctors, labs and tests, mental health, fertility, pregnancy, birth control, sexual health or adult products, weight-loss programs, hair-loss treatment, medical devices, insurance, legal, debt or banking.
-- "other": everything else. Software and online services, app and cloud bills, subscriptions, utilities, phone bills, school or kids' activity notices, events and tickets, travel, rides, food delivery and restaurants, groceries, donations, newsletters, marketing and promotions without a purchase.
+- "other": everything else. Software and online services, app and cloud bills, digital subscriptions and memberships, in-game or account credit, news, utilities, phone bills, school or kids' activity notices, events and tickets, school or team forms and photo-day reminders, travel, rides, food delivery and restaurants, groceries, donations, newsletters, work emails, marketing and promotions without a confirmed purchase.
 If unsure between shopping and sensitive, choose sensitive. If unsure whether it is a purchase at all, choose other.`;
 
 const Verdict = z.object({ verdict: z.enum(["shopping", "sensitive", "other"]) });

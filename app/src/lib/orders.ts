@@ -104,6 +104,17 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
   }
   const groups = new Set([...byKey.values(), ...[...byWhat.values()].flat()]);
   for (const r of sorted) if (!r.order_no && !describe(r.subject)) groups.add(lone(r, itemNames));
+  // "Your order was delivered" often has no order number (Chewy). Attach it to the
+  // store's newest order that shipped in the 10 days before and isn't delivered yet.
+  for (const g of [...groups]) {
+    if (g.order_no || g.events.some(e => e.kind !== "delivered")) continue;
+    const at = Date.parse(g.events[0].at);
+    const open = [...groups].filter(o => o !== g && o.order_no && o.store_domain === g.store_domain
+      && o.events.some(e => e.kind === "shipping") && !o.events.some(e => e.kind === "delivered")
+      && at >= Date.parse(o.last_at) && at - Date.parse(o.last_at) < 10 * 86400000)
+      .sort((a, b) => b.last_at.localeCompare(a.last_at))[0];
+    if (open) { open.events.push(...g.events); open.last_at = g.last_at; groups.delete(g); }
+  }
   for (const g of groups) {
     g.events.sort((a, b) => a.at.localeCompare(b.at));
     g.stage = STAGES[Math.max(...g.events.map(e => STAGE[e.kind] ?? 0))];
