@@ -57,7 +57,7 @@ export default function Import() {
             if (batch.length >= 50) await save();
           }
         };
-        await Promise.all(Array.from({ length: 8 }, worker));
+        await Promise.all(Array.from({ length: 4 }, worker));
         await save();
         setStage("done");
       } catch (e) {
