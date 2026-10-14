@@ -8,7 +8,7 @@ import { readItems } from "./items";
 import { scanRewards } from "./earn";
 
 export type ImportState = {
-  stage: "idle" | "scan" | "items" | "done" | "reconnect" | "no-access" | "error";
+  stage: "idle" | "scan" | "items" | "points" | "done" | "reconnect" | "no-access" | "error";
   read: number; total: number; orders: number; skipped: number; latest: Order[];
   itemsDone: number; itemsTotal: number; itemsFound: number;
 };
@@ -19,7 +19,7 @@ const set = (patch: Partial<ImportState>) => { state = { ...state, ...patch }; l
 
 export const importState = () => state;
 export function onImport(fn: (s: ImportState) => void) { listeners.add(fn); return () => { listeners.delete(fn); }; }
-export const importing = () => state.stage === "scan" || state.stage === "items";
+export const importing = () => state.stage === "scan" || state.stage === "items" || state.stage === "points";
 
 export async function startImport() {
   if (importing()) return;
@@ -82,6 +82,7 @@ export async function startImport() {
     set({ stage: "items" });
     await readItems(token, (done, total, found) => set({ itemsDone: done, itemsTotal: total, itemsFound: found }));
     // Points and credit too, while Google's pass is still fresh.
+    set({ stage: "points" });
     await scanRewards(() => {}).catch(() => null);
     set({ stage: "done" });
   } catch (e) {

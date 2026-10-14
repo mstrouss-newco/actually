@@ -8,7 +8,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.117.3";
 const CATEGORIES = ["tops", "bottoms", "dresses", "outerwear", "shoes", "bags", "accessories", "beauty", "home", "other"] as const;
 
 const Result = z.object({
-  is_order: z.boolean().describe("True only if this email confirms a purchase and lists what was bought."),
+  is_order: z.boolean().describe("True only if this email is about a purchase (order, receipt or shipment) and lists what was bought."),
   items: z.array(z.object({
     name: z.string().describe("Short product name as a shopper would say it, without size or color. Example: 'Pegasus 41 running shoe'."),
     brand: z.string().nullable().describe("Brand of the product. Often the store itself."),

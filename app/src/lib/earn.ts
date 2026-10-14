@@ -4,6 +4,9 @@ import { type Item, WEAR } from "./items";
 
 export type Reward = { store: string; store_domain: string | null; kind: string; points: number | null; value: number | null; expires_on: string | null; sent_at: string };
 
+const NOT_REWARD = /\b(card|visa|mastercard|amex|credit union|bank)\b|openai|anthropic|chatgpt/i;
+const NOT_REWARD_DOMAIN = /(^|\.)(openai|anthropic|chase|citi|capitalone|americanexpress|discover|barclays|synchronybank|bankofamerica|wellsfargo)\.com$/i;
+
 // Her current balance at each store: the newest email per store and kind, skipping anything expired or stale.
 export async function loadRewards(): Promise<Reward[]> {
   const { data } = await supabase().from("rewards").select("store, store_domain, kind, points, value, expires_on, sent_at").not("kind", "is", null).order("sent_at", { ascending: false }).limit(1000);
@@ -14,6 +17,10 @@ export async function loadRewards(): Promise<Reward[]> {
     const key = `${r.store}|${r.kind}`;
     if (seen.has(key)) return false;
     seen.add(key);
+    // Nothing to show: no money value and no points.
+    if (!r.value && !r.points) return false;
+    // Bank cards and app or AI credit aren't store rewards.
+    if (NOT_REWARD.test(r.store) || (r.store_domain && NOT_REWARD_DOMAIN.test(r.store_domain))) return false;
     return (!r.expires_on || r.expires_on >= today) && r.sent_at > stale;
   }).sort((a, b) => (a.expires_on ?? "9999").localeCompare(b.expires_on ?? "9999"));
 }

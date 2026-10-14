@@ -14,7 +14,7 @@ const QUERY = '(category:purchases OR subject:(order OR receipt OR shipped OR de
 const MAX = 1500;
 
 // Senders that aren't stores.
-const SKIP = /(amctheatres|fandango|ticketmaster|livenation|stubhub|seatgeek|eventbrite|cinemark|regmovies|olo\.com|order\.online|toasttab|chownow|mcdonalds|chick-fil-a|wendys|dominos|jerseymikes|baskinrobbins|starbucks|grubhub|postmates|paypal|venmo|chase|amex|americanexpress|bankofamerica|wellsfargo|capitalone|citi\.com|square|intuit|irs\.gov|doordash|ubereats|uber\.com|lyft|grubhub|instacart|apple\.com|google\.com|linkedin|github|netflix|spotify)/i;
+const SKIP = /(amctheatres|fandango|ticketmaster|livenation|stubhub|seatgeek|eventbrite|cinemark|regmovies|olo\.com|order\.online|toasttab|chownow|mcdonalds|chick-fil-a|wendys|dominos|jerseymikes|baskinrobbins|starbucks|grubhub|postmates|paypal|venmo|chase|amex|americanexpress|bankofamerica|wellsfargo|capitalone|citi\.com|square|intuit|irs\.gov|doordash|ubereats|uber\.com|lyft|grubhub|instacart|apple\.com|google\.com|linkedin|github|netflix|spotify|openai|anthropic|discover|barclays|synchrony)/i;
 const FREE_MAIL = /^(gmail|yahoo|outlook|hotmail|icloud|aol|me)\./i;
 // Carriers (they hide the real store), phone and cable bills, restaurants, kids' sports and school sign-ups.
 const NOT_STORE = /(^|\.)(ups|fedex|usps|dhl|ontrac|lasership|verizon|verizonwireless|vzw|att|t-mobile|tmobile|xfinity|comcast|spectrum|cox|chipotle|sweetgreen|cava|panera|tacobell|sportsengine|leagueapps|teamsnap|playmetrics|gotsport|ottosportmail|active|signupgenius|jotform|campminder|schoolpay|myschoolbucks|educationalproducts|schoolkidz|owner|popmenu|bentobox|slicelife)\.(com|ai|net|org)$/i;
@@ -184,5 +184,8 @@ export async function listRewardEmails(token: string, skip: Set<string>): Promis
     }
   };
   await Promise.all(Array.from({ length: 4 }, worker));
-  return out;
+  // A balance only needs the newest email from each store.
+  const newest = new Map<string, RewardEmail>();
+  for (const e of out.sort((a, b) => b.sent_at.localeCompare(a.sent_at))) if (!newest.has(e.store_domain)) newest.set(e.store_domain, e);
+  return [...newest.values()];
 }

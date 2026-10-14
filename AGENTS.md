@@ -69,7 +69,7 @@ design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPAB
    list matching emails → read headers → `parse()` in `lib/gmail.ts` drops non-orders,
    blocked senders and sensitive mail → each batch goes to `screen-emails` (AI) →
    only "shopping" is saved to `orders` → then `read-order` (AI) reads full order emails
-   into `items`. After the first import, only mail since `profiles.last_import_at` is read.
+   into `items` (also numbered shipping emails for orders with no order email, except Amazon). After the first import, only mail since `profiles.last_import_at` is read.
 3. **Shopping email:** mail to name@shop.myocto.co → Resend → `inbound-email` forwards
    it to the user's inbox, screens it and saves orders and items.
 4. **Grouping:** `groupOrders()` in `lib/orders.ts` turns emails into orders in the
@@ -77,7 +77,7 @@ design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPAB
    contents within 21 days (Amazon), else an email with neither joins the store's latest
    open order from the last 10 days. A numbered email can adopt an open unnumbered order.
    "Out for delivery" 2+ days ago = delivered. Relay senders
-   (`RELAY`, e.g. Narvar) don't count as the store's address. Quiet for 30 days = arrived (`assumed`, shown as "Last update").
+   (`RELAY`, e.g. Narvar) don't count as the store's address. Shipped 7+ days or ordered 14+ days with no news = arrived (`assumed`, shown as "Likely arrived"). Store names via a relay map to the store's own web address when one is seen. Amazon delay-only orders fold into the nearest order with contents.
 5. **Gmail pass:** Google's token lasts about an hour and Supabase drops it on refresh.
    `/auth` hands Google's refresh token to `gmail-token` (stored in `gmail_tokens`, server
    only). `gmailToken()` in `lib/supabase.ts` uses the session token, then a device copy,
