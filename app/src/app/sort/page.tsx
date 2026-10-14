@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { type Item, loadItems, setPick, toSort } from "@/lib/items";
-import { ItemImage, tint } from "@/lib/tabs";
+import { type Item, brandOf, loadItems, setPick, setPicks, toSort } from "@/lib/items";
+import { ItemImage } from "@/lib/tabs";
 
 type Pick = NonNullable<Item["pick"]>;
 const DIR: Record<Pick, [number, number]> = { share: [520, 40], private: [-520, 40], sell: [0, -760] };
@@ -49,12 +49,29 @@ export default function Sort() {
 
   const op = (v: number) => Math.max(0, Math.min(1, v / THRESHOLD));
   const finished = deck !== null && i >= total;
+  const restPrivate = () => {
+    if (!deck || d.fly) return;
+    const rest = deck.slice(i);
+    setPicks(rest.map(x => x.id), "private");
+    setHist(h => [...h, ...rest.map(() => "private" as Pick)]);
+    setI(total);
+  };
+  const shared = (deck ?? []).filter((_, n) => hist[n] === "share");
+  const fan = (shared.length >= 3 ? shared : deck ?? []).slice(0, 3);
+  const last = hist.at(-1);
+  const idle = d.x === 0 && d.y === 0;
+  const hint: React.CSSProperties = { border: 0, background: "none", padding: 0, font: "700 13px var(--font-sans), sans-serif", color: "var(--muted)", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 };
+  const stamp = (color: string, rot: number): React.CSSProperties => ({ position: "absolute", top: 22, zIndex: 2, border: `3px solid ${color}`, color, borderRadius: 12, padding: "6px 12px", font: "700 20px var(--font-sans), sans-serif", letterSpacing: ".06em", transform: `rotate(${rot}deg)`, background: "rgba(255,255,255,.8)" });
 
   return (
-    <main className="screen" style={{ paddingTop: 20, overflow: "hidden" }}>
+    <main className="screen" style={{ padding: "20px 20px 26px", overflow: "hidden" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Link href="/closet" className="back" style={{ padding: "0 14px" }}>Finish later</Link>
-        {!finished && <button onClick={undo} disabled={!i} className="back" style={{ border: 0, cursor: "pointer", font: "inherit", fontSize: 13, fontWeight: 700, padding: "0 14px", opacity: i ? 1 : 0.4 }}>Undo</button>}
+        {!finished && (
+          <button onClick={undo} disabled={!i} style={{ height: 36, padding: "0 14px", borderRadius: 999, border: 0, background: "transparent", font: "700 13px var(--font-sans), sans-serif", color: i ? "var(--ink)" : "#C9C3BC", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14L4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-3" /></svg>Undo
+          </button>
+        )}
       </div>
 
       {deck === null && <p className="lead">Loading your pieces…</p>}
@@ -70,59 +87,71 @@ export default function Sort() {
 
       {card && (
         <>
-          <h1 className="h1" style={{ fontSize: 36, marginTop: 20 }}>Sort your <em>pieces</em></h1>
+          <div className="serif" style={{ fontSize: 32, lineHeight: 1.05, letterSpacing: "-0.02em", marginTop: 14 }}>Pick what to <em>share</em></div>
           <div style={{ marginTop: 14, height: 6, borderRadius: 3, background: "#F1EDE8", overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${Math.round((i / total) * 100)}%`, background: "var(--ink)", transition: "width .3s" }} />
+            <div style={{ height: "100%", width: `${Math.round((i / total) * 100)}%`, background: "var(--ink)", borderRadius: 3, transition: "width .3s" }} />
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 13, color: "var(--muted)", fontWeight: 700 }}>
-            <span>{i + 1} of {total}</span>
-            <span>{count("share")} shared · {count("sell")} to sell · {count("private")} private</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 10 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>{i + 1} of {total}</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <span key={`s${count("share")}`} className={last === "share" ? "bump" : ""} style={{ background: "#DCEFDF", borderRadius: 999, padding: "6px 10px", fontSize: 12, fontWeight: 700 }}>{count("share")} shared</span>
+              {count("sell") > 0 && <span key={`l${count("sell")}`} className={last === "sell" ? "bump" : ""} style={{ background: "#FFF0BF", borderRadius: 999, padding: "6px 10px", fontSize: 12, fontWeight: 700 }}>{count("sell")} to sell</span>}
+              <span key={`p${count("private")}`} className={last === "private" ? "bump" : ""} style={{ background: "var(--chip)", borderRadius: 999, padding: "6px 10px", fontSize: 12, fontWeight: 700 }}>{count("private")} private</span>
+            </div>
           </div>
+          <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>Your feed is the page friends follow. It shows the photo, brand and name only.</div>
 
-          <div style={{ position: "relative", flex: 1, minHeight: 300, marginTop: 18 }}>
-            {[2, 1].map(k => deck[i + k] && (
-              <div key={k} style={{ position: "absolute", inset: 0, borderRadius: 30, background: tint(deck[i + k].store), transform: `translateY(${k * 10}px) scale(${1 - k * 0.04})`, opacity: 0.7 }} />
-            ))}
+          <div style={{ position: "relative", flex: 1, minHeight: 280, marginTop: 16 }}>
+            {deck[i + 2] && <div style={{ position: "absolute", inset: "26px 26px 0", borderRadius: 32, background: "#E4DED6", transform: "scale(.9) translateY(24px)" }} />}
+            {deck[i + 1] && <div style={{ position: "absolute", inset: "14px 14px 0", borderRadius: 32, background: "#ECE7E0", transform: "scale(.95) translateY(12px)", boxShadow: "0 8px 20px rgba(20,18,16,.06)" }} />}
             <div
               onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
               style={{
-                position: "absolute", inset: 0, borderRadius: 30, background: "#fff", border: "1.5px solid var(--line)", boxShadow: "0 14px 34px rgba(20,18,16,.12)",
-                touchAction: "none", cursor: "grab", userSelect: "none", display: "flex", flexDirection: "column", overflow: "hidden",
+                position: "absolute", inset: 0, borderRadius: 32, background: "var(--tile)", boxShadow: "0 20px 44px rgba(20,18,16,.18)",
+                touchAction: "none", cursor: "grab", userSelect: "none", overflow: "hidden",
                 transform: `translate(${d.x}px, ${d.y}px) rotate(${d.x / 18}deg)`, transition: d.drag ? "none" : "transform .28s cubic-bezier(.2,.8,.2,1)",
               }}
             >
-              <div style={{ position: "absolute", top: 18, left: 18, zIndex: 2, border: "3px solid #2F7A4F", color: "#2F7A4F", borderRadius: 10, padding: "4px 10px", fontWeight: 700, transform: "rotate(-10deg)", opacity: op(d.x) }}>SHARE</div>
-              <div style={{ position: "absolute", top: 18, right: 18, zIndex: 2, border: "3px solid #7A746D", color: "#7A746D", borderRadius: 10, padding: "4px 10px", fontWeight: 700, transform: "rotate(10deg)", opacity: op(-d.x) }}>PRIVATE</div>
-              <div style={{ position: "absolute", top: 18, left: "50%", zIndex: 2, border: "3px solid #8A6D1E", color: "#8A6D1E", borderRadius: 10, padding: "4px 10px", fontWeight: 700, transform: "translateX(-50%)", opacity: op(-d.y - Math.abs(d.x)) }}>SELL</div>
-              <div style={{ flex: 1, minHeight: 0, pointerEvents: "none" }}>
+              <div style={{ ...stamp("#2F7A4F", -12), left: 20, opacity: op(d.x) }}>SHARE</div>
+              <div style={{ ...stamp("#141210", 12), right: 20, opacity: op(-d.x) }}>PRIVATE</div>
+              <div style={{ ...stamp("#8A6D1E", 0), left: "50%", translate: "-50% 0", opacity: op(-d.y - Math.abs(d.x)) }}>SELL</div>
+              <div style={{ position: "absolute", top: 18, left: "50%", transform: "translateX(-50%)", background: "rgba(255,255,255,.85)", borderRadius: 999, padding: "6px 12px", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", opacity: idle ? 1 : 0, transition: "opacity .15s" }}>From your {brandOf(card)} orders</div>
+              <div style={{ position: "absolute", left: "14%", right: "14%", top: 56, bottom: 128, pointerEvents: "none" }}>
                 <ItemImage src={card.image_url} store={card.store} w="100%" h="100%" radius={0} size={96} />
               </div>
-              <div style={{ padding: "14px 18px 18px", pointerEvents: "none" }}>
-                <div className="kicker">{card.brand || card.store}</div>
-                <div className="serif" style={{ fontSize: 24, lineHeight: 1.1, marginTop: 4 }}>{card.name}</div>
-                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+              <div style={{ position: "absolute", left: 12, right: 12, bottom: 12, background: "#fff", borderRadius: 24, padding: "16px 18px", pointerEvents: "none" }}>
+                <div className="kicker">{brandOf(card)}</div>
+                <div className="serif" style={{ fontSize: 26, lineHeight: 1.1, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{card.name}</div>
+                <div style={{ fontSize: 13, color: "var(--soft)", marginTop: 4 }}>
                   {[card.size && `Size ${card.size}`, `bought ${new Date(card.ordered_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })}`].filter(Boolean).join(" · ")}
                 </div>
               </div>
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
-            <button onClick={() => decide("private")} className="btn" style={{ marginTop: 0, height: 52, fontSize: 15 }}>Keep private</button>
-            <button onClick={() => decide("sell")} className="btn btn-line" style={{ marginTop: 0, height: 52, fontSize: 15 }}>Sell</button>
-            <button onClick={() => decide("share")} className="btn btn-line" style={{ marginTop: 0, height: 52, fontSize: 15 }}>Share</button>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, padding: "0 6px" }}>
+            <button onClick={() => decide("private")} className="nl" style={hint}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>Keep private</button>
+            <button onClick={() => decide("sell")} style={{ ...hint, fontSize: 12, fontWeight: 500 }}>Up to sell</button>
+            <button onClick={() => decide("share")} className="nr" style={{ ...hint, color: "#2F7A4F" }}>Share<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button>
           </div>
-          <div className="note">Everything stays private unless you share it. Swipe right to share, left to keep private, up to sell.</div>
+          {total - i > 1 && <button onClick={restPrivate} style={{ marginTop: 10, height: 36, border: 0, background: "transparent", font: "500 13px var(--font-sans), sans-serif", color: "var(--muted)", cursor: "pointer", textDecoration: "underline" }}>Keep the other {total - i} private</button>}
         </>
       )}
 
       {finished && total > 0 && (
-        <>
-          <h1 className="h1" style={{ fontSize: 40, marginTop: 40 }}>All <em>sorted.</em></h1>
-          <p className="lead">{count("share")} to share · {count("sell")} to sell · {count("private")} kept private</p>
-          <div className="spacer" />
-          <Link href="/closet" className="btn">Back to closet</Link>
-        </>
+        <div className="rise" style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center" }}>
+          <div style={{ display: "flex", marginBottom: 26 }}>
+            {fan.map((x, n) => (
+              <div key={x.id} style={{ transform: ["rotate(-10deg) translateX(14px)", "translateY(-8px)", "rotate(10deg) translateX(-14px)"][n], zIndex: n === 1 ? 1 : 0, boxShadow: n === 1 ? "0 10px 20px rgba(0,0,0,.1)" : "none", borderRadius: 18 }}>
+                <ItemImage src={x.image_url} store={x.store} w={70} h={88} radius={18} size={26} />
+              </div>
+            ))}
+          </div>
+          <div className="serif" style={{ fontSize: 40, lineHeight: 1 }}>Your feed is <em>ready.</em></div>
+          <div style={{ fontSize: 15, color: "var(--muted)", marginTop: 12 }}>{[`${count("share")} shared`, count("sell") && `${count("sell")} to sell`, `${count("private")} kept private`].filter(Boolean).join(" · ")}</div>
+          <Link href="/feed?tab=mine" className="btn" style={{ marginTop: 26, width: "auto", padding: "0 32px" }}>See my feed</Link>
+          <Link href="/people" style={{ marginTop: 8, height: 44, display: "flex", alignItems: "center", fontSize: 15, fontWeight: 700, color: "#5B44B0", textDecoration: "none" }}>Find friends to follow</Link>
+        </div>
       )}
     </main>
   );
