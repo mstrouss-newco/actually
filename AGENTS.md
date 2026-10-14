@@ -30,7 +30,7 @@ Mike (mstrouss@gmail.com) is not a coder. When talking to him:
 | Path | What it is |
 |---|---|
 | `app/` | The real app. Next.js 15 (App Router), TypeScript, no CSS framework. |
-| `app/src/app/` | Screens, one folder per route. |
+| `app/src/app/` | Screens, one folder per route. `/settings` (from the person icon on Today) has disconnect Gmail, delete data, sign out, delete account. |
 | `app/src/lib/` | Shared logic (Gmail reading, orders, items, earn, social, UI pieces). |
 | `supabase/functions/` | Server functions (Deno). Source of truth for what is deployed. |
 | `supabase/migrations/` | Every database change, in order. Source of truth for the schema. |
@@ -89,6 +89,7 @@ design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPAB
 | `read-reward` | Yes | AI reads a points / credit / gift card email. |
 | `value-items` | Yes | AI estimates resale ranges, 40 items at a time. |
 | `inbound-email` | No (checks Resend signature) | Shopping email receiver. |
+| `delete-account` | Yes | `data`: deletes orders, items, rewards, blocked stores (keeps account). `account`: deletes the user; every table cascades. |
 
 All AI calls use `claude-haiku-5-5` with structured output, chosen for cost (about
 $0.50 per user to start). Ask Mike before switching to a pricier model.
@@ -152,5 +153,4 @@ SQL to `supabase/migrations/<version>_<name>.sql`. Run the security advisor afte
 - Google app is in Testing: each tester's Gmail must be added in Google Cloud. Going
   past 100 users needs Google's review plus privacy policy, terms and delete-account.
 - Restaurants, tickets, groceries and digital purchases are skipped on purpose.
-- No settings screen yet (disconnect Gmail, delete account).
 - Return windows are a 30-day estimate, not per-store policy.
