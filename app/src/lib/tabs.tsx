@@ -48,17 +48,40 @@ const TINTS = ["#DCEBFF", "#DCEFDF", "#FFE3CC", "#FFE1DC", "#EBE3FF", "#FFF0BF"]
 export const tint = (s: string) => TINTS[[...s].reduce((n, c) => n + c.charCodeAt(0), 0) % TINTS.length];
 
 // The store's logo, looked up by its web address. Falls back to its first letter.
-export const logoUrl = (domain: string) => `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
+// Two logo sources, tried in order. Google answers a tiny globe when it has nothing.
+const LOGOS = [
+  (d: string) => `https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=128`,
+  (d: string) => `https://icons.duckduckgo.com/ip3/${encodeURIComponent(d)}.ico`,
+];
+export const logoUrl = LOGOS[0];
 
-export function StoreTile({ store, domain, w, h, radius = 18, size = 28 }: { store: string; domain?: string | null; w: number; h: number; radius?: number; size?: number }) {
-  const [bad, setBad] = useState(false);
-  if (domain && !bad) {
-    const logo = Math.round(Math.min(w, h) * 0.5);
+// Stores whose web address isn't just their name plus .com.
+const KNOWN: Record<string, string> = {
+  levis: "levi.com", amazon: "amazon.com", target: "target.com", jcrew: "jcrew.com", gap: "gap.com", oldnavy: "oldnavy.com",
+  nordstrom: "nordstrom.com", nordstromrack: "nordstromrack.com", hm: "hm.com", zara: "zara.com", uniqlo: "uniqlo.com",
+  bouqs: "bouqs.com", thebouqs: "bouqs.com", lego: "lego.com", rei: "rei.com", costco: "costco.com", walmart: "walmart.com",
+  homedepot: "homedepot.com", lowes: "lowes.com", bestbuy: "bestbuy.com", macys: "macys.com", kohls: "kohls.com",
+  dickssportinggoods: "dickssportinggoods.com", underarmour: "underarmour.com", nike: "nike.com", adidas: "adidas.com",
+  lululemon: "lululemon.com", patagonia: "patagonia.com", sunglassresort: "sunglassresort.com",
+};
+// The store's web address: the one from the email, else a good guess from its name.
+export function storeDomain(store: string, domain?: string | null) {
+  if (domain) return domain;
+  const key = store.toLowerCase().replace(/[’']s\b/g, "s").replace(/\.(com|co|net|shop)$/, "").replace(/[^a-z0-9]/g, "");
+  if (!key) return null;
+  return KNOWN[key] ?? `${key}.com`;
+}
+
+export function StoreTile({ store, domain, w, h, radius = 18, size = 28 }: { store: string; domain?: string | null; w: number | string; h: number | string; radius?: number; size?: number }) {
+  const [src, setSrc] = useState(0);
+  const d = storeDomain(store, domain);
+  if (d && src < LOGOS.length) {
+    const logo = typeof w === "number" && typeof h === "number" ? Math.round(Math.min(w, h) * 0.5) : Math.round(size * 1.8);
     return (
       <div style={{ width: w, height: h, borderRadius: radius, background: "#fff", border: "1.5px solid var(--line)", flex: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logoUrl(domain)} alt={store} width={logo} height={logo} referrerPolicy="no-referrer" onError={() => setBad(true)}
-          onLoad={e => { if ((e.target as HTMLImageElement).naturalWidth <= 16) setBad(true); }} style={{ borderRadius: 8 }} />
+        <img key={src} src={LOGOS[src](d)} alt={store} width={logo} height={logo} referrerPolicy="no-referrer" onError={() => setSrc(n => n + 1)}
+          onLoad={e => { if ((e.target as HTMLImageElement).naturalWidth <= 16) setSrc(n => n + 1); }} style={{ borderRadius: 8 }} />
       </div>
     );
   }
@@ -78,16 +101,10 @@ export function Progress({ step, h = 4 }: { step: number; h?: number }) {
   );
 }
 
-// Product photo from the order email, or the store letter if there isn't one or it won't load.
+// Product photo from the order email, or the store logo if there isn't one or it won't load.
 export function ItemImage({ src, store, w, h, radius = 18, size = 28 }: { src: string | null; store: string; w: number | string; h: number | string; radius?: number; size?: number }) {
   const [bad, setBad] = useState(false);
-  if (!src || bad) {
-    return (
-      <div className="serif" style={{ width: w, height: h, borderRadius: radius, background: tint(store), flex: "none", display: "flex", alignItems: "center", justifyContent: "center", fontSize: size, fontStyle: "italic" }}>
-        {store.charAt(0).toUpperCase()}
-      </div>
-    );
-  }
+  if (!src || bad) return <StoreTile store={store} w={w} h={h} radius={radius} size={size} />;
   return (
     <div style={{ width: w, height: h, borderRadius: radius, background: "var(--tile)", flex: "none", overflow: "hidden" }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
