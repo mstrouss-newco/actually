@@ -14,7 +14,7 @@ const QUERY = '(category:purchases OR subject:(order OR receipt OR shipped OR de
 const MAX = 1500;
 
 // Senders that aren't stores.
-const SKIP = /(amctheatres|fandango|ticketmaster|livenation|stubhub|seatgeek|eventbrite|cinemark|regmovies|olo\.com|order\.online|toasttab|chownow|mcdonalds|chick-fil-a|wendys|dominos|jerseymikes|baskinrobbins|starbucks|grubhub|postmates|paypal|venmo|chase|amex|americanexpress|bankofamerica|wellsfargo|capitalone|citi\.com|stripe|square|intuit|irs\.gov|doordash|ubereats|uber\.com|lyft|grubhub|instacart|apple\.com|google\.com|linkedin|github|netflix|spotify)/i;
+const SKIP = /(amctheatres|fandango|ticketmaster|livenation|stubhub|seatgeek|eventbrite|cinemark|regmovies|olo\.com|order\.online|toasttab|chownow|mcdonalds|chick-fil-a|wendys|dominos|jerseymikes|baskinrobbins|starbucks|grubhub|postmates|paypal|venmo|chase|amex|americanexpress|bankofamerica|wellsfargo|capitalone|citi\.com|square|intuit|irs\.gov|doordash|ubereats|uber\.com|lyft|grubhub|instacart|apple\.com|google\.com|linkedin|github|netflix|spotify)/i;
 const FREE_MAIL = /^(gmail|yahoo|outlook|hotmail|icloud|aol|me)\./i;
 
 async function get<T>(url: string, token: string): Promise<T> {
@@ -54,7 +54,7 @@ export async function readOne(id: string, token: string): Promise<Order | null> 
 // Marketing and follow-ups that mention an order but aren't one.
 // Order contents that point to health. Never saved, even from regular stores.
 const SENSITIVE_SUBJECT = /health ?care|medical|pharmacy|prescription|vitamin|supplement|sexual|incontinence|pregnan|ovulation|fertility|covid|test kit|first aid/i;
-const NOT_ORDER = /time to review|review it|meet your expectations|rate (your|us)|how did we do|survey|feedback|tell us what you think|write a review|recommended for you/i;
+const NOT_ORDER = /order (today|now|by)\b|last chance|don't miss|ends (soon|tonight|today)|reminder|time to review|review it|meet your expectations|rate (your|us)|how did we do|survey|feedback|tell us what you think|write a review|recommended for you/i;
 // Invisible direction marks some stores put around order numbers.
 const INVISIBLE = /[\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g;
 
@@ -68,12 +68,12 @@ export function parse(id: string, from: string, subjectRaw: string, snippetRaw: 
 
   const text = `${subject} ${snippet}`;
   const kind: Kind =
-    /refund/i.test(text) ? "refund" :
+    /\brefund(ed| issued| processed| is on| on its way| has been)|your refund|advance refund|dropoff confirmed/i.test(text) ? "refund" :
     /return (label|request|started|received)|your return/i.test(text) ? "return" :
     /delivered|has arrived/i.test(subject) ? "delivered" :
     /shipped|on (its|the) way|out for delivery|tracking|delivery estimate|arriving|arrives/i.test(subject) ? "shipping" :
     /receipt/i.test(subject) ? "receipt" :
-    /order|purchase|thanks for shopping|thank you for shopping/i.test(subject) ? "order" : "other";
+    /\b(your|new|online|web) order\b|\border (confirm|number|no\b|#|received|placed|details|summary|from|is|has|was)|thank(s| you) for (your )?(order|purchase|shopping)|\bpurchase (confirm|receipt)|^ordered\b|^order\b/i.test(subject) ? "order" : "other";
   if (kind === "other") return null;
 
   const order_no = [...text.matchAll(/(?:order|confirmation)\s*(?:number|no\.?|#)?\s*[:#]?\s*(?=[A-Z0-9-]*\d)([A-Z0-9][A-Z0-9-]{4,24})/gi)]
@@ -83,7 +83,7 @@ export function parse(id: string, from: string, subjectRaw: string, snippetRaw: 
 
   return {
     from, snippet: snippet.slice(0, 200),
-    gmail_id: id, store: storeName(from, domain), store_domain: rootDomain(domain), subject: subject.slice(0, 300),
+    gmail_id: id, store: storeName(from, domain, subject), store_domain: rootDomain(domain), subject: subject.slice(0, 300),
     kind, order_no: order_no?.toUpperCase() ?? null, amount, sent_at: new Date(ms).toISOString(),
   };
 }
@@ -95,7 +95,10 @@ export function rootDomain(d: string) {
 }
 
 // "Nike <nike@official.nike.com>" -> "Nike". Falls back to the web address.
-export function storeName(from: string, domain: string) {
+export function storeName(from: string, domain: string, subject = "") {
+  // "Receipt from itch.io" sent by Stripe: the store is in the subject.
+  const via = /(^|\.)(stripe\.com)$/.test(domain) ? subject.match(/(?:receipt|order|payment) from ([^#(\[]+)/i)?.[1]?.trim() : null;
+  if (via) return via.slice(0, 40);
   let name = from.replace(/<[^>]*>/, "").replace(/["']/g, "").trim();
   name = name.replace(/\b(customer (service|care)|orders?|order updates|shipping|no-?reply|team|store|shop|online|support|notifications?)\b/gi, "").replace(/[|·,:-]+\s*$/, "").replace(/\s{2,}/g, " ").trim();
   if (!name || name.includes("@") || name.length > 40) {
