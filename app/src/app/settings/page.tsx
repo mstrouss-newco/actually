@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { DOMAIN } from "@/lib/profile";
 import { clearData, deleteAccount, disconnectGmail, signOut } from "@/lib/account";
 import { TabBar } from "@/lib/tabs";
+import { signIn } from "@/lib/signin";
 
 type Ask = "gmail" | "data" | "account" | null;
 const COPY: Record<Exclude<Ask, null>, [string, string, string]> = {
@@ -21,6 +22,7 @@ export default function Settings() {
   const [ask, setAsk] = useState<Ask>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
+  const [gmail, setGmail] = useState<boolean | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -29,13 +31,15 @@ export default function Settings() {
       if (!data.session) return router.replace("/login");
       const { data: p } = await sb.from("profiles").select("handle").eq("id", data.session.user.id).maybeSingle();
       setMe({ email: data.session.user.email ?? "", handle: (p?.handle as string | null) ?? null });
+      const { data: g } = await sb.functions.invoke("gmail-token", { body: { status: true } });
+      setGmail(!!g?.connected);
     })();
   }, [router]);
 
   const run = async () => {
     if (!ask) return;
     setBusy(true);
-    if (ask === "gmail") { await disconnectGmail(); setNote("Gmail disconnected."); }
+    if (ask === "gmail") { await disconnectGmail(); setGmail(false); setNote("Gmail disconnected."); }
     if (ask === "data") setNote((await clearData()) ? "Your orders and closet are deleted." : "That didn't work. Try again in a minute.");
     if (ask === "account") {
       if (await deleteAccount()) return router.replace("/");
@@ -77,8 +81,9 @@ export default function Settings() {
           <>
             {head("Gmail")}
             <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+              {gmail === false && row("Connect Gmail", "Lets Actually keep finding orders and points without asking again.", () => signIn("/settings", true))}
               {row("Look for new orders", "Checks your Gmail for anything new.", () => router.push("/import"))}
-              {row("Disconnect Gmail", "Stop Actually from reading your email.", () => setAsk("gmail"))}
+              {gmail && row("Disconnect Gmail", "Connected. Tap to stop Actually from reading your email.", () => setAsk("gmail"))}
             </div>
             {head("Your data")}
             <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>

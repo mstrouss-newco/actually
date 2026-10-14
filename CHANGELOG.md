@@ -4,6 +4,7 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-14
 
+- Settings shows whether Gmail is connected, with a "Connect Gmail" button that saves Google's pass on the server (Google secret now set).
 - QA round 3: one row per order (Kizik, J.Crew, CrunchLabs, Nike, Charmin, EPI), out-for-delivery counts as delivered after 2 days, old quiet orders say "Last update", stores merged by web address, untitled orders say "Store order". Closet drops cases, adapters and key cards, merges the same piece read twice, guesses kids from 12C-style sizes and matching names, asks about women's pieces in a men's closet. Undo lasts 8 seconds and order Remove has Undo. Today's return card only for clothes. Worth skips pieces under $10. Restaurant platforms, school supply packs and hair-loss products skipped. Gmail pass renewed by the server (`gmail-token`, `gmail_tokens`) so no hourly reconnect once Google's secret is set.
 - Settings screen (person icon on Today): look for new orders, disconnect Gmail, delete my orders and closet (start fresh), sign out, delete account and all data. New `delete-account` function.
 - Closet: "Who is this for?" (kids' items sorted on their own, only odd sizes get asked, answers carry to the same brand and size; Mine / Kids / Partner tabs; Sizes counts only your things). "Remove from closet" with Undo, stays removed after imports. Logos: second logo source, store web address guessed from the name, store logo instead of a letter when there's no photo.

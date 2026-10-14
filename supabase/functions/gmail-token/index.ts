@@ -1,5 +1,6 @@
 // Keeps Gmail working past Google's one-hour pass. Right after sign-in the browser hands over
-// Google's refresh token ({ save }); later it asks for a fresh pass ({}). { forget } drops it.
+// Google's refresh token ({ save }); later it asks for a fresh pass ({}). { forget } drops it,
+// { status } says whether one is saved.
 // GET answers whether it is set up, without saying anything else.
 import { createClient } from "npm:@supabase/supabase-js@2.117.3";
 
@@ -20,6 +21,10 @@ Deno.serve(async req => {
   if (typeof body.save === "string" && body.save.length > 10) {
     await admin.from("gmail_tokens").upsert({ user_id: uid, refresh_token: body.save, updated_at: new Date().toISOString() });
     return json({ saved: true });
+  }
+  if (body.status) {
+    const { data: row } = await admin.from("gmail_tokens").select("user_id").eq("user_id", uid).maybeSingle();
+    return json({ connected: !!row });
   }
   if (body.forget) {
     const { data: row } = await admin.from("gmail_tokens").select("refresh_token").eq("user_id", uid).maybeSingle();
