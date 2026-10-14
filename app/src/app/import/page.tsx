@@ -19,6 +19,7 @@ export default function Import() {
   const [read, setRead] = useState(0);
   const [total, setTotal] = useState(0);
   const [latest, setLatest] = useState<Order[]>([]);
+  const [skipped, setSkipped] = useState(0);
   const ran = useRef(false);
 
   useEffect(() => {
@@ -33,12 +34,33 @@ export default function Import() {
       try {
         const ids = await listIds(token);
         setTotal(ids.length);
-        const batch: Order[] = [];
+        const pending: Order[] = [];
         const keys = new Set<string>();
-        const save = async () => {
-          if (!batch.length) return;
-          const rows = batch.splice(0);
-          await sb.from("orders").upsert(rows, { onConflict: "user_id,gmail_id", ignoreDuplicates: true });
+        // Only real shopping orders are saved. Each batch is screened first;
+        // non-orders and sensitive emails are dropped and never stored.
+        const flush = async () => {
+          if (!pending.length) return;
+          const batch = pending.splice(0);
+          const { data: res, error } = await sb.functions.invoke("screen-emails", {
+            body: { emails: batch.map(o => ({ id: o.gmail_id, from: o.from ?? o.store, subject: o.subject, snippet: o.snippet })) },
+          });
+          if (error) { setSkipped(n => n + batch.length); return; }
+          const keep = new Set<string>(res?.keep ?? []);
+          const rows = batch.filter(o => keep.has(o.gmail_id)).map(o => {
+            const row = { ...o };
+            delete row.from;
+            delete row.snippet;
+            return row;
+          });
+          if (rows.length) await sb.from("orders").upsert(rows, { onConflict: "user_id,gmail_id", ignoreDuplicates: true });
+          for (const o of rows) {
+            const key = o.order_no ? `${o.store}|${o.order_no}` : o.gmail_id;
+            if ((o.kind === "order" || o.kind === "receipt" || o.order_no) && !keys.has(key)) {
+              keys.add(key);
+              setOrders(keys.size);
+              setLatest(l => [o, ...l.filter(x => x.store !== o.store)].slice(0, 4));
+            }
+          }
         };
         let next = 0;
         const worker = async () => {
@@ -47,18 +69,12 @@ export default function Import() {
             const o = await readOne(id, token).catch(e => { if (e.message === "expired" || e.message === "no-access") throw e; return null; });
             setRead(r => r + 1);
             if (!o) continue;
-            batch.push(o);
-            const key = o.order_no ? `${o.store}|${o.order_no}` : o.gmail_id;
-            if ((o.kind === "order" || o.kind === "receipt" || o.order_no) && !keys.has(key)) {
-              keys.add(key);
-              setOrders(keys.size);
-              setLatest(l => [o, ...l.filter(x => x.store !== o.store)].slice(0, 4));
-            }
-            if (batch.length >= 50) await save();
+            pending.push(o);
+            if (pending.length >= 40) await flush();
           }
         };
         await Promise.all(Array.from({ length: 4 }, worker));
-        await save();
+        await flush();
         setStage("done");
       } catch (e) {
         const m = (e as Error).message;
@@ -121,6 +137,7 @@ export default function Import() {
           <ReadItems auto />
         </div>
       )}
+      {stage === "done" && skipped > 0 && <p style={{ margin: "0 0 10px", fontSize: 13, color: "var(--muted)", lineHeight: 1.45 }}>{skipped} emails couldn&apos;t be checked and were skipped. Run this again later to pick them up.</p>}
       {stage === "done" && orders === 0 && <p style={{ margin: "0 0 14px", fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>No orders found in this inbox. Try another email you shop with.</p>}
       <Link href="/reveal" className="btn" style={working ? { opacity: 0.4, pointerEvents: "none" } : undefined}>See my orders</Link>
     </main>

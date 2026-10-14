@@ -76,7 +76,7 @@ export default function Orders() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "16px 16px 0" }}>
           {orders === undefined && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}>Loading your orders…</div>}
-          {orders === null && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}><Link href="/claim" style={{ fontWeight: 700 }}>Sign in</Link> to see your orders.</div>}
+          {orders === null && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}><Link href="/login" style={{ fontWeight: 700 }}>Sign in</Link> to see your orders.</div>}
           {orders && rows.length === 0 && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}>{query ? "No orders match that." : "Nothing here right now."}</div>}
           {rows.slice(0, 200).map(g => {
             const c = chip(g);

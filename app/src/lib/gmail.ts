@@ -1,7 +1,10 @@
+import { SENSITIVE } from "./sensitive";
+
 // Reads shopping emails from Gmail in the browser, using the read-only access she granted.
 
 export type Kind = "order" | "shipping" | "delivered" | "return" | "refund" | "receipt" | "other";
 export type Order = {
+  from?: string; snippet?: string;
   gmail_id: string; store: string; store_domain: string | null; subject: string;
   kind: Kind; order_no: string | null; amount: number | null; sent_at: string;
 };
@@ -51,7 +54,7 @@ export async function readOne(id: string, token: string): Promise<Order | null> 
 export function parse(id: string, from: string, subject: string, snippet: string, ms: number): Order | null {
   const email = (from.match(/<([^>]+)>/)?.[1] ?? from).trim().toLowerCase();
   const domain = email.split("@")[1] ?? "";
-  if (!domain || SKIP.test(domain) || FREE_MAIL.test(domain)) return null;
+  if (!domain || SKIP.test(domain) || FREE_MAIL.test(domain) || SENSITIVE.test(domain)) return null;
 
   const text = `${subject} ${snippet}`;
   const kind: Kind =
@@ -69,6 +72,7 @@ export function parse(id: string, from: string, subject: string, snippet: string
   const amount = money ? Number(money[1].replace(/,/g, "")) : null;
 
   return {
+    from, snippet: snippet.slice(0, 200),
     gmail_id: id, store: storeName(from, domain), store_domain: rootDomain(domain), subject: subject.slice(0, 300),
     kind, order_no: order_no?.toUpperCase() ?? null, amount, sent_at: new Date(ms).toISOString(),
   };
@@ -153,7 +157,7 @@ export async function listRewardEmails(token: string, skip: Set<string>): Promis
       const h = (n: string) => m.payload?.headers?.find(x => x.name.toLowerCase() === n.toLowerCase())?.value ?? "";
       const from = h("From"), subject = h("Subject");
       const domain = ((from.match(/<([^>]+)>/)?.[1] ?? from).trim().toLowerCase().split("@")[1]) ?? "";
-      if (!domain || SKIP.test(domain) || FREE_MAIL.test(domain) || !REWARD_SUBJECT.test(subject)) continue;
+      if (!domain || SKIP.test(domain) || FREE_MAIL.test(domain) || SENSITIVE.test(domain) || !REWARD_SUBJECT.test(subject)) continue;
       out.push({ gmail_id: id, store: storeName(from, domain), store_domain: rootDomain(domain), subject, sent_at: new Date(Number(m.internalDate)).toISOString() });
     }
   };

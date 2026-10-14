@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { type OrderGroup, isArriving, loadOrders, orderTitle, returnDaysLeft, fmtDate, isReturn } from "@/lib/orders";
+import { type OrderGroup, cleanupOnce, isArriving, loadOrders, orderTitle, returnDaysLeft, fmtDate, isReturn } from "@/lib/orders";
 import { loadProfile } from "@/lib/profile";
 import { type Reward, daysUntil, fmtDay, loadRewards, money } from "@/lib/earn";
 import { Progress, StoreTile, TabBar } from "@/lib/tabs";
@@ -19,6 +19,8 @@ export default function Today() {
       setOrders(list);
       if (list) loadRewards().then(setRewards);
     });
+    // First visit after sign-in: tidy up anything that isn't a real shopping order.
+    cleanupOnce().then(changed => { if (changed) loadOrders().then(setOrders); });
   }, []);
   const expiring = rewards.filter(r => r.expires_on && daysUntil(r.expires_on) <= 30);
 
@@ -55,7 +57,7 @@ export default function Today() {
           <div style={{ margin: "18px 16px 0", background: "var(--chip)", borderRadius: 28, padding: "22px 18px" }}>
             <div className="serif" style={{ fontSize: 26, lineHeight: 1.05 }}>Bring in your past <em>orders.</em></div>
             <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 8, lineHeight: 1.45 }}>Connect Gmail and we&apos;ll find your orders, deliveries and returns.</div>
-            <Link href={orders === null ? "/claim" : "/permission"} className="btn" style={{ marginTop: 16, height: 48, fontSize: 15 }}>{orders === null ? "Sign in" : "Connect Gmail"}</Link>
+            <Link href={orders === null ? "/login" : "/permission"} className="btn" style={{ marginTop: 16, height: 48, fontSize: 15 }}>{orders === null ? "Sign in" : "Connect Gmail"}</Link>
           </div>
         )}
 

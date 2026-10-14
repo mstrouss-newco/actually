@@ -75,7 +75,7 @@ export default function People() {
         <div style={{ margin: "22px 16px 0", background: "#EBE3FF", borderRadius: 26, padding: "20px 18px" }}>
           <div className="serif" style={{ fontSize: 24, lineHeight: 1.1 }}>Bring your <em>friends.</em></div>
           <div style={{ fontSize: 14, color: "#5B4A8A", margin: "8px 0 14px", lineHeight: 1.45 }}>Send your feed link. They can see it without the app, then join to follow you back.</div>
-          {me ? <ShareLink handle={me} label="Invite friends" /> : <Link href="/claim" className="btn" style={{ height: 48, fontSize: 15 }}>Sign in first</Link>}
+          {me ? <ShareLink handle={me} label="Invite friends" /> : <Link href="/login" className="btn" style={{ height: 48, fontSize: 15 }}>Sign in first</Link>}
         </div>
       </div>
       <TabBar />

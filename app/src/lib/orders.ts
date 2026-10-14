@@ -49,12 +49,12 @@ export function summarize(rows: Row[]): Summary {
 
 export type Event = { kind: string; at: string; gmail_id: string; subject: string | null };
 export type OrderGroup = {
-  key: string; store: string; order_no: string | null; amount: number | null;
+  key: string; store: string; store_domain: string | null; order_no: string | null; amount: number | null;
   ordered_at: string; last_at: string; events: Event[];
   stage: "placed" | "shipped" | "delivered" | "returning" | "refunded";
 };
 
-type FullRow = Row & { subject: string | null };
+type FullRow = Row & { subject: string | null; store_domain: string | null };
 const STAGE: Record<string, number> = { order: 0, receipt: 0, shipping: 1, delivered: 2, return: 3, refund: 4 };
 const STAGES = ["placed", "shipped", "delivered", "returning", "refunded"] as const;
 
@@ -62,7 +62,7 @@ export function groupOrders(rows: FullRow[]): OrderGroup[] {
   const map = new Map<string, OrderGroup>();
   for (const r of rows) {
     const key = r.order_no ? `${r.store}|${r.order_no}` : r.gmail_id;
-    const g = map.get(key) ?? { key, store: r.store, order_no: r.order_no, amount: null, ordered_at: r.sent_at, last_at: r.sent_at, events: [], stage: "placed" as const };
+    const g = map.get(key) ?? { key, store: r.store, store_domain: r.store_domain, order_no: r.order_no, amount: null, ordered_at: r.sent_at, last_at: r.sent_at, events: [], stage: "placed" as const };
     g.events.push({ kind: r.kind, at: r.sent_at, gmail_id: r.gmail_id, subject: r.subject });
     if (r.amount != null && (g.amount == null || r.amount > g.amount)) g.amount = r.amount;
     if (r.sent_at < g.ordered_at) g.ordered_at = r.sent_at;
@@ -80,7 +80,7 @@ export async function loadOrders(): Promise<OrderGroup[] | null> {
   const sb = supabase();
   const { data: auth } = await sb.auth.getSession();
   if (!auth.session) return null;
-  const { data } = await sb.from("orders").select("store, kind, order_no, amount, sent_at, gmail_id, subject").order("sent_at", { ascending: false }).limit(5000);
+  const { data } = await sb.from("orders").select("store, store_domain, kind, order_no, amount, sent_at, gmail_id, subject").order("sent_at", { ascending: false }).limit(5000);
   return groupOrders((data ?? []) as FullRow[]);
 }
 
@@ -105,3 +105,35 @@ export function orderTitle(g: OrderGroup) {
 
 export const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 export const gmailLink = (id: string) => `https://mail.google.com/mail/u/0/#all/${id}`;
+
+// Removes one order, its emails and any items read from it.
+export async function removeOrder(g: OrderGroup) {
+  const sb = supabase();
+  const ids = g.events.map(e => e.gmail_id);
+  await sb.from("items").delete().in("gmail_id", ids);
+  await sb.from("orders").delete().in("gmail_id", ids);
+}
+
+// Hides a store for good: removes everything from it and skips it from now on.
+export async function blockStore(g: OrderGroup) {
+  const sb = supabase();
+  const domain = g.store_domain;
+  if (!domain) return removeOrder(g);
+  await sb.from("blocked_stores").upsert({ store_domain: domain, store: g.store });
+  const { data } = await sb.from("orders").select("gmail_id").eq("store_domain", domain);
+  const ids = ((data ?? []) as { gmail_id: string }[]).map(r => r.gmail_id);
+  for (let i = 0; i < ids.length; i += 200) await sb.from("items").delete().in("gmail_id", ids.slice(i, i + 200));
+  await sb.from("orders").delete().eq("store_domain", domain);
+  await sb.from("rewards").delete().eq("store_domain", domain);
+}
+
+// Runs once per account: re-checks saved orders and removes non-orders and sensitive ones.
+export async function cleanupOnce(): Promise<boolean> {
+  const sb = supabase();
+  const { data: s } = await sb.auth.getSession();
+  if (!s.session) return false;
+  const { data: p } = await sb.from("profiles").select("screened_at").eq("id", s.session.user.id).maybeSingle();
+  if (!p || p.screened_at) return false;
+  const { data } = await sb.functions.invoke("screen-emails", { body: { clean: true } });
+  return !!data?.removed;
+}
