@@ -1,0 +1,88 @@
+"use client";
+
+// The Gmail import, as one shared job. It keeps running while she moves around the app,
+// and any screen can show its progress.
+import { supabase } from "./supabase";
+import { type Order, listIds, readOne } from "./gmail";
+import { readItems } from "./items";
+
+export type ImportState = {
+  stage: "idle" | "scan" | "items" | "done" | "reconnect" | "no-access" | "error";
+  read: number; total: number; orders: number; skipped: number; latest: Order[];
+  itemsDone: number; itemsTotal: number; itemsFound: number;
+};
+
+let state: ImportState = { stage: "idle", read: 0, total: 0, orders: 0, skipped: 0, latest: [], itemsDone: 0, itemsTotal: 0, itemsFound: 0 };
+const listeners = new Set<(s: ImportState) => void>();
+const set = (patch: Partial<ImportState>) => { state = { ...state, ...patch }; listeners.forEach(l => l(state)); };
+
+export const importState = () => state;
+export function onImport(fn: (s: ImportState) => void) { listeners.add(fn); return () => { listeners.delete(fn); }; }
+export const importing = () => state.stage === "scan" || state.stage === "items";
+
+export async function startImport() {
+  if (importing()) return;
+  set({ stage: "scan", read: 0, total: 0, orders: 0, skipped: 0, latest: [], itemsDone: 0, itemsTotal: 0, itemsFound: 0 });
+  const sb = supabase();
+  const { data } = await sb.auth.getSession();
+  const token = data.session?.provider_token;
+  if (!token || !data.session) return set({ stage: "reconnect" });
+  const uid = data.session.user.id;
+  const { data: me } = await sb.from("profiles").select("last_import_at").eq("id", uid).maybeSingle();
+  const started = new Date().toISOString();
+
+  try {
+    const ids = await listIds(token, me?.last_import_at);
+    set({ total: ids.length });
+    const pending: Order[] = [];
+    const keys = new Set<string>();
+    // Only real shopping orders are saved. Each batch is screened first.
+    const flush = async () => {
+      if (!pending.length) return;
+      const batch = pending.splice(0);
+      const { data: res, error } = await sb.functions.invoke("screen-emails", {
+        body: { emails: batch.map(o => ({ id: o.gmail_id, from: o.from ?? o.store, subject: o.subject, snippet: o.snippet })) },
+      });
+      if (error) { set({ skipped: state.skipped + batch.length }); return; }
+      const keep = new Set<string>(res?.keep ?? []);
+      const rows = batch.filter(o => keep.has(o.gmail_id)).map(o => {
+        const row = { ...o };
+        delete row.from;
+        delete row.snippet;
+        return row;
+      });
+      if (rows.length) await sb.from("orders").upsert(rows, { onConflict: "user_id,gmail_id", ignoreDuplicates: true });
+      let latest = state.latest;
+      for (const o of rows) {
+        const key = o.order_no ? `${o.store}|${o.order_no}` : o.gmail_id;
+        if ((o.kind === "order" || o.kind === "receipt" || o.order_no) && !keys.has(key)) {
+          keys.add(key);
+          latest = [o, ...latest.filter(x => x.store !== o.store)].slice(0, 4);
+        }
+      }
+      set({ orders: keys.size, latest });
+    };
+    let next = 0;
+    const worker = async () => {
+      while (next < ids.length) {
+        const id = ids[next++];
+        const o = await readOne(id, token).catch(e => { if (e.message === "expired" || e.message === "no-access") throw e; return null; });
+        set({ read: state.read + 1 });
+        if (!o) continue;
+        pending.push(o);
+        if (pending.length >= 40) await flush();
+      }
+    };
+    await Promise.all(Array.from({ length: 4 }, worker));
+    await flush();
+    if (!state.skipped) await sb.from("profiles").update({ last_import_at: started }).eq("id", uid);
+
+    // Then read what was in each new order.
+    set({ stage: "items" });
+    await readItems(token, (done, total, found) => set({ itemsDone: done, itemsTotal: total, itemsFound: found }));
+    set({ stage: "done" });
+  } catch (e) {
+    const m = (e as Error).message;
+    set({ stage: m === "expired" ? "reconnect" : m === "no-access" ? "no-access" : "error" });
+  }
+}

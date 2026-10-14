@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { type ImportState, importState, onImport } from "./importer";
 
 const TABS = [
   { href: "/today", label: "Today", icon: <path d="M3 10.5 12 3l9 7.5V21H3z" /> },
@@ -12,9 +13,25 @@ const TABS = [
   { href: "/earn", label: "Earn", icon: <><rect x="3" y="8" width="18" height="13" rx="2" /><path d="M12 8v13M3 12.5h18" /><path d="M12 8C10 4 6 4 6 6.5S12 8 12 8s6-1 6-1.5S14 4 12 8z" /></> },
 ];
 
+// Small progress strip above the tab bar while Gmail is being read.
+function ImportStrip() {
+  const [s, setS] = useState<ImportState>(importState());
+  useEffect(() => onImport(setS), []);
+  if (s.stage !== "scan" && s.stage !== "items") return null;
+  const text = s.stage === "scan" ? (s.total ? `Finding orders · ${s.read} of ${s.total}` : "Finding your orders") : `Reading items · ${s.itemsDone} of ${s.itemsTotal}`;
+  return (
+    <Link href="/import" style={{ position: "absolute", zIndex: 11, left: 24, right: 24, bottom: 90, height: 34, borderRadius: 999, background: "#FFF0BF", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontSize: 12, fontWeight: 700, textDecoration: "none", boxShadow: "0 6px 16px rgba(20,18,16,.12)" }}>
+      <svg className="spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8A6D1E" strokeWidth="3" strokeLinecap="round"><path d="M12 3a9 9 0 1 1-9 9" /></svg>
+      {text}
+    </Link>
+  );
+}
+
 export function TabBar() {
   const path = usePathname();
   return (
+    <>
+    <ImportStrip />
     <nav className="tabbar">
       {TABS.map(t => (
         <Link key={t.href} href={t.href} className={path.startsWith(t.href) || (t.href === "/orders" && path.startsWith("/order/")) || (t.href === "/feed" && /^\/(people|u\/)/.test(path)) ? "on" : ""}>
@@ -23,6 +40,7 @@ export function TabBar() {
         </Link>
       ))}
     </nav>
+    </>
   );
 }
 
