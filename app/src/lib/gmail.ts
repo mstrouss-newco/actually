@@ -1,4 +1,4 @@
-import { SENSITIVE } from "./sensitive";
+import { SENSITIVE, SENSITIVE_BRAND, SENSITIVE_IN_SUBJECT } from "./sensitive";
 
 // Reads shopping emails from Gmail in the browser, using the read-only access she granted.
 
@@ -30,11 +30,13 @@ async function get<T>(url: string, token: string): Promise<T> {
   }
 }
 
-export async function listIds(token: string): Promise<string[]> {
+export async function listIds(token: string, since?: string | null): Promise<string[]> {
   const ids: string[] = [];
   let page = "";
+  // After the first scan, only look at mail since the last one (with a day of overlap).
+  const query = since ? `${QUERY} after:${Math.floor(Date.parse(since) / 1000) - 86400}` : QUERY;
   do {
-    const q = new URLSearchParams({ q: QUERY, maxResults: "500", ...(page ? { pageToken: page } : {}) });
+    const q = new URLSearchParams({ q: query, maxResults: "500", ...(page ? { pageToken: page } : {}) });
     const res = await get<{ messages?: { id: string }[]; nextPageToken?: string }>(`${API}?${q}`, token);
     ids.push(...(res.messages ?? []).map(m => m.id));
     page = res.nextPageToken ?? "";
@@ -61,7 +63,7 @@ const INVISIBLE = /[\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g;
 export function parse(id: string, from: string, subjectRaw: string, snippetRaw: string, ms: number): Order | null {
   const subject = subjectRaw.replace(INVISIBLE, "");
   const snippet = snippetRaw.replace(INVISIBLE, "");
-  if (NOT_ORDER.test(subject) || SENSITIVE_SUBJECT.test(subject)) return null;
+  if (NOT_ORDER.test(subject) || SENSITIVE_SUBJECT.test(subject) || SENSITIVE_IN_SUBJECT.test(subject)) return null;
   const email = (from.match(/<([^>]+)>/)?.[1] ?? from).trim().toLowerCase();
   const domain = email.split("@")[1] ?? "";
   if (!domain || SKIP.test(domain) || FREE_MAIL.test(domain) || SENSITIVE.test(domain)) return null;
@@ -81,6 +83,7 @@ export function parse(id: string, from: string, subjectRaw: string, snippetRaw: 
   const money = text.match(/\$\s?(\d{1,5}(?:,\d{3})*(?:\.\d{2})?)/);
   const amount = money ? Number(money[1].replace(/,/g, "")) : null;
 
+  if (SENSITIVE_BRAND.test(storeName(from, domain, subject))) return null;
   return {
     from, snippet: snippet.slice(0, 200),
     gmail_id: id, store: storeName(from, domain, subject), store_domain: rootDomain(domain), subject: subject.slice(0, 300),

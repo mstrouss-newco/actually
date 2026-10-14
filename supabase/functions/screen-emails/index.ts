@@ -9,6 +9,9 @@ import { createClient } from "npm:@supabase/supabase-js@2.117.3";
 // Known health, pharmacy, telehealth, testing and adult senders. Blocked without asking the AI.
 const SENSITIVE = /(^|\.)(ro\.co|getroman\.com|hims\.com|forhers\.com|hers\.com|nurx\.com|keeps\.com|thirtymadison\.com|cove\.com|picnicallergy\.com|curology\.com|apostrophe\.com|musely\.com|agencyskincare\.com|cerebral\.com|donefirst\.com|done\.com|betterhelp\.com|talkspace\.com|brightline\.com|lemonaidhealth\.com|plushcare\.com|teladoc\.com|mdlive\.com|amwell\.com|onemedical\.com|zocdoc\.com|goodrx\.com|cvs\.com|caremark\.com|walgreens\.com|riteaid\.com|capsule\.com|alto\.com|altopharmacy\.com|pillpack\.com|truepill\.com|expressscripts\.com|express-scripts\.com|optumrx\.com|optum\.com|honeybeehealth\.com|costplusdrugs\.com|blinkhealth\.com|everlywell\.com|letsgetchecked\.com|myLAB(box)?\.com|mylabbox\.com|labcorp\.com|questdiagnostics\.com|23andme\.com|natalist\.com|modernfertility\.com|proovtest\.com|kindbody\.com|plannedparenthood\.org|pandiahealth\.com|thepill\.com|wisp\.com|hellowisp\.com|lovehoney\.com|adameve\.com|dameproducts\.com|lelo\.com|babeland\.com|hims-hers\.com|weightwatchers\.com|noom\.com|found\.com|joinfound\.com|calibrate\.com|henrymeds\.com|ivim\.com|sesamecare\.com|1800contacts\.com|kaiserpermanente\.org|mychart\.com|pharmacy\.amazon\.com|healthequity\.com|hsastore\.com|fsastore\.com)$/i;
 
+// Health brands by name, for mail sent through shipping services (Ro via Narvar).
+const SENSITIVE_BRAND = /^(ro|roman|hims|hers|hims ?& ?hers|nurx|keeps|cove|curology|apostrophe|musely|cerebral|done|talkspace|betterhelp|lemonaid|plushcare|teladoc|goodrx|cvs( pharmacy)?|walgreens|rite ?aid|capsule|alto( pharmacy)?|pillpack|truepill|amazon pharmacy|everlywell|letsgetchecked|23andme|wisp|thirty madison|noom|found|calibrate|henry ?meds|lovehoney|adam ?& ?eve|1-?800 ?contacts)$/i;
+
 const Verdicts = z.object({
   emails: z.array(z.object({
     n: z.number().int().describe("The email number from the list."),
@@ -20,6 +23,7 @@ const SYSTEM = `You sort emails for a personal shopping app. For each email, ans
 - "shopping": an order, shipping, delivery, return, refund or receipt for physical goods bought from a store. Clothing, shoes, bags, accessories, jewelry, beauty and cosmetics, home goods, furniture, electronics, toys, gifts, sports gear, books, pet food and pet supplies, garden and household supplies. Repeat deliveries of physical goods (Autoship, Subscribe & Save) count as shopping.
 - "sensitive": anything about health or privacy, even if it is an order. Pharmacy, prescriptions, medicine, vitamins sold for a condition, telehealth, doctors, labs and tests, mental health, fertility, pregnancy, birth control, sexual health or adult products, weight-loss programs, hair-loss treatment, medical devices, insurance, legal, debt or banking.
 - "other": everything else. Software and online services, app and cloud bills, digital subscriptions and memberships, in-game or account credit, news, utilities, phone bills, school or kids' activity notices, events and tickets, school or team forms and photo-day reminders, travel, rides, food delivery and restaurants, groceries, donations, newsletters, work emails, marketing and promotions without a confirmed purchase.
+Telehealth and pharmacy brands are always sensitive, even when a shipping service sends the email: Ro, Roman, Hims, Hers, Nurx, Keeps, Curology, Cerebral, Wisp, GoodRx, Capsule, CVS, Walgreens and similar.
 If unsure between shopping and sensitive, choose sensitive. If unsure whether it is a purchase at all, choose other.`;
 
 type Email = { id: string; from: string; subject: string; snippet?: string };
@@ -28,6 +32,7 @@ const anthropic = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") });
 const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
+const nameOf = (from: string) => from.replace(/<[^>]*>/, "").replace(/["']/g, "").trim();
 const domainOf = (from: string) => ((from.match(/<([^>]+)>/)?.[1] ?? from).trim().toLowerCase().split("@")[1]) ?? from.toLowerCase();
 
 // Blocklist first, then the AI, 50 at a time. "unsure" holds emails the AI gave no answer for.
@@ -35,7 +40,7 @@ async function screen(emails: Email[], blocked: Set<string>) {
   const keep = new Set<string>(), unsure = new Set<string>();
   const ask = emails.filter(e => {
     const d = domainOf(e.from);
-    return !SENSITIVE.test(d) && ![...blocked].some(b => d === b || d.endsWith(`.${b}`));
+    return !SENSITIVE.test(d) && !SENSITIVE_BRAND.test(nameOf(e.from)) && ![...blocked].some(b => d === b || d.endsWith(`.${b}`));
   });
   for (let i = 0; i < ask.length; i += 50) {
     const batch = ask.slice(i, i + 50);
