@@ -55,7 +55,7 @@ export type OrderGroup = {
   what: string | null; items: string[];
   stage: "placed" | "shipped" | "delivered" | "returning" | "refunded";
   inStore: boolean;
-  // Counted as delivered because it went quiet, not because a delivery email came.
+  // Counted as delivered because it went quiet, not because a delivery email came ("Likely arrived").
   assumed: boolean;
   // Has clothes, shoes, bags or accessories in it.
   wear: boolean;
@@ -75,6 +75,7 @@ export function describe(subject: string | null): string | null {
     s.match(/^(?:ordered|shipped|delivered|out for delivery):\s*\d+\s+(.+?)\s+items?$/i)?.[1] ??
     s.match(/["\u201c]([^"\u201d]{3,80})["\u201d]/)?.[1] ??
     s.match(/(?:return request confirmed|refund issued|dropoff confirmed|advance refund issued) for (.+?)\.*$/i)?.[1] ??
+    s.match(/^(?:delivery estimate update|out for delivery|arriving[^:]*):\s*(?!\d)([^"\u201c#]{3,80})$/i)?.[1] ??
     null;
   return m ? m.replace(/,? and (more|other)( items)?$/i, "").replace(/\.{2,}$/, "").trim() || null : null;
 }
@@ -89,7 +90,9 @@ const storeKey = (s: string) => cleanStore(s).toLowerCase().replace(/^the\s+/, "
 // Shipping and receipt services that send mail for many stores. Their address says nothing about the store.
 export const RELAY = /(^|\.)(narvar|lightspeedhq|shopify|shopifyemail|squareup|clover|toasttab|aftership|route|klaviyo|mailchimp|sendgrid)\.(com|net|io)$/i;
 // Delay notices are news about an order, not a sign it shipped.
-const kindOf = (e: { kind: string; subject: string | null }) => e.kind === "shipping" && /delivery estimate|delayed/i.test(e.subject ?? "") ? "order" : e.kind;
+const isDelay = (e: { subject: string | null }) => /delivery estimate|delayed/i.test(e.subject ?? "");
+const kindOf = (e: { kind: string; subject: string | null }) =>
+  e.kind === "shipping" && isDelay(e) ? "order" : e.kind === "order" && /picked up|ready to ship|has shipped/i.test(e.subject ?? "") ? "shipping" : e.kind;
 
 export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = new Map(), wearIds: Set<string> = new Set()): OrderGroup[] {
   const byKey = new Map<string, OrderGroup>();
@@ -98,9 +101,12 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
   const names = new Map<string, Map<string, number>>();
   const keyOf = new Map<OrderGroup, string>();
   const sorted = [...rows].sort((a, b) => a.sent_at.localeCompare(b.sent_at));
+  // Store names that have their own web address, so "The Bouqs Co" via Narvar matches bouqs.com.
+  const nameToDomain = new Map<string, string>();
+  for (const r of sorted) if (r.store_domain && !RELAY.test(r.store_domain)) nameToDomain.set(storeKey(r.store), r.store_domain);
   for (const r of sorted) {
     // One key per store: its web address, or its name when the email came through a shipping service.
-    const sk = r.store_domain && !RELAY.test(r.store_domain) ? r.store_domain : storeKey(r.store);
+    const sk = r.store_domain && !RELAY.test(r.store_domain) ? r.store_domain : nameToDomain.get(storeKey(r.store)) ?? storeKey(r.store);
     const nm = names.get(sk) ?? new Map<string, number>();
     nm.set(cleanStore(r.store), (nm.get(cleanStore(r.store)) ?? 0) + 1);
     names.set(sk, nm);
@@ -121,7 +127,7 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
       if (o && !o.order_no && !o.what) { g = o; g.order_no = r.order_no; g.key = `${sk}|${r.order_no}`; byKey.set(g.key, g); }
     }
     if (!g) {
-      g = { key: r.order_no ? `${sk}|${r.order_no}` : r.gmail_id, store: r.store, store_domain: r.store_domain && !RELAY.test(r.store_domain) ? r.store_domain : null,
+      g = { key: r.order_no ? `${sk}|${r.order_no}` : r.gmail_id, store: r.store, store_domain: sk.includes(".") ? sk : null,
         order_no: r.order_no, amount: null, ordered_at: r.sent_at, last_at: r.sent_at, events: [], stage: "placed", what, items: [], inStore: false, assumed: false, wear: false };
       all.push(g);
       keyOf.set(g, sk);
@@ -134,6 +140,15 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
     if (r.sent_at > g.last_at) g.last_at = r.sent_at;
     g.items.push(...(itemNames.get(r.gmail_id) ?? []));
     if (wearIds.has(r.gmail_id)) g.wear = true;
+  }
+  // Amazon sends "Delivery estimate update" with only an order number. Fold it into the store's
+  // order with contents that was moving in the two weeks around it.
+  for (const g of [...all]) {
+    if (!g.events.every(isDelay) || g.what || g.items.length) continue;
+    const at = Date.parse(g.events[0].at);
+    const near = all.filter(o => o !== g && keyOf.get(o) === keyOf.get(g) && (o.what || o.items.length) && Math.abs(Date.parse(o.ordered_at) - at) < 14 * DAY_MS)
+      .sort((a, b) => Math.abs(Date.parse(a.ordered_at) - at) - Math.abs(Date.parse(b.ordered_at) - at))[0];
+    if (near) { near.events.push(...g.events); near.order_no ??= g.order_no; all.splice(all.indexOf(g), 1); }
   }
   const now = Date.now();
   for (const g of all) {
@@ -148,8 +163,8 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
     // "Out for delivery" two days ago: it arrived.
     const outForDelivery = g.events.some(e => /out for delivery|arriv(es|ing) today/i.test(e.subject ?? ""));
     if (g.inStore || (g.stage === "shipped" && outForDelivery && quiet > 2 * DAY_MS)) g.stage = "delivered";
-    // Nothing heard in a month: it most likely arrived.
-    else if ((g.stage === "placed" || g.stage === "shipped") && quiet > 30 * DAY_MS) { g.stage = "delivered"; g.assumed = true; }
+    // Shipped a week ago, or ordered two weeks ago, with no news since: it most likely arrived.
+    else if ((g.stage === "shipped" && quiet > 7 * DAY_MS) || (g.stage === "placed" && quiet > 14 * DAY_MS)) { g.stage = "delivered"; g.assumed = true; }
     g.items = dedupeNames(g.items);
   }
   return all.sort((a, b) => b.last_at.localeCompare(a.last_at));
@@ -187,7 +202,7 @@ const DAY = 86400000;
 export const daysAgo = (iso: string) => Math.floor((Date.now() - Date.parse(iso)) / DAY);
 
 // Still on its way: shipped or placed recently, no delivery email yet.
-export const isArriving = (g: OrderGroup) => (g.stage === "shipped" && daysAgo(g.last_at) < 14) || (g.stage === "placed" && daysAgo(g.ordered_at) < 7);
+export const isArriving = (g: OrderGroup) => g.stage === "shipped" || g.stage === "placed";
 export const isReturn = (g: OrderGroup) => g.stage === "returning" || g.stage === "refunded";
 
 // Most stores give 30 days from delivery. This is a guess until we read each store's policy.

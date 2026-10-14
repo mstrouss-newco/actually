@@ -17,8 +17,10 @@ const TABS = [
 function ImportStrip() {
   const [s, setS] = useState<ImportState>(importState());
   useEffect(() => onImport(setS), []);
-  if (s.stage !== "scan" && s.stage !== "items") return null;
-  const text = s.stage === "scan" ? (s.total ? `Finding orders · ${s.read} of ${s.total}` : "Finding your orders") : `Reading items · ${s.itemsDone} of ${s.itemsTotal}`;
+  if (s.stage !== "scan" && s.stage !== "items" && s.stage !== "points") return null;
+  const text = s.stage === "scan" ? (s.total ? `Finding orders · ${s.read} of ${s.total}` : "Finding your orders")
+    : s.stage === "points" ? "Checking points and credit"
+    : s.itemsTotal ? `Reading what you bought · ${s.itemsDone} of ${s.itemsTotal}` : "Reading what you bought";
   return (
     <Link href="/import" style={{ position: "absolute", zIndex: 11, left: 24, right: 24, bottom: 90, height: 34, borderRadius: 999, background: "#FFF0BF", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontSize: 12, fontWeight: 700, textDecoration: "none", boxShadow: "0 6px 16px rgba(20,18,16,.12)" }}>
       <svg className="spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8A6D1E" strokeWidth="3" strokeLinecap="round"><path d="M12 3a9 9 0 1 1-9 9" /></svg>

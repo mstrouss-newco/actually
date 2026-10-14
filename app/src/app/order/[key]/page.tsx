@@ -10,6 +10,15 @@ const LABEL: Record<string, string> = {
   order: "Ordered", receipt: "Receipt", shipping: "Shipped", delivered: "Delivered", return: "Return started", refund: "Refunded",
 };
 
+// What each email means, in plain words.
+const label = (e: { kind: string; subject: string | null }) => {
+  const t = e.subject ?? "";
+  if (/delivery estimate|delayed/i.test(t)) return "Delivery date changed";
+  if (/out for delivery|arriv(es|ing) today/i.test(t)) return "Out for delivery";
+  if (/picked up|ready to ship/i.test(t)) return "Shipped";
+  return LABEL[e.kind] ?? "Update";
+};
+
 export default function OrderDetail({ params }: { params: Promise<{ key: string }> }) {
   const { key } = use(params);
   const router = useRouter();
@@ -86,7 +95,7 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
                 <span style={{ width: 2, flex: 1, background: i < order.events.length - 1 ? "var(--ink)" : "transparent", minHeight: 22 }} />
               </div>
               <div style={{ paddingBottom: 14, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{LABEL[e.kind] ?? "Update"}</div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{label(e)}</div>
                 <div style={{ fontSize: 13, color: "var(--muted)" }}>{fmtDate(e.at)}{e.subject ? ` · ${e.subject}` : ""}</div>
               </div>
             </div>

@@ -17,7 +17,7 @@ const STEP = { placed: 0, shipped: 1, delivered: 3, returning: 3, refunded: 3 };
 
 function status(g: OrderGroup) {
   if (g.inStore) return `Bought in store ${fmtDate(g.ordered_at)}`;
-  if (g.assumed) return `Last update ${fmtDate(g.last_at)}`;
+  if (g.assumed) return `Likely arrived · last email ${fmtDate(g.last_at)}`;
   switch (g.stage) {
     case "placed": return `Ordered ${fmtDate(g.ordered_at)}`;
     case "shipped": return `Shipped ${fmtDate(g.last_at)}`;

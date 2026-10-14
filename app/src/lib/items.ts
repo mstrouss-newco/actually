@@ -19,14 +19,14 @@ const pieceKey = (i: Item) => `${(i.brand || i.store).toLowerCase()}|${i.size ??
 
 export async function loadItems(): Promise<Item[]> {
   const { data } = await supabase().from("items").select("id, store, name, brand, size, color, price, image_url, category, ordered_at, pick, resale_low, resale_high, resale_note, for_whom").in("category", WEAR).eq("hidden", false).order("ordered_at", { ascending: false }).limit(3000);
-  const seen = new Set<string>();
-  return ((data ?? []) as Item[]).filter(i => {
-    if (NOT_WEAR.test(i.name)) return false;
-    const k = pieceKey(i);
-    if (seen.has(k)) return false;
-    seen.add(k);
-    return true;
-  });
+  // Keep the more specific name ("Women's Lima" over "Lima"): it tells us who it's for.
+  const best = new Map<string, Item>();
+  for (const i of (data ?? []) as Item[]) {
+    if (NOT_WEAR.test(i.name)) continue;
+    const k = pieceKey(i), cur = best.get(k);
+    if (!cur || i.name.length > cur.name.length || (i.for_whom && !cur.for_whom)) best.set(k, i);
+  }
+  return [...best.values()];
 }
 
 export async function setPick(id: string, pick: Item["pick"]) {
@@ -75,6 +75,11 @@ function sizeOff(i: Item, all: Item[]) {
   return usual >= 2 && counts.get(i.size)! < usual;
 }
 
+// "All of these are mine": marks the pieces she checked and left alone.
+export async function confirmMine(ids: string[]) {
+  if (ids.length) await supabase().from("items").update({ for_whom: "me" }).in("id", ids);
+}
+
 // Saves her answer for this piece and others of the same brand and size. Pieces for others stay private.
 export async function setWho(i: Item, who: Who, all: Item[]) {
   const ids = all.filter(o => o === i || (!o.for_whom && sameAs(o, i))).map(o => o.id);
@@ -85,10 +90,18 @@ export async function setWho(i: Item, who: Who, all: Item[]) {
 
 // Order emails the AI hasn't read yet. One email per order is enough.
 export async function unreadOrderEmails(): Promise<string[]> {
-  const { data } = await supabase().from("orders").select("gmail_id, store, order_no, kind").eq("items_read", false).in("kind", ["order", "receipt"]).order("sent_at", { ascending: false }).limit(1500);
-  const seen = new Set<string>();
-  return ((data ?? []) as { gmail_id: string; store: string; order_no: string | null }[]).filter(r => {
-    const key = r.order_no ? `${r.store}|${r.order_no}` : r.gmail_id;
+  // Order emails first. Shipping emails too, for orders that never sent one (Chewy Autoship,
+  // Huckberry). Amazon's shipping emails already say what's inside, so they're skipped.
+  const { data } = await supabase().from("orders").select("gmail_id, store, store_domain, order_no, kind").eq("items_read", false)
+    .in("kind", ["order", "receipt", "shipping"]).order("sent_at", { ascending: false }).limit(1500);
+  const rows = ((data ?? []) as { gmail_id: string; store: string; store_domain: string | null; order_no: string | null; kind: string }[])
+    .filter(r => r.kind !== "shipping" || (r.order_no && !/amazon/i.test(r.store_domain ?? "")))
+    .sort((a, b) => (a.kind === "shipping" ? 1 : 0) - (b.kind === "shipping" ? 1 : 0));
+  // Orders already read through another email don't need their shipping email read too.
+  const { data: read } = await supabase().from("orders").select("store, store_domain, order_no").eq("items_read", true).in("kind", ["order", "receipt", "shipping"]).not("order_no", "is", null).limit(5000);
+  const seen = new Set<string>(((read ?? []) as { store: string; store_domain: string | null; order_no: string }[]).map(r => `${r.store_domain ?? r.store}|${r.order_no}`));
+  return rows.filter(r => {
+    const key = r.order_no ? `${r.store_domain ?? r.store}|${r.order_no}` : r.gmail_id;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

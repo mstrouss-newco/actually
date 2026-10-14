@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CATS, type Item, type Who, hideItem, loadItems, needsAsk, setPick, setWho, sizesByBrand, toSort, whoFor } from "@/lib/items";
+import { CATS, type Item, type Who, confirmMine, hideItem, loadItems, needsAsk, setPick, setWho, sizesByBrand, toSort, whoFor } from "@/lib/items";
 import { fmtDate } from "@/lib/orders";
 import { ReadItems } from "@/lib/read-items";
 import { ItemImage, TabBar } from "@/lib/tabs";
@@ -30,6 +30,8 @@ export default function Closet() {
   const [sel, setSel] = useState<Item | null>(null);
   const [who, setWhoView] = useState<Who>("me");
   const [undo, setUndo] = useState<Item | null>(null);
+  // The pieces shown in "Is all of this yours?", fixed when it opens so answers don't reshuffle it.
+  const [review, setReview] = useState<string[] | null>(null);
 
   const remove = async (i: Item) => {
     setSel(null);
@@ -67,6 +69,14 @@ export default function Closet() {
   const people = WHO.filter(([k]) => k === "me" || everything.some(i => whoFor(i, everything) === k));
   const list = everything.filter(i => whoFor(i, everything) === who);
   const toAsk = who === "me" ? list.filter(i => needsAsk(i, everything)) : [];
+  // Pieces in "Mine" she hasn't confirmed yet.
+  const unchecked = who === "me" ? list.filter(i => !i.for_whom) : [];
+  const finishReview = async () => {
+    const ids = everything.filter(i => review?.includes(i.id) && !i.for_whom).map(i => i.id);
+    setItems(l => l?.map(x => (ids.includes(x.id) ? { ...x, for_whom: "me" as Who } : x)) ?? null);
+    setReview(null);
+    await confirmMine(ids);
+  };
   const shelves = CATS.map(([k, label]) => ({ k, label, items: list.filter(i => i.category === k) })).filter(s => s.items.length);
   const cur = shelves.find(s => s.k === cat);
   const unsorted = toSort(everything).length;
@@ -91,7 +101,13 @@ export default function Closet() {
                 {people.map(([k, label]) => <button key={k} onClick={() => setWhoView(k)} style={chip(who === k)}>{k === "me" ? "Mine" : label}</button>)}
               </div>
             )}
-            {toAsk[0] && view === "pieces" && (
+            {!toAsk[0] && unchecked.length > 0 && (
+              <button onClick={() => setReview(unchecked.map(i => i.id))} style={{ margin: "16px 16px 0", width: "calc(100% - 32px)", textAlign: "left", border: 0, background: "#FAF8F6", borderRadius: 22, padding: "14px 16px", font: "inherit", color: "var(--ink)", cursor: "pointer" }}>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>Is all of this yours?</div>
+                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Take 10 seconds to move anything bought for kids or a partner. {unchecked.length} to check.</div>
+              </button>
+            )}
+            {toAsk[0] && (
               <div style={{ margin: "16px 16px 0", background: "#FAF8F6", borderRadius: 22, padding: 14, display: "flex", gap: 12, alignItems: "center" }}>
                 <ItemImage src={toAsk[0].image_url} store={toAsk[0].store} w={56} h={70} radius={14} size={22} />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -200,9 +216,9 @@ export default function Closet() {
                 <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>Bought {fmtDate(sel.ordered_at)} from {sel.store}</div>
               </div>
             </div>
-            <div style={{ marginTop: 16, fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>Who is this for?{!sel.for_whom ? " Our guess is dashed." : ""}</div>
+            <div style={{ marginTop: 16, fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>Who is this for?</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-              {WHO.map(([k, label]) => <button key={k} onClick={() => answer(sel, k)} style={sel.for_whom ? chip(sel.for_whom === k) : { ...chip(false), ...(whoFor(sel, everything) === k ? { borderStyle: "dashed" } : {}) }}>{label}</button>)}
+              {WHO.map(([k, label]) => <button key={k} onClick={() => answer(sel, k)} style={chip(sel.for_whom === k)}>{label}{!sel.for_whom && whoFor(sel, everything) === k ? " (our guess)" : ""}</button>)}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 18 }}>
               {PICKS.map(([k, label]) => (
@@ -212,6 +228,31 @@ export default function Closet() {
               ))}
               <button onClick={() => remove(sel)} className="btn btn-ghost" style={{ marginTop: 0, fontSize: 14, color: "#C9402F" }}>Remove from closet</button>
             </div>
+          </div>
+        </div>
+      )}
+      {review && (
+        <div style={{ position: "absolute", inset: 0, zIndex: 25, background: "#fff", display: "flex", flexDirection: "column" }}>
+          <div style={{ padding: "22px 20px 8px" }}>
+            <div className="serif" style={{ fontSize: 30, lineHeight: 1 }}>Is all of this yours?</div>
+            <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 8 }}>Tap who anything else is for. Everything you leave stays yours.</div>
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: "8px 16px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+            {everything.filter(i => review.includes(i.id)).map(i => (
+              <div key={i.id} style={{ display: "flex", gap: 12, alignItems: "center", background: "#FAF8F6", borderRadius: 18, padding: 10 }}>
+                <ItemImage src={i.image_url} store={i.store} w={48} h={60} radius={12} size={20} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{i.brand || i.store} {i.name}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)" }}>{i.size ? `Size ${i.size}` : "No size"}</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
+                    {WHO.map(([k, label]) => <button key={k} onClick={() => answer(i, k)} style={{ ...chip((i.for_whom ?? "me") === k), padding: "4px 9px", fontSize: 12 }}>{label}</button>)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: "8px 16px 24px" }}>
+            <button className="btn" onClick={finishReview} style={{ height: 50 }}>Done</button>
           </div>
         </div>
       )}
