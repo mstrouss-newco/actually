@@ -46,7 +46,7 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
           </Link>
           <div style={{ display: "flex", gap: 16, alignItems: "flex-end", marginTop: 20 }}>
             <div style={{ transform: "rotate(-3deg)", boxShadow: "0 10px 24px rgba(20,18,16,.12)", borderRadius: 22 }}>
-              <StoreTile store={order.store} w={104} h={130} radius={22} size={52} />
+              <StoreTile store={order.store} domain={order.store_domain} w={104} h={130} radius={22} size={52} />
             </div>
             <div style={{ flex: 1, minWidth: 0, paddingBottom: 4 }}>
               <div className="kicker">{order.store}</div>

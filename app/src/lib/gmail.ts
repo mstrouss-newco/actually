@@ -14,7 +14,7 @@ const QUERY = '(category:purchases OR subject:(order OR receipt OR shipped OR de
 const MAX = 1500;
 
 // Senders that aren't stores.
-const SKIP = /(paypal|venmo|chase|amex|americanexpress|bankofamerica|wellsfargo|capitalone|citi\.com|stripe|square|intuit|irs\.gov|doordash|ubereats|uber\.com|lyft|grubhub|instacart|apple\.com|google\.com|linkedin|github|netflix|spotify)/i;
+const SKIP = /(amctheatres|fandango|ticketmaster|livenation|stubhub|seatgeek|eventbrite|cinemark|regmovies|olo\.com|order\.online|toasttab|chownow|mcdonalds|chick-fil-a|wendys|dominos|jerseymikes|baskinrobbins|starbucks|grubhub|postmates|paypal|venmo|chase|amex|americanexpress|bankofamerica|wellsfargo|capitalone|citi\.com|stripe|square|intuit|irs\.gov|doordash|ubereats|uber\.com|lyft|grubhub|instacart|apple\.com|google\.com|linkedin|github|netflix|spotify)/i;
 const FREE_MAIL = /^(gmail|yahoo|outlook|hotmail|icloud|aol|me)\./i;
 
 async function get<T>(url: string, token: string): Promise<T> {
@@ -51,7 +51,17 @@ export async function readOne(id: string, token: string): Promise<Order | null> 
   return parse(m.id, h("From"), h("Subject"), m.snippet ?? "", Number(m.internalDate));
 }
 
-export function parse(id: string, from: string, subject: string, snippet: string, ms: number): Order | null {
+// Marketing and follow-ups that mention an order but aren't one.
+// Order contents that point to health. Never saved, even from regular stores.
+const SENSITIVE_SUBJECT = /health ?care|medical|pharmacy|prescription|vitamin|supplement|sexual|incontinence|pregnan|ovulation|fertility|covid|test kit|first aid/i;
+const NOT_ORDER = /time to review|review it|meet your expectations|rate (your|us)|how did we do|survey|feedback|tell us what you think|write a review|recommended for you/i;
+// Invisible direction marks some stores put around order numbers.
+const INVISIBLE = /[\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g;
+
+export function parse(id: string, from: string, subjectRaw: string, snippetRaw: string, ms: number): Order | null {
+  const subject = subjectRaw.replace(INVISIBLE, "");
+  const snippet = snippetRaw.replace(INVISIBLE, "");
+  if (NOT_ORDER.test(subject) || SENSITIVE_SUBJECT.test(subject)) return null;
   const email = (from.match(/<([^>]+)>/)?.[1] ?? from).trim().toLowerCase();
   const domain = email.split("@")[1] ?? "";
   if (!domain || SKIP.test(domain) || FREE_MAIL.test(domain) || SENSITIVE.test(domain)) return null;
@@ -61,7 +71,7 @@ export function parse(id: string, from: string, subject: string, snippet: string
     /refund/i.test(text) ? "refund" :
     /return (label|request|started|received)|your return/i.test(text) ? "return" :
     /delivered|has arrived/i.test(subject) ? "delivered" :
-    /shipped|on (its|the) way|out for delivery|tracking/i.test(subject) ? "shipping" :
+    /shipped|on (its|the) way|out for delivery|tracking|delivery estimate|arriving|arrives/i.test(subject) ? "shipping" :
     /receipt/i.test(subject) ? "receipt" :
     /order|purchase|thanks for shopping|thank you for shopping/i.test(subject) ? "order" : "other";
   if (kind === "other") return null;

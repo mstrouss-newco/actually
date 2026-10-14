@@ -65,10 +65,11 @@ export default function Today() {
           <Link href={`/order/${encodeURIComponent(hero.key)}`} style={{ margin: "14px 16px 0", background: "#FFE1DC", borderRadius: 28, padding: "20px 18px", display: "flex", gap: 14, position: "relative", textDecoration: "none" }}>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
               <div className="kicker" style={{ color: "#C9402F" }}>Still returnable</div>
-              <div className="serif" style={{ fontSize: 28, lineHeight: 1.04, letterSpacing: "-0.02em" }}>Your {hero.store} order, delivered <em>{fmtDate(hero.last_at)}</em></div>
+              <div className="serif" style={{ fontSize: 28, lineHeight: 1.04, letterSpacing: "-0.02em" }}>{hero.items[0] || hero.what || `Your ${hero.store} order`}, delivered <em>{fmtDate(hero.last_at)}</em></div>
+              {(hero.items[0] || hero.what) && <div style={{ fontSize: 13, fontWeight: 700, color: "#6B4A44" }}>From {hero.store}</div>}
               <div style={{ fontSize: 13, color: "#6B4A44" }}>Most stores allow 30 days.</div>
             </div>
-            <StoreTile store={hero.store} w={96} h={124} radius={20} size={44} />
+            <StoreTile store={hero.store} domain={hero.store_domain} w={96} h={124} radius={20} size={44} />
             <div style={{ position: "absolute", top: -10, right: 14, width: 58, height: 58, borderRadius: "50%", background: "#FF6159", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transform: "rotate(10deg)", boxShadow: "0 6px 14px rgba(0,0,0,.12)" }}>
               <div className="serif" style={{ fontWeight: 600, fontSize: 22, lineHeight: 1 }}>{left}</div>
               <div style={{ fontSize: 10, fontWeight: 700 }}>{left === 1 ? "day" : "days"}</div>
@@ -96,10 +97,13 @@ export default function Today() {
               {arriving.map(g => (
                 <Link key={g.key} href={`/order/${encodeURIComponent(g.key)}`} className="lift" style={{ width: 148, flex: "none", display: "flex", flexDirection: "column", gap: 8, textDecoration: "none" }}>
                   <div style={{ position: "relative" }}>
-                    <StoreTile store={g.store} w={148} h={180} radius={22} size={64} />
+                    <StoreTile store={g.store} domain={g.store_domain} w={148} h={180} radius={22} size={64} />
                     <div style={{ position: "absolute", top: 10, left: 10, background: "#fff", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 700 }}>{g.stage === "shipped" ? "Shipped" : "Ordered"}</div>
                   </div>
-                  <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.25 }}>{g.store}</div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.25 }}>{orderTitle(g)}</div>
+                    <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{g.store}</div>
+                  </div>
                   <Progress step={STEP[g.stage]} />
                 </Link>
               ))}
@@ -113,7 +117,7 @@ export default function Today() {
             <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "14px 16px 0" }}>
               {orders.filter(g => !isArriving(g)).slice(0, 5).map(g => (
                 <Link key={g.key} href={`/order/${encodeURIComponent(g.key)}`} className="orow" style={{ display: "flex", gap: 12, alignItems: "center", background: "#FAF8F6", borderRadius: 20, padding: "10px 14px 10px 10px", textDecoration: "none" }}>
-                  <StoreTile store={g.store} w={46} h={56} radius={12} size={22} />
+                  <StoreTile store={g.store} domain={g.store_domain} w={46} h={56} radius={12} size={22} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 14 }}>{g.store}</div>
                     <div style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{orderTitle(g)}</div>

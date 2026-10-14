@@ -38,7 +38,7 @@ export default function Points() {
             const left = r.expires_on ? daysUntil(r.expires_on) : null;
             return (
               <div key={`${r.store}|${r.kind}`} style={{ display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", borderRadius: 22, padding: "12px 14px 12px 12px" }}>
-                <StoreTile store={r.store} w={46} h={46} radius={14} size={22} />
+                <StoreTile store={r.store} domain={r.store_domain} w={46} h={46} radius={14} size={22} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 15 }}>{r.store}</div>
                   <div style={{ fontSize: 13, color: "var(--soft)" }}>
