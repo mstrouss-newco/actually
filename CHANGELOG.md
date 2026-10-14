@@ -1,0 +1,31 @@
+# Changelog
+
+Newest first. One line per change, in plain words. Link the PR.
+
+## 2026-10-14
+
+- Project docs for agents: `AGENTS.md`, `CLAUDE.md`, this changelog, and the full database history in `supabase/migrations/`.
+- Import runs in the background with a progress strip; later imports only read new mail; import screen no longer gets stuck; health brands blocked by name (Ro via Narvar). ([#13](https://github.com/mstrouss-newco/actually/pull/13))
+- QA fixes: "order" must read like a purchase (no news headlines or court orders), real refunds only, promos skipped, Stripe receipts kept, Chewy deliveries close the right order, pet supplies and Autoship count as shopping. ([#12](https://github.com/mstrouss-newco/actually/pull/12))
+- Orders say what's inside ("Garden Supplies"), Amazon emails grouped into one order, store logos, review requests and reminders skipped, health contents blocked, tickets and restaurants skipped. ([#11](https://github.com/mstrouss-newco/actually/pull/11))
+- Only real shopping orders are saved: AI screen plus a sensitive-sender block list, one-time cleanup of old data, "Remove" and "Never show this store" on orders, new `/login` page. ([#10](https://github.com/mstrouss-newco/actually/pull/10))
+- Gmail import no longer stops when Google says "slow down". ([#9](https://github.com/mstrouss-newco/actually/pull/9))
+- Sign-up asks Google only once; clear message when the Gmail box isn't ticked. ([#8](https://github.com/mstrouss-newco/actually/pull/8))
+
+## 2026-10-13
+
+- Shopping email: mail to name@shop.myocto.co is forwarded to the user's inbox and saved as orders (Resend + `inbound-email`). ([#7](https://github.com/mstrouss-newco/actually/pull/7))
+- Phase 4: Feed tab, public profile pages, follow, find people. ([#6](https://github.com/mstrouss-newco/actually/pull/6))
+- Phase 3: Earn tab, points and credit from email, resale estimates, copy-ready listings. ([#5](https://github.com/mstrouss-newco/actually/pull/5))
+- Phase 2 part B: AI reads items from order emails, Closet, Sort. ([#4](https://github.com/mstrouss-newco/actually/pull/4))
+- Phase 2 part A: Today, Orders, Order detail, tab bar. ([#3](https://github.com/mstrouss-newco/actually/pull/3))
+- Gmail import of past orders. ([#2](https://github.com/mstrouss-newco/actually/pull/2))
+
+## 2026-10-12
+
+- Phase 1 sign-up screens, Google sign-in, saved profiles, safe Next.js version. ([#1](https://github.com/mstrouss-newco/actually/pull/1))
+- Real app started (blank Next.js starter in `app/`).
+
+## Before 2026-10-12
+
+- Clickable demo (`demo/`) with three journeys (organize, earn, share), resale and donate screens, and product screenshots.
