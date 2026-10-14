@@ -99,6 +99,8 @@ from this repo. Keep repo and deployed code identical.
 ## Database
 
 Tables: `profiles`, `orders`, `items`, `rewards`, `follows`, `blocked_stores`.
+`items.for_whom` (me / kids / partner / other, guessed by `whoFor()` in `lib/items.ts` when empty)
+and `items.hidden` (removed from closet; kept so imports don't bring it back).
 Every table has row level security: people only see their own rows. Shared pieces
 leave the database only through the `profile_page`, `following_feed`, `search_people`
 and `similar_people` functions, which return photo, brand and name only.
@@ -117,7 +119,7 @@ SQL to `supabase/migrations/<version>_<name>.sql`. Run the security advisor afte
   `KIDS_FROM`, `KIDS_SUBJECT` in `lib/gmail.ts`, plus the AI prompt).
 - Closet, Sort and Worth show only wearables (`WEAR` in `lib/items.ts` and `value-items`).
   Other items stay saved for Orders and future points or cash back.
-- Sort and sharing are private by default.
+- Sort and sharing are private by default. Pieces for kids or others are always private.
 - When unsure, drop it. A missed order is fine; a saved prescription is not.
 - Never show price, size or order details on anything shared.
 - Only read the sender, subject and preview to decide; full emails are read only for

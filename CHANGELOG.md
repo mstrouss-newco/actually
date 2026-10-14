@@ -4,6 +4,7 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-14
 
+- Closet: "Who is this for?" (kids' items sorted on their own, only odd sizes get asked, answers carry to the same brand and size; Mine / Kids / Partner tabs; Sizes counts only your things). "Remove from closet" with Undo, stays removed after imports. Logos: second logo source, store web address guessed from the name, store logo instead of a letter when there's no photo.
 - Blind QA fixes. Privacy: eyewear (Warby Parker and similar), health and wellness labels, carrier notices (UPS, FedEx), phone bills, restaurants and kids' sign-ups are never saved; saved ones scrubbed; Sort keeps things private by default. Orders: one order per order number across store-name spellings, Chewy deliveries close the right order, delay notices aren't "shipped", orders quiet for a month count as arrived, in-store receipts say "Bought in store", years on old dates. Closet, Sort and Worth show only clothes, shoes, bags and accessories (everything else stays in Orders). Points found during import; Gmail pass kept for its full hour. Order page buttons clear the menu, "Never show" moved behind Remove, Closet shelves work with Back.
 - Shopping-email receiver now uses the latest rules: pet supplies and Autoship count, health brands blocked by name.
 - Project docs for agents: `AGENTS.md`, `CLAUDE.md`, this changelog, and the full database history in `supabase/migrations/`.

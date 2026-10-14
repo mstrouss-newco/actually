@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CATS, type Item, loadItems, setPick, sizesByBrand } from "@/lib/items";
+import { CATS, type Item, type Who, hideItem, loadItems, needsAsk, setPick, setWho, sizesByBrand, whoFor } from "@/lib/items";
 import { fmtDate } from "@/lib/orders";
 import { ReadItems } from "@/lib/read-items";
 import { ItemImage, TabBar } from "@/lib/tabs";
 
 const PICKS: [NonNullable<Item["pick"]>, string][] = [["share", "Show on my feed"], ["sell", "Want to sell"], ["private", "Keep private"]];
+const WHO: [Who, string][] = [["me", "Me"], ["kids", "Kids"], ["partner", "Partner"], ["other", "Someone else"]];
+const chip = (on: boolean): React.CSSProperties => ({ border: "1.5px solid var(--ink)", background: on ? "var(--ink)" : "#fff", color: on ? "#fff" : "var(--ink)", borderRadius: 999, padding: "7px 12px", font: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" });
 
 export default function Closet() {
   const [items, setItems] = useState<Item[] | null>(null);
@@ -26,6 +28,29 @@ export default function Closet() {
     return () => removeEventListener("popstate", pop);
   }, []);
   const [sel, setSel] = useState<Item | null>(null);
+  const [who, setWhoView] = useState<Who>("me");
+  const [undo, setUndo] = useState<Item | null>(null);
+
+  const remove = async (i: Item) => {
+    setSel(null);
+    setItems(list => list?.filter(x => x.id !== i.id) ?? null);
+    setUndo(i);
+    setTimeout(() => setUndo(u => (u?.id === i.id ? null : u)), 5000);
+    await hideItem(i.id);
+  };
+  const restore = async () => {
+    if (!undo) return;
+    const i = undo;
+    setUndo(null);
+    setItems(list => (list ? [i, ...list].sort((a, b) => b.ordered_at.localeCompare(a.ordered_at)) : list));
+    await hideItem(i.id, false);
+  };
+  const answer = async (i: Item, w: Who) => {
+    const ids = new Set(await setWho(i, w, items ?? []));
+    const patch = (x: Item): Item => (ids.has(x.id) ? { ...x, for_whom: w, pick: w === "me" ? x.pick : "private" } : x);
+    setItems(list => list?.map(patch) ?? null);
+    setSel(cur => (cur ? patch(cur) : cur));
+  };
 
   const load = useCallback(() => { loadItems().then(setItems); }, []);
   useEffect(load, [load]);
@@ -38,7 +63,10 @@ export default function Closet() {
     await setPick(sel.id, next);
   };
 
-  const list = items ?? [];
+  const everything = items ?? [];
+  const people = WHO.filter(([k]) => k === "me" || everything.some(i => whoFor(i, everything) === k));
+  const list = everything.filter(i => whoFor(i, everything) === who);
+  const toAsk = who === "me" ? list.filter(i => needsAsk(i, everything)) : [];
   const shelves = CATS.map(([k, label]) => ({ k, label, items: list.filter(i => i.category === k) })).filter(s => s.items.length);
   const cur = shelves.find(s => s.k === cat);
   const unsorted = list.filter(i => !i.pick).length;
@@ -56,12 +84,29 @@ export default function Closet() {
               ))}
             </div>
             <div style={{ fontSize: 14, color: "var(--muted)", padding: "8px 20px 0" }}>
-              {items === null ? "Loading…" : list.length ? `${list.length} pieces you've bought` : "Everything you've bought, in one place."}
+              {items === null ? "Loading…" : list.length ? `${list.length} ${who === "me" ? "pieces you've bought" : "pieces"}` : "Everything you've bought, in one place."}
             </div>
+            {people.length > 1 && (
+              <div style={{ display: "flex", gap: 6, padding: "12px 20px 0" }}>
+                {people.map(([k, label]) => <button key={k} onClick={() => setWhoView(k)} style={chip(who === k)}>{k === "me" ? "Mine" : label}</button>)}
+              </div>
+            )}
+            {toAsk[0] && view === "pieces" && (
+              <div style={{ margin: "16px 16px 0", background: "#FAF8F6", borderRadius: 22, padding: 14, display: "flex", gap: 12, alignItems: "center" }}>
+                <ItemImage src={toAsk[0].image_url} store={toAsk[0].store} w={56} h={70} radius={14} size={22} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>Is this yours?</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{toAsk[0].brand || toAsk[0].store} {toAsk[0].name} · Size {toAsk[0].size}</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                    {WHO.map(([k, label]) => <button key={k} onClick={() => answer(toAsk[0], k)} style={{ ...chip(false), padding: "5px 10px", fontSize: 12 }}>{k === "me" ? "Yes, mine" : label}</button>)}
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
 
-        {items !== null && list.length === 0 && (
+        {items !== null && everything.length === 0 && (
           <div style={{ margin: "18px 16px 0", background: "var(--chip)", borderRadius: 28, padding: "22px 18px", display: "flex", flexDirection: "column", gap: 14 }}>
             <div className="serif" style={{ fontSize: 26, lineHeight: 1.05 }}>Fill your closet from your <em>orders.</em></div>
             <div style={{ fontSize: 14, color: "var(--soft)", lineHeight: 1.45 }}>We read each order email once to find what you bought, the size and a photo. Takes a minute or two.</div>
@@ -155,14 +200,25 @@ export default function Closet() {
                 <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>Bought {fmtDate(sel.ordered_at)} from {sel.store}</div>
               </div>
             </div>
+            <div style={{ marginTop: 16, fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>Who is this for?</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+              {WHO.map(([k, label]) => <button key={k} onClick={() => answer(sel, k)} style={chip(whoFor(sel, everything) === k)}>{label}</button>)}
+            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 18 }}>
               {PICKS.map(([k, label]) => (
                 <button key={k} onClick={() => choose(k)} className="btn" style={{ height: 48, fontSize: 15, background: sel.pick === k ? "var(--ink)" : "#fff", color: sel.pick === k ? "#fff" : "var(--ink)", border: "1.5px solid var(--ink)" }}>
                   {sel.pick === k ? "✓ " : ""}{label}
                 </button>
               ))}
+              <button onClick={() => remove(sel)} className="btn btn-ghost" style={{ marginTop: 0, fontSize: 14, color: "#C9402F" }}>Remove from closet</button>
             </div>
           </div>
+        </div>
+      )}
+      {undo && (
+        <div style={{ position: "absolute", zIndex: 30, left: 24, right: 24, bottom: 92, background: "var(--ink)", color: "#fff", borderRadius: 999, padding: "10px 10px 10px 18px", display: "flex", alignItems: "center", gap: 10, fontSize: 14 }}>
+          <span style={{ flex: 1 }}>Removed from your closet</span>
+          <button onClick={restore} style={{ border: 0, background: "#fff", color: "var(--ink)", borderRadius: 999, padding: "6px 14px", font: "inherit", fontWeight: 700, cursor: "pointer" }}>Undo</button>
         </div>
       )}
       <TabBar />
