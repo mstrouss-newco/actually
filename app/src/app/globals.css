@@ -1,7 +1,7 @@
 :root {
   --ink: #141210;
-  --muted: #7A746D;
-  --soft: #5E5852;
+  --muted: #6B655E;
+  --soft: #544E48;
   --line: #EFEBE6;
   --chip: #F4F1EE;
   --tile: #F3F0EB;
@@ -38,7 +38,7 @@ a { color: var(--ink); }
 .spacer { flex: 1; min-height: 16px; }
 
 .btn {
-  display: flex; align-items: center; justify-content: center; height: 56px; border-radius: 999px; border: 0; width: 100%;
+  flex: none; display: flex; align-items: center; justify-content: center; height: 56px; border-radius: 999px; border: 0; width: 100%;
   background: var(--ink); color: #fff; font: 700 16px var(--font-sans), sans-serif; text-decoration: none; cursor: pointer;
   transition: scale .14s cubic-bezier(.2,.9,.25,1.3);
 }
@@ -60,9 +60,9 @@ a { color: var(--ink); }
 @keyframes mail { 0%,15% { transform: translateX(0); opacity: 1 } 55%,100% { transform: translateX(26px); opacity: .25 } }
 .pop { animation: pop 3.2s ease-out infinite; }
 @keyframes pop { 0%,40% { transform: scale(.9); opacity: .4 } 60%,100% { transform: none; opacity: 1 } }
-.drop { animation: drop 6s cubic-bezier(.2,.9,.25,1.15) infinite both; }
-.drop.d2 { animation-delay: .5s } .drop.d3 { animation-delay: 1s }
-@keyframes drop { 0% { transform: translateY(-14px); opacity: 0 } 8%,88% { transform: none; opacity: 1 } 100% { transform: translateY(6px); opacity: 0 } }
+.drop { animation: drop .7s cubic-bezier(.2,.9,.25,1.15) .6s both; }
+.drop.d2 { animation-delay: 1.1s } .drop.d3 { animation-delay: 1.6s }
+@keyframes drop { from { transform: translateY(-14px); opacity: 0 } to { transform: none; opacity: 1 } }
 
 /* Pick your email */
 .blink { animation: blink 1s steps(1) infinite; }

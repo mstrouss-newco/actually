@@ -5,7 +5,7 @@ import Link from "next/link";
 import { type Reward, daysUntil, fmtDay, loadRewards, money, scanRewards, valueItems, worth } from "@/lib/earn";
 import { type Item, loadItems } from "@/lib/items";
 import { Job } from "@/lib/read-items";
-import { TabBar } from "@/lib/tabs";
+import { ItemImage, StoreTile, TabBar } from "@/lib/tabs";
 
 export default function Earn() {
   const [rewards, setRewards] = useState<Reward[] | null>(null);
@@ -20,7 +20,11 @@ export default function Earn() {
   // Pieces worth under $10 (socks, cases) aren't worth listing, so they don't count.
   const valued = priced.filter(i => (i.resale_high ?? 0) >= 10);
   const [lo, hi] = worth(valued);
-  const top = [...valued].sort((a, b) => (b.resale_high ?? 0) - (a.resale_high ?? 0))[0];
+  const ranked = [...valued].sort((a, b) => (b.resale_high ?? 0) - (a.resale_high ?? 0));
+  const top = ranked[0];
+  // The three priciest pieces with a photo, fanned out like the design.
+  const fan = ranked.filter(i => i.image_url).slice(0, 3);
+  const logos = (rewards ?? []).filter(r => r.value).slice(0, 3);
 
   return (
     <main className="tabscreen">
@@ -34,7 +38,18 @@ export default function Earn() {
           <div className="kicker" style={{ color: "#8A6D1E" }}>Points and credit</div>
           {rewards && rewards.length > 0 ? (
             <Link href="/earn/points" style={{ textDecoration: "none", display: "block" }}>
-              <div className="serif" style={{ fontSize: 52, lineHeight: 1, marginTop: 8 }}>{money(cash)}</div>
+              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 10, marginTop: 8 }}>
+                <div className="serif" style={{ fontSize: 52, lineHeight: 1 }}>{money(cash)}</div>
+                {logos.length > 0 && (
+                  <div style={{ display: "flex", flex: "none", paddingBottom: 4 }}>
+                    {logos.map((r, i) => (
+                      <div key={r.store} style={{ marginLeft: i ? -10 : 0, borderRadius: 14, border: "2px solid #FFF0BF" }}>
+                        <StoreTile store={r.store} domain={r.store_domain} w={40} h={40} radius={12} size={18} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div style={{ fontSize: 14, color: "#7A6A3A", marginTop: 6, lineHeight: 1.4 }}>
                 Ready to use across {rewards.length} {rewards.length === 1 ? "store" : "stores"}.
                 {soon && <> {soon.store} {soon.value != null ? money(soon.value) : "points"} expire {fmtDay(soon.expires_on!)}.</>}
@@ -54,7 +69,18 @@ export default function Earn() {
           <div className="kicker" style={{ color: "#5B44B0" }}>What your closet is worth</div>
           {priced.length > 0 ? (
             <Link href="/earn/worth" style={{ textDecoration: "none", display: "block" }}>
-              <div className="serif" style={{ fontSize: 44, lineHeight: 1, marginTop: 8 }}>{money(lo)}–{money(hi)}</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 8 }}>
+                <div className="serif" style={{ fontSize: 40, lineHeight: 1, minWidth: 0 }}>{money(lo)}–{money(hi)}</div>
+                {fan.length > 0 && (
+                  <div style={{ display: "flex", flex: "none" }}>
+                    {fan.map((i, n) => (
+                      <div key={i.id} style={{ marginLeft: n ? -14 : 0, transform: `rotate(${[-6, 3, -2][n]}deg)`, borderRadius: 12, boxShadow: "0 4px 10px rgba(20,18,16,.14)" }}>
+                        <ItemImage src={i.image_url} store={i.store} w={46} h={58} radius={12} size={18} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div style={{ fontSize: 14, color: "#5B4A8A", marginTop: 6, lineHeight: 1.4 }}>
                 Estimated resale value of {valued.length} pieces.{top && top.resale_high ? ` Your ${top.brand || top.store} ${top.name} could sell for up to ${money(top.resale_high)}.` : ""}
               </div>

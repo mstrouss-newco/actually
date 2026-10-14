@@ -50,10 +50,10 @@ const TINTS = ["#DCEBFF", "#DCEFDF", "#FFE3CC", "#FFE1DC", "#EBE3FF", "#FFF0BF"]
 export const tint = (s: string) => TINTS[[...s].reduce((n, c) => n + c.charCodeAt(0), 0) % TINTS.length];
 
 // The store's logo, looked up by its web address. Falls back to its first letter.
-// Two logo sources, tried in order. Google answers a tiny globe when it has nothing.
+// Google answers a tiny globe when it has nothing; then we show the first letter.
+// (DuckDuckGo was dropped: it answers a gray arrow, which looked like a broken logo.)
 const LOGOS = [
   (d: string) => `https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=128`,
-  (d: string) => `https://icons.duckduckgo.com/ip3/${encodeURIComponent(d)}.ico`,
 ];
 export const logoUrl = LOGOS[0];
 
@@ -78,12 +78,17 @@ export function StoreTile({ store, domain, w, h, radius = 18, size = 28 }: { sto
   const [src, setSrc] = useState(0);
   const d = storeDomain(store, domain);
   if (d && src < LOGOS.length) {
-    const logo = typeof w === "number" && typeof h === "number" ? Math.round(Math.min(w, h) * 0.5) : Math.round(size * 1.8);
+    // Logo sits small, on a white chip, on the store's soft color, like the design's product tiles.
+    const box = typeof w === "number" && typeof h === "number" ? Math.min(w, h) : size * 2.4;
+    const chip = Math.round(box * (box > 80 ? 0.46 : 0.62));
+    const logo = Math.round(chip * 0.62);
     return (
-      <div style={{ width: w, height: h, borderRadius: radius, background: "#fff", border: "1.5px solid var(--line)", flex: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img key={src} src={LOGOS[src](d)} alt={store} width={logo} height={logo} referrerPolicy="no-referrer" onError={() => setSrc(n => n + 1)}
-          onLoad={e => { if ((e.target as HTMLImageElement).naturalWidth <= 16) setSrc(n => n + 1); }} style={{ borderRadius: 8 }} />
+      <div style={{ width: w, height: h, borderRadius: radius, background: tint(store), flex: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: chip, height: chip, borderRadius: Math.round(chip * 0.28), background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(20,18,16,.08)" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img key={src} src={LOGOS[src](d)} alt={store} width={logo} height={logo} referrerPolicy="no-referrer" onError={() => setSrc(n => n + 1)}
+            onLoad={e => { if ((e.target as HTMLImageElement).naturalWidth <= 16) setSrc(n => n + 1); }} style={{ borderRadius: 6 }} />
+        </div>
       </div>
     );
   }
@@ -104,9 +109,9 @@ export function Progress({ step, h = 4 }: { step: number; h?: number }) {
 }
 
 // Product photo from the order email, or the store logo if there isn't one or it won't load.
-export function ItemImage({ src, store, w, h, radius = 18, size = 28 }: { src: string | null; store: string; w: number | string; h: number | string; radius?: number; size?: number }) {
+export function ItemImage({ src, store, domain, w, h, radius = 18, size = 28 }: { src: string | null; store: string; domain?: string | null; w: number | string; h: number | string; radius?: number; size?: number }) {
   const [bad, setBad] = useState(false);
-  if (!src || bad) return <StoreTile store={store} w={w} h={h} radius={radius} size={size} />;
+  if (!src || bad) return <StoreTile store={store} domain={domain} w={w} h={h} radius={radius} size={size} />;
   return (
     <div style={{ width: w, height: h, borderRadius: radius, background: "var(--tile)", flex: "none", overflow: "hidden" }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}

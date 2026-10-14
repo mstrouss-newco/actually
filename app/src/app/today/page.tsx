@@ -5,7 +5,7 @@ import Link from "next/link";
 import { type OrderGroup, cleanupOnce, isArriving, loadOrders, orderTitle, returnDaysLeft, fmtDate } from "@/lib/orders";
 import { loadProfile } from "@/lib/profile";
 import { type Reward, daysUntil, fmtDay, loadRewards, money } from "@/lib/earn";
-import { Progress, StoreTile, TabBar } from "@/lib/tabs";
+import { ItemImage, Progress, TabBar } from "@/lib/tabs";
 
 const STEP = { placed: 0, shipped: 1, delivered: 3, returning: 3, refunded: 3 };
 
@@ -74,7 +74,9 @@ export default function Today() {
               {(hero.items[0] || hero.what) && <div style={{ fontSize: 13, fontWeight: 700, color: "#6B4A44" }}>From {hero.store}</div>}
               <div style={{ fontSize: 13, color: "#6B4A44" }}>Most stores allow 30 days.</div>
             </div>
-            <StoreTile store={hero.store} domain={hero.store_domain} w={96} h={124} radius={20} size={44} />
+            <div className="lift" style={{ flex: "none", alignSelf: "center", transform: "rotate(4deg)", borderRadius: 20, boxShadow: "0 10px 24px rgba(201,64,47,.18)" }}>
+              <ItemImage src={hero.photo} store={hero.store} domain={hero.store_domain} w={104} h={136} radius={20} size={44} />
+            </div>
             <div style={{ position: "absolute", top: -10, right: 14, width: 58, height: 58, borderRadius: "50%", background: "#FF6159", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transform: "rotate(10deg)", boxShadow: "0 6px 14px rgba(0,0,0,.12)" }}>
               <div className="serif" style={{ fontWeight: 600, fontSize: 22, lineHeight: 1 }}>{left}</div>
               <div style={{ fontSize: 10, fontWeight: 700 }}>{left === 1 ? "day" : "days"}</div>
@@ -102,7 +104,7 @@ export default function Today() {
               {arriving.map(g => (
                 <Link key={g.key} href={`/order/${encodeURIComponent(g.key)}`} className="lift" style={{ width: 148, flex: "none", display: "flex", flexDirection: "column", gap: 8, textDecoration: "none" }}>
                   <div style={{ position: "relative" }}>
-                    <StoreTile store={g.store} domain={g.store_domain} w={148} h={180} radius={22} size={64} />
+                    <ItemImage src={g.photo} store={g.store} domain={g.store_domain} w={148} h={180} radius={22} size={64} />
                     <div style={{ position: "absolute", top: 10, left: 10, background: "#fff", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 700 }}>{g.stage === "shipped" ? "Shipped" : "Ordered"}</div>
                   </div>
                   <div>
@@ -121,13 +123,13 @@ export default function Today() {
             <div className="section"><div>Recent</div><Link href="/orders?tab=all">See all</Link></div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "14px 16px 0" }}>
               {orders.filter(g => !isArriving(g)).slice(0, 5).map(g => (
-                <Link key={g.key} href={`/order/${encodeURIComponent(g.key)}`} className="orow" style={{ display: "flex", gap: 12, alignItems: "center", background: "#FAF8F6", borderRadius: 20, padding: "10px 14px 10px 10px", textDecoration: "none" }}>
-                  <StoreTile store={g.store} domain={g.store_domain} w={46} h={56} radius={12} size={22} />
+                <Link key={g.key} href={`/order/${encodeURIComponent(g.key)}`} className="orow" style={{ display: "flex", gap: 12, alignItems: "center", background: "#FAF8F6", borderRadius: 22, padding: "10px 14px 10px 10px", textDecoration: "none" }}>
+                  <ItemImage src={g.photo} store={g.store} domain={g.store_domain} w={52} h={64} radius={14} size={22} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 14 }}>{g.store}</div>
-                    <div style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{orderTitle(g)}</div>
+                    <div className="kicker">{g.store}</div>
+                    <div style={{ fontWeight: 700, fontSize: 14, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{orderTitle(g)}</div>
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap" }}>{fmtDate(g.last_at)}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--soft)", whiteSpace: "nowrap" }}>{fmtDate(g.last_at)}</div>
                 </Link>
               ))}
             </div>
