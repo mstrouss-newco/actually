@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { KIND, type Reward, daysUntil, fmtDay, loadRewards, money, programName, scanRewards } from "@/lib/earn";
+import { KIND, type Reward, addPoints, daysUntil, fmtDay, loadRewards, money, programName, removeReward, scanRewards } from "@/lib/earn";
 import { Job } from "@/lib/read-items";
 import { StoreTile, TabBar } from "@/lib/tabs";
 import { delay } from "@/lib/motion";
@@ -10,6 +10,18 @@ import { delay } from "@/lib/motion";
 export default function Points() {
   const [rewards, setRewards] = useState<Reward[] | null>(null);
   const load = useCallback(() => { loadRewards().then(setRewards); }, []);
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({ name: "", points: "", value: "", expires: "" });
+  const [saving, setSaving] = useState(false);
+  const save = async () => {
+    const pts = form.points ? Math.round(Number(form.points.replace(/,/g, ""))) : null;
+    const val = form.value ? Number(form.value.replace(/[$,]/g, "")) : null;
+    if (!form.name.trim() || (pts == null && val == null) || Number.isNaN(pts) || Number.isNaN(val)) return;
+    setSaving(true);
+    if (await addPoints(form.name, pts, val, form.expires || null)) { setForm({ name: "", points: "", value: "", expires: "" }); setAdding(false); load(); }
+    setSaving(false);
+  };
+  const field = { height: 44, borderRadius: 14, border: "1.5px solid var(--line)", padding: "0 12px", font: "15px var(--font-sans), sans-serif", width: "100%", boxSizing: "border-box" as const, background: "#fff" };
   useEffect(load, [load]);
 
   const list = rewards ?? [];
@@ -24,7 +36,7 @@ export default function Points() {
         <div style={{ padding: "0 20px" }}>
           <Link href="/earn" className="back">← Earn</Link>
           <h1 className="serif" style={{ fontWeight: 400, fontSize: 36, lineHeight: 1, letterSpacing: "-0.02em", margin: "18px 0 0" }}>Points and credit</h1>
-          <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 8 }}>Everything stores owe you, found in your email.</div>
+          <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 8 }}>Store points, miles, card points and credit, found in your email.</div>
         </div>
 
         {list.length > 0 && (
@@ -50,6 +62,7 @@ export default function Points() {
                     {r.expires_on ? ` · gone after ${fmtDay(r.expires_on)}` : " · no expiry found"}
                   </div>
                   {r.store_domain && <a href={`https://www.${r.store_domain}`} target="_blank" rel="noreferrer" style={{ fontSize: 13, fontWeight: 700 }}>Use at {programName(r.store)} →</a>}
+                  {r.gmail_id.startsWith("manual:") && <button type="button" onClick={async () => { await removeReward(r.gmail_id); load(); }} style={{ border: 0, background: "none", padding: 0, font: "700 13px var(--font-sans), sans-serif", color: "var(--muted)", cursor: "pointer" }}>Added by you · Remove</button>}
                 </div>
                 <div style={{ textAlign: "right" }}>
                   {r.value != null && <div className="serif" style={{ fontSize: 22 }}>{money(r.value)}</div>}
@@ -61,11 +74,34 @@ export default function Points() {
         </div>
 
         {rewards !== null && (
-          <div style={{ padding: "18px 16px 0" }}>
+          <div style={{ padding: "14px 16px 0" }}>
+            {!adding ? (
+              <button type="button" className="btn btn-ghost" onClick={() => setAdding(true)} style={{ height: 46, fontSize: 15, border: "1.5px solid var(--line)" }}>+ Add points yourself</button>
+            ) : (
+              <div className="up" style={{ background: "#FAF8F6", borderRadius: 22, padding: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>Add points</div>
+                <input aria-label="Program" placeholder="Program (Delta SkyMiles, Chase, Sephora)" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} style={field} />
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input aria-label="Points" inputMode="numeric" placeholder="Points or miles" value={form.points} onChange={e => setForm({ ...form, points: e.target.value })} style={field} />
+                  <input aria-label="Dollar value" inputMode="decimal" placeholder="$ value (optional)" value={form.value} onChange={e => setForm({ ...form, value: e.target.value })} style={field} />
+                </div>
+                <label style={{ fontSize: 12, color: "var(--muted)", fontWeight: 700 }}>Expires (optional)
+                  <input type="date" value={form.expires} onChange={e => setForm({ ...form, expires: e.target.value })} style={{ ...field, marginTop: 4 }} />
+                </label>
+                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                  <button type="button" className="btn" disabled={saving || !form.name.trim() || (!form.points && !form.value)} onClick={save} style={{ height: 46, fontSize: 15 }}>{saving ? "Saving" : "Save"}</button>
+                  <button type="button" className="btn btn-ghost" onClick={() => setAdding(false)} style={{ height: 46, fontSize: 15, width: 120 }}>Cancel</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        {rewards !== null && (
+          <div style={{ padding: "12px 16px 0" }}>
             <Job run={scanRewards} label="Check for new points" working="Checking email" noun={["new balance", "new balances"]} onDone={load} />
           </div>
         )}
-        <div style={{ fontSize: 12, color: "var(--muted)", padding: "14px 20px 0", lineHeight: 1.45 }}>Balances come from the latest email each store sent. Check the store&apos;s app to be sure before you shop.</div>
+        <div style={{ fontSize: 12, color: "var(--muted)", padding: "14px 20px 0", lineHeight: 1.45 }}>Balances come from the latest email each program sent. From card companies we only read rewards emails, never statements or payments. Check the app to be sure before you spend.</div>
       </div>
       <TabBar />
     </main>

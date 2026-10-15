@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CATS, type Item, type Who, brandOf, confirmMine, hideItem, hueRank, loadItems, needsAsk, setPick, setWho, sizesByBrand, toSort, whoFor } from "@/lib/items";
+import { CATS, type Item, type Who, brandOf, confirmMine, hideItem, hueRank, loadItems, needsAsk, setPick, setWho, shortSize, sizesByBrand, toSort, whoFor } from "@/lib/items";
 import { type Ret, dayLabel, fmtDate, loadOrders, matches, returnsByEmail } from "@/lib/orders";
 import { ReadItems } from "@/lib/read-items";
 import { ItemImage, StoreTile, TabBar, tint } from "@/lib/tabs";
@@ -246,11 +246,11 @@ export default function Closet() {
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2" strokeLinecap="round" style={{ marginTop: 6 }}><path d="M9 6l6 6-6 6" /></svg>
                   </div>
                   {b.sizes.length > 0 && (
-                    <div style={{ display: "flex", gap: 8, marginTop: 14, overflowX: "auto" }}>
+                    <div style={{ display: "flex", gap: 6, marginTop: 12, overflowX: "auto" }}>
                       {b.sizes.map(s => (
-                        <div key={s.cat} style={{ flex: "none", background: "#fff", borderRadius: 18, padding: "8px 14px", display: "flex", flexDirection: "column", alignItems: "center", minWidth: 64 }}>
-                          <div style={{ fontWeight: 700, fontSize: 24, lineHeight: 1.1, letterSpacing: "-0.01em" }}>{s.size}</div>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)" }}>{CATS.find(c => c[0] === s.cat)?.[1]}</div>
+                        <div key={s.cat} style={{ flex: "none", background: "#fff", borderRadius: 999, padding: "5px 11px", display: "flex", alignItems: "baseline", gap: 6, fontSize: 13, whiteSpace: "nowrap" }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)" }}>{CATS.find(c => c[0] === s.cat)?.[1]}</span>
+                          <span style={{ fontWeight: 700 }}>{shortSize(s.size, s.cat)}</span>
                         </div>
                       ))}
                     </div>
