@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { type OrderGroup, SOON, cleanupOnce, dayLabel, isArriving, loadOrders, orderTitle, returnBy, returnDaysLeft, ruleText, fmtDate, trackStep, justArrived } from "@/lib/orders";
+import { type OrderGroup, SOON, cleanupOnce, dayLabel, etaText, isArriving, loadOrders, orderTitle, refreshArriving, returnBy, returnDaysLeft, ruleText, shortTitle, fmtDate, trackStep, justArrived } from "@/lib/orders";
+import { gmailToken } from "@/lib/supabase";
 import { loadProfile } from "@/lib/profile";
 import { type Reward, daysUntil, fmtDay, loadRewards, money, programName } from "@/lib/earn";
 import { type Item, loadItems, monthPieces, whoFor } from "@/lib/items";
@@ -22,9 +23,16 @@ export default function Today() {
   const startX = useRef<number | null>(null);
   useEffect(() => {
     setName(loadProfile().handle);
-    loadOrders().then(list => {
+    loadOrders().then(async list => {
       setOrders(list);
-      if (list) { loadRewards().then(setRewards); loadItems().then(setItems); }
+      if (!list) return;
+      loadRewards().then(setRewards);
+      loadItems().then(setItems);
+      // Look up delivery dates for orders on the way that don't have one yet.
+      if (list.some(g => isArriving(g) && !g.eta)) {
+        const token = await gmailToken().catch(() => null);
+        if (token && await refreshArriving(list, token)) loadOrders().then(setOrders);
+      }
     });
     // First visit after sign-in: tidy up anything that isn't a real shopping order.
     cleanupOnce().then(changed => { if (changed) loadOrders().then(setOrders); });
@@ -37,7 +45,8 @@ export default function Today() {
   const returns = all.filter(g => g.stage === "returning");
   const greet = name ? name.split(".")[0].replace(/^./, c => c.toUpperCase()) : "";
   const mine = items.filter(i => whoFor(i, items) === "me");
-  const landed = mine.filter(i => i.image_url && !i.arriving).slice(0, 8);
+  // Only pieces that arrived in the last 45 days.
+  const landed = mine.filter(i => i.image_url && !i.arriving && Date.now() - Date.parse(i.ordered_at) < 45 * 86400000).slice(0, 8);
   const month = monthPieces(items);
   const reward = [...rewards].sort((a, b) => (a.expires_on ?? "9999").localeCompare(b.expires_on ?? "9999") || (b.value ?? 0) - (a.value ?? 0))[0];
 
@@ -47,8 +56,8 @@ export default function Today() {
   if (nextIn) slides.push({
     key: "in", href: `/order/${encodeURIComponent(nextIn.key)}`, bg: "#DCEBFF", kc: "#3E5C8E",
     kicker: trackStep(nextIn) === 2 ? "Out for delivery" : nextIn.stage === "shipped" ? "On the way" : "Ordered",
-    title: `${orderTitle(nextIn)} ${trackStep(nextIn) === 2 ? "arrives today" : "is on its way"}`,
-    sub: `${nextIn.stage === "shipped" ? "Shipped" : "Ordered"} ${fmtDate(nextIn.last_at)} from ${nextIn.store}`,
+    title: `${shortTitle(nextIn)}${trackStep(nextIn) === 2 ? ", arriving today" : nextIn.pieces.length > 1 ? ", on the way" : " is on its way"}`,
+    sub: etaText(nextIn) ?? `${nextIn.stage === "shipped" ? "Shipped" : "Ordered"} ${fmtDate(nextIn.last_at)} from ${nextIn.store}`,
     img: <ItemImage src={nextIn.photo} store={nextIn.store} name={nextIn.items[0] ?? nextIn.what ?? undefined} w={104} h={136} radius={20} size={44} />,
     badge: <div className="serif" style={{ fontWeight: 600, fontSize: 15, lineHeight: 1 }}>{["Placed", "Shipped", "Today", "Here"][trackStep(nextIn)]}</div>,
   });
@@ -57,7 +66,7 @@ export default function Today() {
     const left = returnDaysLeft(hero)!;
     slides.push({
       key: "ret", href: `/order/${encodeURIComponent(hero.key)}`, bg: "#FFE1DC", kc: "#C9402F",
-      kicker: "Still returnable", title: `Keep the ${orderTitle(hero)}, or send it back?`,
+      kicker: "Still returnable", title: hero.pieces.length > 1 ? `Keep the ${shortTitle(hero)}, or send some back?` : `Keep the ${orderTitle(hero)}, or send it back?`,
       sub: `Return by ${dayLabel(returnBy(hero))}${ruleText(hero) ? ` · ${ruleText(hero)}` : ""}`,
       img: <ItemImage src={hero.photo} store={hero.store} name={hero.items[0] ?? hero.what ?? undefined} w={104} h={136} radius={20} size={44} />,
       badge: <><div className="serif" style={{ fontWeight: 600, fontSize: 22, lineHeight: 1 }}>{left}</div><div style={{ fontSize: 10, fontWeight: 700 }}>{left === 1 ? "day" : "days"}</div></>,
@@ -77,13 +86,17 @@ export default function Today() {
     badge: <div className="serif" style={{ fontWeight: 600, fontSize: 22, lineHeight: 1 }}>{month.length}</div>,
   });
   else if (landed[0]) slides.push({
-    key: "new", href: "/closet", bg: "#DCEFDF", kc: "#3F7A55", kicker: "New in your closet",
+    key: "new", href: `/closet?piece=${landed[0]?.id}`, bg: "#DCEFDF", kc: "#3F7A55", kicker: "New in your closet",
     title: landed[0].name, sub: `${landed[0].brand || landed[0].store} · ${fmtDate(landed[0].ordered_at)}`,
     img: <ItemImage src={landed[0].image_url} store={landed[0].store} name={landed[0].name} w={104} h={136} radius={20} size={44} />,
     badge: <div className="serif" style={{ fontWeight: 600, fontSize: 15, lineHeight: 1 }}>New</div>,
   });
 
   const n = slides.length;
+  // Moves on every 5 seconds, but holds still while a finger or mouse is on it, and for a while after.
+  const resume = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hold = () => { setPaused(true); if (resume.current) clearTimeout(resume.current); };
+  const release = () => { if (resume.current) clearTimeout(resume.current); resume.current = setTimeout(() => setPaused(false), 6000); };
   useEffect(() => {
     if (n < 2 || paused) return;
     const t = setInterval(() => setAt(a => (a + 1) % n), 5000);
@@ -96,7 +109,7 @@ export default function Today() {
     canReturn.length && `${canReturn.length} still returnable`,
     arriving.length && `${arriving.length} ${arriving.length === 1 ? "order" : "orders"} on the way`,
   ].filter(Boolean).join(". ");
-  const recent = all.filter(g => !isArriving(g) && g.stage !== "cancelled" && g.photo).slice(0, 4);
+  const recent = all.filter(g => !isArriving(g) && g.stage !== "cancelled").slice(0, 4);
 
   return (
     <main className="tabscreen">
@@ -107,7 +120,7 @@ export default function Today() {
           <Link href="/settings" aria-label="Settings" className="press" style={{ width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #EAE6E1", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="8" r="4" /><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" /></svg>
           </Link>
-          <Link href="/orders" aria-label="Find an order" className="press" style={{ width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #EAE6E1", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Link href="/orders?find=1" aria-label="Find an order" className="press" style={{ width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #EAE6E1", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
           </Link>
           </div>
@@ -142,10 +155,11 @@ export default function Today() {
         {slide && (
           <>
             <div style={{ position: "relative", margin: "22px 16px 0" }}
-              onPointerDown={e => { startX.current = e.clientX; setPaused(true); }}
-              onPointerUp={e => { const s = startX.current; startX.current = null; setPaused(false); if (s != null && Math.abs(e.clientX - s) > 40) { e.preventDefault(); go(e.clientX < s ? 1 : -1); } }}
-              onPointerCancel={() => { startX.current = null; setPaused(false); }}>
-              <Link key={slide.key} href={slide.href} className="heroIn press" draggable={false} style={{ background: slide.bg, borderRadius: 28, padding: "20px 18px", display: "flex", gap: 14, position: "relative", textDecoration: "none", minHeight: 176, boxSizing: "border-box" }}>
+              onPointerEnter={hold} onPointerLeave={release}
+              onPointerDown={e => { startX.current = e.clientX; hold(); }}
+              onPointerUp={e => { const s = startX.current; startX.current = null; release(); if (s != null && Math.abs(e.clientX - s) > 40) { e.preventDefault(); go(e.clientX < s ? 1 : -1); } }}
+              onPointerCancel={() => { startX.current = null; release(); }}>
+              <Link key={slide.key} href={slide.href} className="heroIn press" draggable={false} style={{ background: slide.bg, borderRadius: 28, padding: "20px 18px", display: "flex", gap: 14, position: "relative", textDecoration: "none", height: 196, boxSizing: "border-box" }}>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
                   <div className="kicker" style={{ color: slide.kc }}>{slide.kicker}</div>
                   <div className="serif" style={{ fontSize: 26, lineHeight: 1.06, letterSpacing: "-0.02em", overflowWrap: "break-word", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{slide.title}</div>
@@ -158,7 +172,7 @@ export default function Today() {
             {n > 1 && (
               <div style={{ display: "flex", gap: 2, justifyContent: "center", marginTop: 6 }}>
                 {slides.map((s, i) => (
-                  <button key={s.key} onClick={() => setAt(i)} aria-label={`Card ${i + 1} of ${n}`} style={{ border: 0, background: "none", padding: "10px 3px", cursor: "pointer" }}>
+                  <button key={s.key} onClick={() => { setAt(i); hold(); release(); }} aria-label={`Card ${i + 1} of ${n}`} style={{ border: 0, background: "none", padding: "10px 3px", cursor: "pointer" }}>
                     <span style={{ display: "block", height: 6, width: i === at % n ? 22 : 6, borderRadius: 3, background: i === at % n ? "var(--ink)" : "#D9D3CC", transition: "width .3s, background .3s" }} />
                   </button>
                 ))}
@@ -176,7 +190,8 @@ export default function Today() {
                   <ItemImage src={g.photo} store={g.store} name={g.items[0] ?? g.what ?? undefined} w={72} h={88} radius={16} size={28} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="kicker" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{g.store}{g.pieces.length > 1 ? ` · ${g.pieces.length} pieces` : ""}</div>
-                    <div style={{ fontWeight: 700, fontSize: 15, marginTop: 3, marginBottom: 10, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{orderTitle(g)}</div>
+                    <div style={{ fontWeight: 700, fontSize: 15, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{etaText(g) ?? orderTitle(g)}</div>
+                    <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2, marginBottom: 10, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{etaText(g) ? orderTitle(g) : `${g.stage === "shipped" ? "Shipped" : "Ordered"} ${fmtDate(g.last_at)}`}</div>
                     <TrackBar step={trackStep(g)} />
                   </div>
                 </Link>
@@ -190,8 +205,8 @@ export default function Today() {
             <div className="section"><div>Just landed</div><Link href="/closet">Closet</Link></div>
             <div className="rail">
               {landed.map((i, k) => (
-                <Link key={i.id} href="/closet" className="lift up" style={{ ...delay(k, 70), width: 140, flex: "none", textDecoration: "none" }}>
-                  <ItemImage src={i.image_url} store={i.store} name={i.name} w={140} h={172} radius={22} size={56} />
+                <Link key={i.id} href={`/closet?piece=${i.id}`} className="lift up" style={{ ...delay(k, 70), width: 140, flex: "none", textDecoration: "none" }}>
+                  <ItemImage src={i.image_url} store={i.store} name={i.name} label="" w={140} h={172} radius={22} size={56} />
                   <div style={{ fontWeight: 700, fontSize: 14, marginTop: 8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{i.name}</div>
                   <div style={{ fontSize: 12, color: "var(--muted)" }}>{i.brand || i.store} · {fmtDate(i.ordered_at)}</div>
                 </Link>

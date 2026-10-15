@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { HUE_SWATCH, type Item, brandOf, hueRank, loadItems, monthPieces, whoFor } from "@/lib/items";
 import { type OrderGroup, loadOrders, returnDaysLeft } from "@/lib/orders";
 import { closetWorth, money, worth } from "@/lib/earn";
@@ -12,6 +13,7 @@ export default function Story() {
   const [items, setItems] = useState<Item[] | null>(null);
   const [groups, setGroups] = useState<OrderGroup[] | null>(null);
   const [i, setI] = useState(0);
+  const router = useRouter();
   useEffect(() => { loadItems().then(setItems); loadOrders().then(setGroups); }, []);
 
   const all = items ?? [];
@@ -62,7 +64,7 @@ export default function Story() {
           <div style={{ fontSize: 12, fontWeight: 700, opacity: .7 }}>{label}</div>
         </div>
 
-        <button type="button" onClick={() => setI(x => (x + 1) % n)} aria-label="Next card" style={{ flex: 1, border: 0, background: "transparent", color: "#fff", cursor: "pointer", padding: 0, textAlign: "left", font: "inherit", display: "flex", flexDirection: "column", minHeight: 0 }}>
+        <button type="button" onClick={() => (i + 1 < n ? setI(i + 1) : router.push("/today"))} aria-label={i + 1 < n ? "Next card" : "Close"} style={{ flex: 1, border: 0, background: "transparent", color: "#fff", cursor: "pointer", padding: 0, textAlign: "left", font: "inherit", display: "flex", flexDirection: "column", minHeight: 0 }}>
           {items === null ? <div style={{ marginTop: 60, opacity: .7 }}>Putting your month together…</div>
           : pieces.length === 0 ? <>{kick(label)}{big("Nothing new yet.")}<div style={{ fontSize: 16, opacity: .8, marginTop: 10 }}>Your story fills in as orders come in.</div></>
           : card === "new" ? (
@@ -105,7 +107,7 @@ export default function Story() {
           <Link href="/sort" className="press" style={{ flex: 1, height: 52, borderRadius: 999, background: "#fff", color: "var(--ink)", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>Share pieces to my feed</Link>
           <Link href="/today" className="press" style={{ height: 52, padding: "0 20px", borderRadius: 999, border: "1.5px solid rgba(255,255,255,.45)", color: "#fff", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", textDecoration: "none" }}>Close</Link>
         </div>
-        <div style={{ textAlign: "center", fontSize: 12, opacity: .6, marginTop: 10 }}>Tap for the next card</div>
+        <div style={{ textAlign: "center", fontSize: 12, opacity: .6, marginTop: 10 }}>{i + 1 < n ? "Tap for the next card" : "Tap to finish"}</div>
       </div>
     </main>
   );

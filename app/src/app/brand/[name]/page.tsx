@@ -96,7 +96,8 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
 
         {(mine.length > 0 || theirs.length > 0) && <div style={{ margin: "22px 16px 0", background: "var(--ink)", color: "#fff", borderRadius: 26, padding: "20px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
           <div className="serif" style={{ fontSize: 24 }}>Returning to {returnTo}</div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, gap: 12 }}><span style={{ color: "#B9B3AC" }}>Window</span><span style={{ fontWeight: 700, textAlign: "right" }}>{ruled?.returnDays ? `${windowDays(ruled)} days from delivery` : rule ?? "Not in their emails"}</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, gap: 12 }}><span style={{ color: "#B9B3AC" }}>Window</span><span style={{ fontWeight: 700, textAlign: "right" }}>{ruled?.returnDays ? `${windowDays(ruled)} days from delivery` : "Not stated, usually 30 days"}</span></div>
+          {ruled?.returnNote && !/^final sale$/i.test(ruled.returnNote) && <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, gap: 12 }}><span style={{ color: "#B9B3AC" }}>Policy</span><span style={{ fontWeight: 700, textAlign: "right" }}>{ruled.returnNote}</span></div>}
           <div style={{ height: 1, background: "#2E2B28" }} />
           <div style={{ fontSize: 13, color: "#B9B3AC", lineHeight: 1.4 }}>{rule ? `From ${ruled!.store}'s email: ${rule}.` : `${returnTo}'s emails don't say. Most stores allow 30 days, so check their site before you send something back.`}</div>
         </div>}
@@ -107,7 +108,7 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
             <div style={{ display: "flex", gap: 12, overflowX: "auto", padding: "12px 20px 4px" }}>
               {mine.slice(0, 20).map((i, n) => (
                 <div key={i.id} className="up" style={{ ...delay(n, 60), flex: "none", width: 132, display: "flex", flexDirection: "column", gap: 6 }}>
-                  <ItemImage src={i.image_url} store={i.store} name={i.name} w={132} h={164} radius={22} size={44} />
+                  <ItemImage src={i.image_url} store={i.store} name={i.name} label="" w={132} h={164} radius={22} size={44} />
                   <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{i.name}</div>
                   <div style={{ fontSize: 12, color: "var(--muted)" }}>{[mine.some(o => o !== i && o.name === i.name) && i.color, i.size && `Size ${i.size}`, month(i.ordered_at)].filter(Boolean).join(" · ")}</div>
                 </div>

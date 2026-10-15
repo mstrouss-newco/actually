@@ -12,11 +12,9 @@ export type Item = {
 };
 export type Who = "me" | "kids" | "partner" | "other";
 
-import { WEAR } from "./wear";
+import { NOT_WEAR, WEAR } from "./wear";
 export { WEAR };
 
-// Things the reader sometimes files under accessories or bags that you don't wear.
-const NOT_WEAR = /\b(i?pad|iphone|phone|tablet|laptop|kindle)\b.*\b(case|cover|stand|sleeve)\b|\b(case|cover) for\b|adapter|charger|cable|key ?card|compression bags?|packing cubes?|vacuum bags?|luggage tags?/i;
 // The same piece read from two emails about one order ("Lima" and "Men's Lima"). Other colors stay separate.
 const pieceKey = (i: Item) => `${(i.brand || i.store).toLowerCase()}|${i.size ?? ""}|${i.name.toLowerCase().replace(/\b(men|women|boy|girl|kid)s?['’]?s?\b/g, "").replace(/[^a-z0-9]/g, "")}|${i.ordered_at.slice(0, 7)}`;
 

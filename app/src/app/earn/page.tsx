@@ -20,17 +20,21 @@ export default function Earn() {
   const soon = (rewards ?? []).find(r => r.expires_on && daysUntil(r.expires_on) <= 30);
   const priced = (items ?? []).filter(i => i.resale_high != null);
   // Counted: arrived, priced and worth listing. Same rule as the Worth page.
-  const { counted: valued, unpriced } = closetWorth(items ?? [], groups);
+  const { counted: valued } = closetWorth(items ?? [], groups);
+  // Only pieces that have arrived are worth pricing; the rest wait.
+  const toPrice = (items ?? []).filter(i => i.resale_high == null && !i.arriving);
+  const unpriced = toPrice.length;
   const [lo, hi] = worth(valued);
   const loN = useCountUp(Math.round(lo)), hiN = useCountUp(Math.round(hi)), cashN = useCountUp(Math.round(cash));
-  const unpricedNames = (items ?? []).filter(i => i.resale_high == null).map(i => i.name);
+  const unpricedNames = toPrice.map(i => (toPrice.some(o => o !== i && o.name === i.name) && i.color ? `${i.name} (${i.color})` : i.name));
   const ranked = [...valued].sort((a, b) => (b.resale_high ?? 0) - (a.resale_high ?? 0));
   const top = ranked[0];
   // The three priciest pieces with a photo, fanned out like the design.
   const fan = ranked.filter(i => i.image_url).slice(0, 3);
   const logos = [...(rewards ?? [])].sort((a, b) => (b.value ?? 0) - (a.value ?? 0)).slice(0, 3);
   const points = (rewards ?? []).filter(r => !r.value && r.points);
-  const pts = points.reduce((s, r) => s + (r.points ?? 0), 0);
+  // Points from different programs can't be added up; lead with the biggest.
+  const topPts = [...points].sort((a, b) => (b.points ?? 0) - (a.points ?? 0))[0];
 
   return (
     <main className="tabscreen">
@@ -45,7 +49,7 @@ export default function Earn() {
           {rewards && rewards.length > 0 ? (
             <Link href="/earn/points" style={{ textDecoration: "none", display: "block" }}>
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 10, marginTop: 8 }}>
-                <div className="serif glow" style={{ fontSize: cash ? 52 : 40, lineHeight: 1 }}>{cash ? money(cashN) : `${pts.toLocaleString("en-US")} points`}</div>
+                <div className="serif glow" style={{ fontSize: cash ? 52 : 30, lineHeight: 1.05 }}>{cash ? money(cashN) : topPts ? `${(topPts.points ?? 0).toLocaleString("en-US")} ${programName(topPts.store)} points` : money(0)}</div>
                 {logos.length > 0 && (
                   <div style={{ display: "flex", flex: "none", paddingBottom: 4 }}>
                     {logos.map((r, i) => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { type OrderGroup, dayLabel, fmtDate, isArriving, isReturn, loadOrders, matches, orderTitle, returnBy, returnDaysLeft, ruleText, SOON } from "@/lib/orders";
 import { Progress, ItemImage, TabBar } from "@/lib/tabs";
@@ -11,7 +11,7 @@ function PhotoCard({ g, chipText, chipBg, i }: { g: OrderGroup; chipText: string
   return (
     <Link href={`/order/${encodeURIComponent(g.key)}`} className="press up" style={{ ...delay(i, 60), textDecoration: "none", color: "var(--ink)", display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
       <div style={{ position: "relative" }}>
-        <ItemImage src={g.photo} store={g.store} name={g.items[0] ?? g.what ?? undefined} w="100%" h={196} radius={22} size={48} />
+        <ItemImage src={g.photo} store={g.store} name={g.items[0] ?? g.what ?? undefined} label="" w="100%" h={196} radius={22} size={48} />
         {chipText && <div style={{ position: "absolute", left: 10, top: 10, background: chipBg, borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 700 }}>{chipText}</div>}
         {g.pieces.length > 1 && <div style={{ position: "absolute", right: 10, bottom: 10, background: "rgba(20,18,16,.78)", color: "#fff", borderRadius: 999, padding: "4px 9px", fontSize: 11, fontWeight: 700 }}>+{g.pieces.length - 1}</div>}
       </div>
@@ -63,6 +63,9 @@ export default function Orders() {
   const [orders, setOrders] = useState<OrderGroup[] | null | undefined>(undefined);
   const [tab, setTab] = useState<Tab>("arriving");
   const [q, setQ] = useState("");
+  const findRef = useRef<HTMLInputElement>(null);
+  // From the search button on Today: ready to type.
+  useEffect(() => { if (new URLSearchParams(location.search).get("find")) findRef.current?.focus(); }, []);
   // "photos": clothes, shoes and accessories as big photo cards. "list": every order, by tab.
   const [view, setViewState] = useState<"photos" | "list">("photos");
   const setView = (v: "photos" | "list", t?: Tab) => {
@@ -77,7 +80,7 @@ export default function Orders() {
     loadOrders().then(list => {
       setOrders(list);
       // A link to a tab, or no clothes at all, opens the list.
-      if (t || sp.get("view") === "list" || !list?.some(g => g.wear && g.photo)) setViewState("list");
+      if (t || sp.get("view") === "list" || sp.get("find") || !list?.some(g => g.wear && g.photo)) setViewState("list");
       // Open on the first tab that has something in it.
       if (t && FILTER[t]) setTab(t);
       else if (list && !list.some(isArriving)) setTab(list.some(g => g.stage === "delivered") ? "delivered" : "all");
@@ -105,7 +108,7 @@ export default function Orders() {
         <div style={{ padding: "0 20px" }}><h1 className="serif" style={{ fontWeight: 400, fontSize: 36, lineHeight: 1, letterSpacing: "-0.02em", margin: 0 }}>Orders</h1></div>
         <label style={{ margin: "16px 16px 0", height: 50, borderRadius: 999, background: "var(--chip)", display: "flex", alignItems: "center", gap: 10, padding: "0 18px" }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A746D" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Find any order or receipt" aria-label="Find any order or receipt" style={{ border: 0, outline: 0, background: "transparent", font: "500 15px var(--font-sans), sans-serif", flex: 1, color: "var(--ink)", minWidth: 0 }} />
+          <input ref={findRef} value={q} onChange={e => setQ(e.target.value)} placeholder="Find any order or receipt" aria-label="Find any order or receipt" style={{ border: 0, outline: 0, background: "transparent", font: "500 15px var(--font-sans), sans-serif", flex: 1, color: "var(--ink)", minWidth: 0 }} />
         </label>
 
         {!query && (
