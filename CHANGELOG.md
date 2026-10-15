@@ -2,6 +2,10 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-15
+
+- Feed and Find people match the design board. Feed has three tabs: Friends (big photo posts with brand and name), Taste match (people who shop your brands, with three pieces from their feed) and My feed (followers, Share my feed, Sort N new purchases, On your feed grid). Find people: search, "Friends already here" (people who follow you or you follow) with Follow buttons, a sideways "Shop like you" row, invite card. "Find it" shop links removed from the feed. New `my_people` database function.
+
 ## 2026-10-14
 
 - Closet, Brands and Sort match the design board. Closet tabs are Pieces and Brands. Shelves are flat rows with a fan of photos and "N can still go back". Inside a shelf: Sort (Newest, By color, By brand, Returnable first), a hanging rail with Return by, New and Returned tags, then all pieces 3 across. Brands: search, one card per brand with your sizes and the return window (30-day estimate), and a new brand page (sizes, open orders, pieces, past orders). Sort: drag card with Keep private, Share and Up to sell, "Keep the other N private", "Your feed is ready" finish. Fixes the Sort button running off the edge.
