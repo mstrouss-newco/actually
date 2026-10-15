@@ -1,12 +1,14 @@
 import { supabase } from "./supabase";
 import { readFullText } from "./gmail";
-import { cancelledEmails } from "./orders";
+import { orderInfo } from "./orders";
 
 export type Item = {
   id: string; store: string; name: string; brand: string | null; size: string | null; color: string | null;
   price: number | null; image_url: string | null; category: string; ordered_at: string; pick: "share" | "sell" | "private" | null;
   resale_low?: number | null; resale_high?: number | null; resale_note?: string | null;
   for_whom?: Who | null; gmail_id?: string;
+  // Its order hasn't arrived yet.
+  arriving?: boolean;
 };
 export type Who = "me" | "kids" | "partner" | "other";
 
@@ -32,7 +34,8 @@ function sameRead(a: Item, b: Item) {
 
 export async function loadItems(): Promise<Item[]> {
   // Pieces from cancelled orders never arrived, so they stay out of the closet.
-  const cancelled = await cancelledEmails();
+  // Every piece uses its order's date, so one purchase shows one date everywhere.
+  const { cancelled, arriving, ordered } = await orderInfo();
   const { data } = await supabase().from("items").select("id, store, name, brand, size, color, price, image_url, category, ordered_at, pick, resale_low, resale_high, resale_note, for_whom, gmail_id").in("category", WEAR).eq("hidden", false).order("ordered_at", { ascending: false }).limit(3000);
   // Keep the more specific name ("Women's Lima" over "Lima"): it tells us who it's for.
   // Two colors of one piece (a tee in Black and White) stay separate; a missing color matches any.
@@ -40,6 +43,9 @@ export async function loadItems(): Promise<Item[]> {
   const sameColor = (a: Item, b: Item) => !a.color || !b.color || a.color.toLowerCase() === b.color.toLowerCase();
   for (const i of (data ?? []) as Item[]) {
     if (NOT_WEAR.test(i.name) || cancelled.has(i.gmail_id ?? "")) continue;
+    const when = ordered.get(i.gmail_id ?? "");
+    if (when) i.ordered_at = when;
+    i.arriving = arriving.has(i.gmail_id ?? "");
     const list = best.get(pieceKey(i)) ?? [];
     const n = list.findIndex(c => sameColor(c, i));
     if (n < 0) list.push(i);
@@ -247,7 +253,8 @@ export const CATS: [string, string][] = [
 
 // Her usual size at each brand: the size she bought most often there, per category.
 // What Sort shows: her own pieces with a photo and no choice yet. Closet counts the same way.
-export const toSort = (all: Item[]) => all.filter(x => !x.pick && x.image_url && whoFor(x, all) === "me");
+// Pieces still in the mail wait until they arrive.
+export const toSort = (all: Item[]) => all.filter(x => !x.pick && x.image_url && !x.arriving && whoFor(x, all) === "me");
 
 export function sizesByBrand(items: Item[]) {
   const map = new Map<string, Map<string, Map<string, number>>>();
@@ -277,3 +284,13 @@ export function hueRank(color: string | null) {
   const n = HUES.findIndex(r => r.test(c));
   return n < 0 ? HUES.length : n;
 }
+
+// Pieces of hers bought this calendar month.
+export const monthPieces = (items: Item[]) => {
+  const now = new Date();
+  return items.filter(i => { const d = new Date(i.ordered_at); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && whoFor(i, items) === "me"; });
+};
+
+// Each color family's swatch, in the same order as HUES.
+export const HUE_SWATCH: [string, string][] = [["cream", "#EFE6D6"], ["pink", "#F2B8C6"], ["red", "#B83A35"], ["orange", "#E0874A"], ["yellow", "#EBC855"],
+  ["tan", "#B8916A"], ["green", "#6F8A5B"], ["navy", "#2B3A5C"], ["purple", "#7B5EA7"], ["gray", "#8E8B86"], ["black", "#1E1C1A"]];

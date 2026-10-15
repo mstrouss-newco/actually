@@ -142,3 +142,39 @@ a { color: var(--ink); }
 .nr { animation: nr 1.4s ease-in-out infinite; }
 @keyframes nl { 50% { transform: translateX(-5px) } }
 @keyframes nr { 50% { transform: translateX(5px) } }
+
+/* Motion: things move in, react to taps, and feel alive */
+.press, .orow, .lift { -webkit-tap-highlight-color: transparent; }
+.press { transition: transform .18s cubic-bezier(.2,.8,.2,1); }
+.press:active, .orow:active, .lift:active { transform: scale(.97); }
+.up { animation: up .5s cubic-bezier(.2,.9,.25,1.2) both; }
+@keyframes up { from { transform: translateY(18px); opacity: 0 } to { transform: none; opacity: 1 } }
+.drop { animation: dropIn .7s cubic-bezier(.2,.9,.25,1.3) .25s both; }
+@keyframes dropIn { from { transform: translateY(-24px) scale(.96); opacity: 0 } to { transform: none; opacity: 1 } }
+.bell { animation: bell 2.6s ease-in-out 1s infinite; transform-origin: 50% 2px; }
+@keyframes bell { 0%,20%,100% { transform: rotate(0) } 5% { transform: rotate(14deg) } 10% { transform: rotate(-12deg) } 15% { transform: rotate(6deg) } }
+.float { animation: float 4s ease-in-out infinite; }
+@keyframes float { 0%,100% { translate: 0 0 } 50% { translate: 0 -7px } }
+.heroIn { animation: heroIn .5s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes heroIn { from { transform: translateX(40px); opacity: 0 } to { transform: none; opacity: 1 } }
+.barfill { animation: barfill 1.4s cubic-bezier(.2,.8,.2,1) .4s both; }
+@keyframes barfill { from { width: 0 } }
+.dotslide { animation: dotslide 1.4s cubic-bezier(.2,.8,.2,1) .4s both; }
+@keyframes dotslide { from { left: 0 } }
+.ping { animation: ping 1.8s ease-out 1.8s infinite; }
+@keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(20,18,16,.35) } 100% { box-shadow: 0 0 0 12px rgba(20,18,16,0) } }
+.glow { display: inline-block; animation: glow 2.4s ease-in-out 2s infinite; }
+@keyframes glow { 50% { transform: scale(1.05) } }
+.fanin { animation: fanin .7s cubic-bezier(.2,.9,.25,1.3) both; }
+@keyframes fanin { from { translate: 0 28px; opacity: 0 } to { translate: 0 0; opacity: 1 } }
+.boom { position: absolute; left: 50%; top: 40%; width: 1px; height: 1px; pointer-events: none; }
+.boom span { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: boom 1.2s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes boom { from { transform: translate(-50%,-50%) scale(.2); opacity: 1 } to { transform: translate(var(--x),var(--y)) rotate(220deg); opacity: 0 } }
+.seg { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.3); overflow: hidden; }
+.seg i { display: block; height: 100%; background: #fff; }
+.segrun { animation: segrun 5s linear both; }
+@keyframes segrun { from { width: 0 } to { width: 100% } }
+.pop { animation: popOnce .55s cubic-bezier(.2,.9,.25,1.4) both; }
+@keyframes popOnce { from { transform: scale(.6); opacity: 0 } to { transform: none; opacity: 1 } }
+.sw { animation: sw .5s cubic-bezier(.2,.9,.25,1.3) both; }
+@keyframes sw { from { transform: scale(0) } to { transform: none } }

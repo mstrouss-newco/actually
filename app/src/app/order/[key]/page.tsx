@@ -3,7 +3,8 @@
 import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type OrderGroup, blockStore, dayLabel, fmtDate, gmailLink, loadOrders, orderTitle, removeOrder, returnBy, returnDaysLeft, ruleText } from "@/lib/orders";
+import { type OrderGroup, blockStore, dayLabel, deliveredAt, fmtDate, gmailLink, isArriving, justArrived, loadOrders, orderTitle, removeOrder, returnBy, returnDaysLeft, ruleText, trackStep } from "@/lib/orders";
+import { Confetti, TrackBar, delay } from "@/lib/motion";
 import { ItemImage, TabBar, tint } from "@/lib/tabs";
 
 const LABEL: Record<string, string> = {
@@ -35,9 +36,17 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
     timer.current = setTimeout(async () => { await removeOrder(g); router.replace("/orders"); }, 8000);
   };
   const undoRemove = () => { if (timer.current) clearTimeout(timer.current); setRemoved(false); setConfirm(null); };
+  const [party, setParty] = useState(false);
   useEffect(() => {
     const k = decodeURIComponent(key);
-    loadOrders().then(list => setOrder(list?.find(g => g.key === k) ?? null));
+    loadOrders().then(list => {
+      const g = list?.find(x => x.key === k) ?? null;
+      setOrder(g);
+      // A small celebration the first time she opens an order that just arrived.
+      if (g && justArrived(g)) {
+        try { const seen = `party:${g.key}`; if (!localStorage.getItem(seen)) { localStorage.setItem(seen, "1"); setParty(true); } } catch {}
+      }
+    });
   }, [key]);
 
   if (order === undefined) return <main className="tabscreen"><TabBar /></main>;
@@ -65,7 +74,7 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>Orders
           </Link>
           <div style={{ display: "flex", gap: 16, alignItems: "flex-end", marginTop: 20 }}>
-            <div style={{ transform: "rotate(-3deg)", boxShadow: "0 10px 24px rgba(20,18,16,.12)", borderRadius: 22 }}>
+            <div className="float" style={{ transform: "rotate(-3deg)", boxShadow: "0 10px 24px rgba(20,18,16,.12)", borderRadius: 22 }}>
               <ItemImage src={order.photo} store={order.store} name={order.items[0] ?? order.what ?? undefined} domain={order.store_domain} w={110} h={138} radius={22} size={52} />
             </div>
             <div style={{ flex: 1, minWidth: 0, paddingBottom: 4 }}>
@@ -75,6 +84,19 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
             </div>
           </div>
         </div>
+
+        {(isArriving(order) || justArrived(order)) && (
+          <div className="up" style={{ ...delay(1), position: "relative", margin: "18px 16px 0", background: "#FAF8F6", borderRadius: 26, padding: "18px 18px 16px" }}>
+            {party && <Confetti />}
+            <div className={justArrived(order) ? "pop" : undefined} style={{ fontFamily: "var(--font-serif), serif", fontSize: 26, lineHeight: 1.05 }}>
+              {justArrived(order) ? <>It&apos;s <em>here.</em></> : trackStep(order) === 2 ? <>Out for <em>delivery</em></> : order.stage === "shipped" ? <>On its <em>way</em></> : <>Order <em>placed</em></>}
+            </div>
+            <div style={{ fontSize: 13, color: "var(--soft)", marginTop: 4, marginBottom: 16 }}>
+              {justArrived(order) ? `Delivered ${fmtDate(deliveredAt(order))}${order.pieces.length > 1 ? `, ${order.pieces.length} pieces` : ""}` : order.stage === "shipped" ? `Shipped ${fmtDate(order.last_at)}. We'll update this as emails come in.` : `Ordered ${fmtDate(order.ordered_at)}. Waiting for it to ship.`}
+            </div>
+            <TrackBar step={trackStep(order)} />
+          </div>
+        )}
 
         {order.stage === "cancelled" && (
           <div style={{ margin: "18px 16px 0", background: "#F1EDE8", borderRadius: 26, padding: "18px" }}>
@@ -101,8 +123,8 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
           <>
             <div style={{ padding: "26px 20px 0" }} className="serif"><span style={{ fontSize: 24 }}>In this order</span></div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "12px 16px 0" }}>
-              {order.pieces.map(p => (
-                <div key={`${p.name}|${p.color ?? ""}`} style={{ display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", borderRadius: 20, padding: "8px 14px 8px 8px" }}>
+              {order.pieces.map((p, i) => (
+                <div key={`${p.name}|${p.color ?? ""}`} className="up" style={{ ...delay(i, 60), display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", borderRadius: 20, padding: "8px 14px 8px 8px" }}>
                   <ItemImage src={p.img} store={order.store} name={p.name} domain={order.store_domain} w={52} h={64} radius={14} size={20} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{p.name}</div>

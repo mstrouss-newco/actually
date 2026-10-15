@@ -5,6 +5,7 @@ import Link from "next/link";
 import { KIND, type Reward, daysUntil, fmtDay, loadRewards, money, programName, scanRewards } from "@/lib/earn";
 import { Job } from "@/lib/read-items";
 import { StoreTile, TabBar } from "@/lib/tabs";
+import { delay } from "@/lib/motion";
 
 export default function Points() {
   const [rewards, setRewards] = useState<Reward[] | null>(null);
@@ -36,10 +37,10 @@ export default function Points() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "16px 16px 0" }}>
           {rewards !== null && list.length === 0 && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}>No balances found yet.</div>}
-          {list.map(r => {
+          {list.map((r, n) => {
             const left = r.expires_on ? daysUntil(r.expires_on) : null;
             return (
-              <div key={`${r.store}|${r.kind}`} style={{ display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", borderRadius: 22, padding: "12px 14px 12px 12px" }}>
+              <div key={`${r.store}|${r.kind}`} className="up" style={{ ...delay(n), display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", borderRadius: 22, padding: "12px 14px 12px 12px" }}>
                 <StoreTile store={r.store} domain={r.store_domain} w={46} h={46} radius={14} size={22} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 15 }}>{programName(r.store)}</div>

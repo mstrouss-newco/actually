@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { type Reward, closetWorth, daysUntil, fmtDay, listNames, loadRewards, money, programName, scanRewards, valueItems, worth } from "@/lib/earn";
+import { type Reward, closetWorth, daysUntil, fmtDay, listNames, listNames as names, loadRewards, money, programName, scanRewards, valueItems, worth } from "@/lib/earn";
 import { type OrderGroup, loadOrders } from "@/lib/orders";
 import { type Item, loadItems, whoFor } from "@/lib/items";
 import { Job } from "@/lib/read-items";
 import { ItemImage, StoreTile, TabBar } from "@/lib/tabs";
+import { delay, useCountUp } from "@/lib/motion";
 
 export default function Earn() {
   const [rewards, setRewards] = useState<Reward[] | null>(null);
@@ -21,6 +22,8 @@ export default function Earn() {
   // Counted: arrived, priced and worth listing. Same rule as the Worth page.
   const { counted: valued, unpriced } = closetWorth(items ?? [], groups);
   const [lo, hi] = worth(valued);
+  const loN = useCountUp(Math.round(lo)), hiN = useCountUp(Math.round(hi)), cashN = useCountUp(Math.round(cash));
+  const unpricedNames = (items ?? []).filter(i => i.resale_high == null).map(i => i.name);
   const ranked = [...valued].sort((a, b) => (b.resale_high ?? 0) - (a.resale_high ?? 0));
   const top = ranked[0];
   // The three priciest pieces with a photo, fanned out like the design.
@@ -37,12 +40,12 @@ export default function Earn() {
           <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 8 }}>Money you already have, and money in your closet.</div>
         </div>
 
-        <div style={{ margin: "18px 16px 0", background: "#FFF0BF", borderRadius: 28, padding: "20px 18px" }}>
+        <div className="up" style={{ ...delay(0), margin: "18px 16px 0", background: "#FFF0BF", borderRadius: 28, padding: "20px 18px" }}>
           <div className="kicker" style={{ color: "#8A6D1E" }}>Points and credit</div>
           {rewards && rewards.length > 0 ? (
             <Link href="/earn/points" style={{ textDecoration: "none", display: "block" }}>
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 10, marginTop: 8 }}>
-                <div className="serif" style={{ fontSize: cash ? 52 : 40, lineHeight: 1 }}>{cash ? money(cash) : `${pts.toLocaleString("en-US")} points`}</div>
+                <div className="serif glow" style={{ fontSize: cash ? 52 : 40, lineHeight: 1 }}>{cash ? money(cashN) : `${pts.toLocaleString("en-US")} points`}</div>
                 {logos.length > 0 && (
                   <div style={{ display: "flex", flex: "none", paddingBottom: 4 }}>
                     {logos.map((r, i) => (
@@ -69,23 +72,24 @@ export default function Earn() {
           )}
         </div>
 
-        <div style={{ margin: "12px 16px 0", background: "#EBE3FF", borderRadius: 28, padding: "20px 18px" }}>
+        <div className="up" style={{ ...delay(1, 120), margin: "12px 16px 0", background: "#EBE3FF", borderRadius: 28, padding: "20px 18px" }}>
           <div className="kicker" style={{ color: "#5B44B0" }}>What your closet is worth</div>
           {priced.length > 0 ? (
             <Link href="/earn/worth" style={{ textDecoration: "none", display: "block" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 8 }}>
-                <div className="serif" style={{ fontSize: 40, lineHeight: 1, minWidth: 0 }}>{money(lo)}–{money(hi)}</div>
+                <div className="serif glow" style={{ fontSize: 40, lineHeight: 1, minWidth: 0 }}>{money(loN)}–{money(hiN)}</div>
                 {fan.length > 0 && (
                   <div style={{ display: "flex", flex: "none" }}>
                     {fan.map((i, n) => (
-                      <div key={i.id} style={{ marginLeft: n ? -14 : 0, transform: `rotate(${[-6, 3, -2][n]}deg)`, borderRadius: 12, boxShadow: "0 4px 10px rgba(20,18,16,.14)" }}>
+                      <div key={i.id} className="fanin" style={{ ...delay(n + 3, 110), marginLeft: n ? -14 : 0, transform: `rotate(${[-6, 3, -2][n]}deg)`, borderRadius: 12, boxShadow: "0 4px 10px rgba(20,18,16,.14)" }}>
                         <ItemImage src={i.image_url} store={i.store} name={i.name} w={46} h={58} radius={12} size={18} />
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-              <div style={{ fontSize: 14, color: "#5B4A8A", marginTop: 6, lineHeight: 1.4 }}>
+              <div style={{ height: 8, borderRadius: 4, background: "rgba(91,68,176,.15)", marginTop: 14 }}><div className="barfill" style={{ height: "100%", width: `${Math.round(100 * valued.length / Math.max(1, (items ?? []).length))}%`, borderRadius: 4, background: "#5B44B0" }} /></div>
+              <div style={{ fontSize: 14, color: "#5B4A8A", marginTop: 8, lineHeight: 1.4 }}>
                 Estimated resale value of {valued.length} of your {(items ?? []).length} {(items ?? []).length === 1 ? "piece" : "pieces"}.{top && top.resale_high ? ` Your ${top.brand || top.store} ${top.name} could sell for up to ${money(top.resale_high)}.` : ""}
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, marginTop: 12 }}>See what sells →</div>
@@ -99,7 +103,7 @@ export default function Earn() {
           {items !== null && unpriced > 0 && (
             <div style={{ marginTop: 14 }}>
               <Job run={valueItems} label={priced.length ? `Price ${unpriced} new ${unpriced === 1 ? "piece" : "pieces"}` : "Price my closet"} working="Pricing" noun={["piece priced", "pieces priced"]} onDone={load} />
-              <div style={{ fontSize: 12, color: "#5B4A8A", marginTop: 8 }}>Takes about a minute. Clothes, shoes, bags and accessories only.</div>
+              <div style={{ fontSize: 12, color: "#5B4A8A", marginTop: 8 }}>{unpricedNames.length <= 3 ? `New: ${names(unpricedNames)}. ` : ""}Takes about a minute.</div>
             </div>
           )}
         </div>

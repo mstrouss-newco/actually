@@ -1,43 +1,102 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { type OrderGroup, SOON, cleanupOnce, dayLabel, isArriving, loadOrders, orderTitle, returnBy, returnDaysLeft, ruleText, fmtDate } from "@/lib/orders";
+import { type OrderGroup, SOON, cleanupOnce, dayLabel, isArriving, loadOrders, orderTitle, returnBy, returnDaysLeft, ruleText, fmtDate, trackStep, justArrived } from "@/lib/orders";
 import { loadProfile } from "@/lib/profile";
-import { type Reward, daysUntil, fmtDay, loadRewards, money } from "@/lib/earn";
-import { ItemImage, Progress, TabBar } from "@/lib/tabs";
+import { type Reward, daysUntil, fmtDay, loadRewards, money, programName } from "@/lib/earn";
+import { type Item, loadItems, monthPieces, whoFor } from "@/lib/items";
+import { ItemImage, StoreTile, TabBar } from "@/lib/tabs";
+import { TrackBar, delay } from "@/lib/motion";
 
-const STEP = { placed: 0, shipped: 1, delivered: 3, returning: 3, refunded: 3, cancelled: 0 };
+type Slide = { key: string; href: string; bg: string; kc: string; kicker: string; title: string; sub: string; img: React.ReactNode; badge: React.ReactNode };
+const MONTH = () => new Date().toLocaleDateString("en-US", { month: "long" });
 
 export default function Today() {
   const [orders, setOrders] = useState<OrderGroup[] | null | undefined>(undefined);
+  const [items, setItems] = useState<Item[]>([]);
   const [name, setName] = useState("");
   const [rewards, setRewards] = useState<Reward[]>([]);
+  const [at, setAt] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const startX = useRef<number | null>(null);
   useEffect(() => {
     setName(loadProfile().handle);
     loadOrders().then(list => {
       setOrders(list);
-      if (list) loadRewards().then(setRewards);
+      if (list) { loadRewards().then(setRewards); loadItems().then(setItems); }
     });
     // First visit after sign-in: tidy up anything that isn't a real shopping order.
     cleanupOnce().then(changed => { if (changed) loadOrders().then(setOrders); });
   }, []);
-  const expiring = rewards.filter(r => r.expires_on && daysUntil(r.expires_on) <= 30);
 
-  const arriving = (orders ?? []).filter(isArriving);
-  // Most urgent first, whatever it is.
-  const canReturn = (orders ?? []).filter(g => returnDaysLeft(g) != null).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!);
-  const returnable = canReturn;
+  const all = orders ?? [];
+  const arriving = all.filter(isArriving);
+  const canReturn = all.filter(g => returnDaysLeft(g) != null).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!);
   const closing = canReturn.filter(g => returnDaysLeft(g)! <= SOON);
-  const returns = (orders ?? []).filter(g => g.stage === "returning");
-  const hero = returnable[0];
-  const left = hero ? returnDaysLeft(hero)! : 0;
+  const returns = all.filter(g => g.stage === "returning");
   const greet = name ? name.split(".")[0].replace(/^./, c => c.toUpperCase()) : "";
+  const mine = items.filter(i => whoFor(i, items) === "me");
+  const landed = mine.filter(i => i.image_url && !i.arriving).slice(0, 8);
+  const month = monthPieces(items);
+  const reward = [...rewards].sort((a, b) => (a.expires_on ?? "9999").localeCompare(b.expires_on ?? "9999") || (b.value ?? 0) - (a.value ?? 0))[0];
+
+  // The big card: the most timely things, one at a time.
+  const slides: Slide[] = [];
+  const nextIn = arriving.find(g => g.photo) ?? arriving[0];
+  if (nextIn) slides.push({
+    key: "in", href: `/order/${encodeURIComponent(nextIn.key)}`, bg: "#DCEBFF", kc: "#3E5C8E",
+    kicker: trackStep(nextIn) === 2 ? "Out for delivery" : nextIn.stage === "shipped" ? "On the way" : "Ordered",
+    title: `${orderTitle(nextIn)} ${trackStep(nextIn) === 2 ? "arrives today" : "is on its way"}`,
+    sub: `${nextIn.stage === "shipped" ? "Shipped" : "Ordered"} ${fmtDate(nextIn.last_at)} from ${nextIn.store}`,
+    img: <ItemImage src={nextIn.photo} store={nextIn.store} name={nextIn.items[0] ?? nextIn.what ?? undefined} w={104} h={136} radius={20} size={44} />,
+    badge: <div className="serif" style={{ fontWeight: 600, fontSize: 15, lineHeight: 1 }}>{["Placed", "Shipped", "Today", "Here"][trackStep(nextIn)]}</div>,
+  });
+  const hero = canReturn[0];
+  if (hero) {
+    const left = returnDaysLeft(hero)!;
+    slides.push({
+      key: "ret", href: `/order/${encodeURIComponent(hero.key)}`, bg: "#FFE1DC", kc: "#C9402F",
+      kicker: "Still returnable", title: `Keep the ${orderTitle(hero)}, or send it back?`,
+      sub: `Return by ${dayLabel(returnBy(hero))}${ruleText(hero) ? ` · ${ruleText(hero)}` : ""}`,
+      img: <ItemImage src={hero.photo} store={hero.store} name={hero.items[0] ?? hero.what ?? undefined} w={104} h={136} radius={20} size={44} />,
+      badge: <><div className="serif" style={{ fontWeight: 600, fontSize: 22, lineHeight: 1 }}>{left}</div><div style={{ fontSize: 10, fontWeight: 700 }}>{left === 1 ? "day" : "days"}</div></>,
+    });
+  }
+  if (reward) slides.push({
+    key: "pts", href: "/earn/points", bg: "#FFF0BF", kc: "#8A6D1E", kicker: "Found in your email",
+    title: reward.value != null ? `${money(reward.value)} at ${programName(reward.store)}` : `${(reward.points ?? 0).toLocaleString("en-US")} ${programName(reward.store)} points`,
+    sub: reward.expires_on ? `Use by ${fmtDay(reward.expires_on)}${daysUntil(reward.expires_on) <= 30 ? ". Don't lose it." : ""}` : "Ready when you are.",
+    img: <StoreTile store={reward.store} domain={reward.store_domain} w={104} h={136} radius={20} size={44} />,
+    badge: <div className="serif" style={{ fontWeight: 600, fontSize: 15, lineHeight: 1 }}>{reward.value != null ? money(reward.value) : "Pts"}</div>,
+  });
+  if (month.length >= 3) slides.push({
+    key: "story", href: "/story", bg: "#EBE3FF", kc: "#5B44B0", kicker: `Your ${MONTH()}`,
+    title: `${month.length} new pieces. See your month in style.`, sub: "Your brands, your colors, what's still returnable.",
+    img: <ItemImage src={month.find(i => i.image_url)?.image_url ?? null} store={month[0].store} name={month[0].name} w={104} h={136} radius={20} size={44} />,
+    badge: <div className="serif" style={{ fontWeight: 600, fontSize: 22, lineHeight: 1 }}>{month.length}</div>,
+  });
+  else if (landed[0]) slides.push({
+    key: "new", href: "/closet", bg: "#DCEFDF", kc: "#3F7A55", kicker: "New in your closet",
+    title: landed[0].name, sub: `${landed[0].brand || landed[0].store} · ${fmtDate(landed[0].ordered_at)}`,
+    img: <ItemImage src={landed[0].image_url} store={landed[0].store} name={landed[0].name} w={104} h={136} radius={20} size={44} />,
+    badge: <div className="serif" style={{ fontWeight: 600, fontSize: 15, lineHeight: 1 }}>New</div>,
+  });
+
+  const n = slides.length;
+  useEffect(() => {
+    if (n < 2 || paused) return;
+    const t = setInterval(() => setAt(a => (a + 1) % n), 5000);
+    return () => clearInterval(t);
+  }, [n, paused]);
+  const slide = slides[at % Math.max(1, n)];
+  const go = (d: number) => setAt(a => (a + d + n) % n);
 
   const line = [
     canReturn.length && `${canReturn.length} still returnable`,
     arriving.length && `${arriving.length} ${arriving.length === 1 ? "order" : "orders"} on the way`,
   ].filter(Boolean).join(". ");
+  const recent = all.filter(g => !isArriving(g) && g.stage !== "cancelled" && g.photo).slice(0, 4);
 
   return (
     <main className="tabscreen">
@@ -45,10 +104,10 @@ export default function Today() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px" }}>
           <div className="logo">Actually</div>
           <div style={{ display: "flex", gap: 8 }}>
-          <Link href="/settings" aria-label="Settings" style={{ width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #EAE6E1", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Link href="/settings" aria-label="Settings" className="press" style={{ width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #EAE6E1", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="8" r="4" /><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" /></svg>
           </Link>
-          <Link href="/orders" aria-label="Find an order" style={{ width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #EAE6E1", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Link href="/orders" aria-label="Find an order" className="press" style={{ width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #EAE6E1", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
           </Link>
           </div>
@@ -70,80 +129,89 @@ export default function Today() {
         )}
 
         {closing.length > 0 && (
-          <Link href="/orders?tab=canreturn" style={{ margin: "14px 16px 0", background: "#FF6159", borderRadius: 22, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+          <Link href="/orders?tab=canreturn" className="drop press" style={{ margin: "14px 16px 0", background: "#FF6159", borderRadius: 22, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
+            <svg className="bell" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>{closing.length === 1 ? "1 return closes soon" : `${closing.length} returns close soon`}</div>
-              <div style={{ fontSize: 13 }}>Last day {dayLabel(returnBy(closing[0]))}{closing.length > 1 ? " for the first one" : ""}. Decide now so you don&apos;t miss it.</div>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>{closing.length === 1 ? `Last call: ${orderTitle(closing[0])}` : `${closing.length} returns close soon`}</div>
+              <div style={{ fontSize: 13 }}>Last day {dayLabel(returnBy(closing[0]))}. Decide now so you don&apos;t miss it.</div>
             </div>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
           </Link>
         )}
 
-        {hero && (
-          <Link href={`/order/${encodeURIComponent(hero.key)}`} style={{ margin: "14px 16px 0", background: "#FFE1DC", borderRadius: 28, padding: "20px 18px", display: "flex", gap: 14, position: "relative", textDecoration: "none" }}>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
-              <div className="kicker" style={{ color: "#C9402F" }}>Still returnable</div>
-              <div className="serif" style={{ fontSize: 28, lineHeight: 1.04, letterSpacing: "-0.02em", overflowWrap: "break-word" }}>{orderTitle(hero)}, {hero.inStore ? "bought" : "delivered"} <em>{fmtDate(hero.last_at)}</em></div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#6B4A44" }}>From {hero.store}</div>
-              <div style={{ fontSize: 13, color: "#6B4A44" }}>Return by {dayLabel(returnBy(hero))}{ruleText(hero) ? ` · ${ruleText(hero)}` : ""}</div>
+        {slide && (
+          <>
+            <div style={{ position: "relative", margin: "22px 16px 0" }}
+              onPointerDown={e => { startX.current = e.clientX; setPaused(true); }}
+              onPointerUp={e => { const s = startX.current; startX.current = null; setPaused(false); if (s != null && Math.abs(e.clientX - s) > 40) { e.preventDefault(); go(e.clientX < s ? 1 : -1); } }}
+              onPointerCancel={() => { startX.current = null; setPaused(false); }}>
+              <Link key={slide.key} href={slide.href} className="heroIn press" draggable={false} style={{ background: slide.bg, borderRadius: 28, padding: "20px 18px", display: "flex", gap: 14, position: "relative", textDecoration: "none", minHeight: 176, boxSizing: "border-box" }}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
+                  <div className="kicker" style={{ color: slide.kc }}>{slide.kicker}</div>
+                  <div className="serif" style={{ fontSize: 26, lineHeight: 1.06, letterSpacing: "-0.02em", overflowWrap: "break-word", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{slide.title}</div>
+                  <div style={{ fontSize: 13, color: "#5E5852", lineHeight: 1.35 }}>{slide.sub}</div>
+                </div>
+                <div className="float" style={{ flex: "none", alignSelf: "center", transform: "rotate(4deg)", borderRadius: 20, boxShadow: "0 12px 26px rgba(20,18,16,.14)" }}>{slide.img}</div>
+                <div style={{ position: "absolute", top: -10, right: 14, minWidth: 58, height: 58, padding: "0 6px", boxSizing: "border-box", borderRadius: 999, background: "var(--ink)", color: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transform: "rotate(8deg)", boxShadow: "0 6px 14px rgba(0,0,0,.14)" }}>{slide.badge}</div>
+              </Link>
             </div>
-            <div className="lift" style={{ flex: "none", alignSelf: "center", transform: "rotate(4deg)", borderRadius: 20, boxShadow: "0 10px 24px rgba(201,64,47,.18)" }}>
-              <ItemImage src={hero.photo} store={hero.store} name={hero.items[0] ?? hero.what ?? undefined} domain={hero.store_domain} w={104} h={136} radius={20} size={44} />
-            </div>
-            <div style={{ position: "absolute", top: -10, right: 14, width: 58, height: 58, borderRadius: "50%", background: "#FF6159", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transform: "rotate(10deg)", boxShadow: "0 6px 14px rgba(0,0,0,.12)" }}>
-              <div className="serif" style={{ fontWeight: 600, fontSize: 22, lineHeight: 1 }}>{left}</div>
-              <div style={{ fontSize: 10, fontWeight: 700 }}>{left === 1 ? "day" : "days"}</div>
-            </div>
-          </Link>
-        )}
-
-        {expiring.length > 0 && (
-          <Link href="/earn/points" style={{ margin: "14px 16px 0", background: "#FFF0BF", borderRadius: 24, padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, textDecoration: "none" }}>
-            <div style={{ flex: 1 }}>
-              <div className="kicker" style={{ color: "#8A6D1E" }}>Expiring soon</div>
-              <div style={{ fontWeight: 700, fontSize: 15, marginTop: 4 }}>
-                {expiring[0].value != null ? `${money(expiring[0].value)} in ` : ""}{expiring[0].store} {expiring[0].kind === "points" ? "points" : "credit"}
+            {n > 1 && (
+              <div style={{ display: "flex", gap: 2, justifyContent: "center", marginTop: 6 }}>
+                {slides.map((s, i) => (
+                  <button key={s.key} onClick={() => setAt(i)} aria-label={`Card ${i + 1} of ${n}`} style={{ border: 0, background: "none", padding: "10px 3px", cursor: "pointer" }}>
+                    <span style={{ display: "block", height: 6, width: i === at % n ? 22 : 6, borderRadius: 3, background: i === at % n ? "var(--ink)" : "#D9D3CC", transition: "width .3s, background .3s" }} />
+                  </button>
+                ))}
               </div>
-              <div style={{ fontSize: 13, color: "#7A6A3A" }}>Gone after {fmtDay(expiring[0].expires_on!)}{expiring.length > 1 ? `, plus ${expiring.length - 1} more` : ""}</div>
-            </div>
-            <span style={{ height: 40, padding: "0 14px", borderRadius: 999, border: "1.5px solid var(--ink)", display: "flex", alignItems: "center", fontSize: 13, fontWeight: 700 }}>See</span>
-          </Link>
+            )}
+          </>
         )}
 
         {arriving.length > 0 && (
           <>
-            <div className="section"><div>On the way</div><Link href="/orders">All orders</Link></div>
-            <div className="rail">
-              {arriving.map(g => (
-                <Link key={g.key} href={`/order/${encodeURIComponent(g.key)}`} className="lift" style={{ width: 148, flex: "none", display: "flex", flexDirection: "column", gap: 8, textDecoration: "none" }}>
-                  <div style={{ position: "relative" }}>
-                    <ItemImage src={g.photo} store={g.store} name={g.items[0] ?? g.what ?? undefined} domain={g.store_domain} w={148} h={180} radius={22} size={64} />
-                    <div style={{ position: "absolute", top: 10, left: 10, background: "#fff", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 700 }}>{g.stage === "shipped" ? "Shipped" : "Ordered"}</div>
+            <div className="section"><div>On the way</div><Link href="/orders?tab=arriving">All orders</Link></div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "12px 16px 0" }}>
+              {arriving.slice(0, 3).map((g, i) => (
+                <Link key={g.key} href={`/order/${encodeURIComponent(g.key)}`} className="press up" style={{ ...delay(i, 90), display: "flex", gap: 14, alignItems: "center", background: "#FAF8F6", borderRadius: 24, padding: "12px 16px 12px 12px", textDecoration: "none" }}>
+                  <ItemImage src={g.photo} store={g.store} name={g.items[0] ?? g.what ?? undefined} w={72} h={88} radius={16} size={28} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="kicker" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{g.store}{g.pieces.length > 1 ? ` · ${g.pieces.length} pieces` : ""}</div>
+                    <div style={{ fontWeight: 700, fontSize: 15, marginTop: 3, marginBottom: 10, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{orderTitle(g)}</div>
+                    <TrackBar step={trackStep(g)} />
                   </div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.25 }}>{orderTitle(g)}</div>
-                    <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{g.store}</div>
-                  </div>
-                  <Progress step={STEP[g.stage]} />
                 </Link>
               ))}
             </div>
           </>
         )}
 
-        {orders && orders.length > 0 && (
+        {landed.length > 0 && (
           <>
-            <div className="section"><div>Recent</div><Link href="/orders?tab=all">See all</Link></div>
+            <div className="section"><div>Just landed</div><Link href="/closet">Closet</Link></div>
+            <div className="rail">
+              {landed.map((i, k) => (
+                <Link key={i.id} href="/closet" className="lift up" style={{ ...delay(k, 70), width: 140, flex: "none", textDecoration: "none" }}>
+                  <ItemImage src={i.image_url} store={i.store} name={i.name} w={140} h={172} radius={22} size={56} />
+                  <div style={{ fontWeight: 700, fontSize: 14, marginTop: 8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{i.name}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)" }}>{i.brand || i.store} · {fmtDate(i.ordered_at)}</div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
+
+        {recent.length > 0 && (
+          <>
+            <div className="section"><div>Recent</div><Link href="/orders">See all</Link></div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "14px 16px 0" }}>
-              {orders.filter(g => !isArriving(g) && g.stage !== "cancelled").slice(0, 5).map(g => (
-                <Link key={g.key} href={`/order/${encodeURIComponent(g.key)}`} className="orow" style={{ display: "flex", gap: 12, alignItems: "center", background: "#FAF8F6", borderRadius: 22, padding: "10px 14px 10px 10px", textDecoration: "none" }}>
-                  <ItemImage src={g.photo} store={g.store} name={g.items[0] ?? g.what ?? undefined} domain={g.store_domain} w={52} h={64} radius={14} size={22} />
+              {recent.map((g, i) => (
+                <Link key={g.key} href={`/order/${encodeURIComponent(g.key)}`} className="orow up" style={{ ...delay(i), display: "flex", gap: 12, alignItems: "center", background: "#FAF8F6", borderRadius: 22, padding: "10px 14px 10px 10px", textDecoration: "none" }}>
+                  <ItemImage src={g.photo} store={g.store} name={g.items[0] ?? g.what ?? undefined} w={52} h={64} radius={14} size={22} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="kicker">{g.store}</div>
                     <div style={{ fontWeight: 700, fontSize: 14, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{orderTitle(g)}</div>
                   </div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--soft)", whiteSpace: "nowrap" }}>{fmtDate(g.last_at)}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--soft)", whiteSpace: "nowrap" }}>{justArrived(g) ? "Just arrived" : fmtDate(g.last_at)}</div>
                 </Link>
               ))}
             </div>
