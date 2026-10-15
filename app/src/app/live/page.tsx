@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { ConnectGmail, SkipGmail } from "../permission/connect";
 import { Check } from "@/lib/ui";
 import { DOMAIN, loadProfile } from "@/lib/profile";
-import { signIn } from "@/lib/signin";
 
 const ROWS: [string, boolean][] = [
   ["New orders", true],
@@ -44,25 +43,23 @@ export default function Live() {
       </div>
 
       <h1 className="h1" style={{ fontSize: 42 }}>Now bring everything <em>in.</em></h1>
-      <p className="lead">Your shopping email catches every new order. Connect your inbox to add everything you&apos;ve already bought, so your closet, sizes and returns are ready today.</p>
+      <p className="lead">Your shopping email catches new orders. Connect Gmail to add what you&apos;ve already bought.</p>
 
       <div style={{ marginTop: 20, border: "1.5px solid var(--line)", borderRadius: 24, overflow: "hidden" }}>
         <div style={{ display: "flex", padding: "12px 16px", background: "#FAF8F6", fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>
           <span style={{ flex: 1 }} /><span style={{ width: 74, textAlign: "center" }}>Shopping email</span><span style={{ width: 74, textAlign: "center", color: "var(--ink)" }}>With inbox</span>
         </div>
         {ROWS.map(([label, both], i) => (
-          <div key={label} style={{ display: "flex", alignItems: "center", padding: "12px 16px", borderTop: "1px solid var(--line)", fontSize: 14 }}>
+          <div key={label} style={{ display: "flex", alignItems: "center", padding: "10px 16px", borderTop: "1px solid var(--line)", fontSize: 14 }}>
             <span style={{ flex: 1 }}>{label}</span>
             <span style={{ width: 74, display: "flex", justifyContent: "center", color: "#C4BDB5" }}>{both ? <Check size={18} color="#9A938B" width={2.4} /> : "–"}</span>
             <span style={{ width: 74, display: "flex", justifyContent: "center" }}><Tick delay={0.5 + i * 0.2} /></span>
           </div>
         ))}
       </div>
-      <div className="note">One tap. Takes about a minute.</div>
-
       <div className="spacer" />
-      <Link href="/permission" className="btn">Connect my inbox</Link>
-      <button onClick={() => signIn("/today")} className="btn btn-ghost">Just use my shopping email for now</button>
+      <ConnectGmail />
+      <SkipGmail label="Just use my shopping email for now" />
     </main>
   );
 }

@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Sign-up: "Email ready" and "What we read" are now one page. Gmail button sits on the email-ready page with one small line ("Only shopping emails. Disconnect anytime.") instead of the we read / we never boxes. Same change in the demo. /permission (from Today, Reveal, Import) is the calm version too.
+
 - No-photo pieces and orders now show a small drawing of what they are (sunglasses, pants, tee, garden, beauty and more) instead of a big letter.
 
 - QA round 10: smaller brand names (no cut-off letters), pieces on the way can go on your feed, closet card says "Add pieces to your feed", in-store returns count from purchase day (Sunglass Resort: 5 days, exchange or store credit), Worth counts pieces on the way and prices a color twin the same, sharper Amazon photos, no-photo tiles use the brand's letter, "Levi's" spelling, "nothing new" after a points check, clearer returnable counts, Orders tabs fade at the edge, smaller feed tabs, empty cancelled orders hidden, unnumbered shipping emails read for stores with no order email (J.Crew Factory), Clare V. receipts re-read.
