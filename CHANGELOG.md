@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Resale posts: each piece's Worth page now picks a site (Poshmark, Depop, eBay, Mercari, ThredUp), suggests a price per site, and builds an editable post (title within the site's limit, condition, description, hashtags for Depop). "Copy and open" copies it, adds the piece to the sell list and opens the site's sell page. Closet piece sheet has "Make a resale post" once a piece is marked to sell.
+
 - Prices: `read-order` now saves the order total (with tax and shipping) into `orders.amount`, in the main read and the rules pass. Orders without one show the piece prices added up as "Items (before tax and shipping)". Each piece shows its price on the order page, Today says how much was spent this month, and brand pages show spent per brand. Never on anything shared.
 
 - Points: airline and hotel miles, and credit card points from a short list of card companies (Chase, Amex, Capital One, Citi, Discover, Bank of America, Wells Fargo, Barclays). Card mail only when the subject is about rewards and says nothing about statements, payments or the account; only points or cash back are saved. New "Add points yourself" on Points and credit (migration rewards_manual_insert).

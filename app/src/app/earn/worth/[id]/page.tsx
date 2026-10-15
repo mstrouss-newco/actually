@@ -2,15 +2,33 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { SITES, listingText, money } from "@/lib/earn";
+import { CONDITIONS, type Condition, SITES, askPrice, buildListing, money } from "@/lib/earn";
 import { type Item, loadItems, setPick } from "@/lib/items";
 import { ItemImage, TabBar, tint } from "@/lib/tabs";
+import { delay } from "@/lib/motion";
 
+// One piece: what it's worth, and a ready-made post for the resale site she picks.
 export default function WorthItem({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [item, setItem] = useState<Item | null | undefined>(undefined);
-  const [copied, setCopied] = useState(false);
+  const [site, setSite] = useState(0);
+  const [cond, setCond] = useState<Condition>("Good");
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [price, setPrice] = useState("");
+  const [copied, setCopied] = useState("");
   useEffect(() => { loadItems().then(all => setItem(all.find(i => i.id === id) ?? null)); }, [id]);
+
+  const s = SITES[site];
+  // Rebuild the post when the site or condition changes. Her own edits stay until then.
+  useEffect(() => {
+    if (!item) return;
+    const l = buildListing(item, s, cond);
+    setTitle(l.title);
+    setBody(l.body);
+    const p = askPrice(item, s);
+    setPrice(p != null ? String(p) : "");
+  }, [item, s, cond]);
 
   if (item === undefined) return <main className="tabscreen"><TabBar /></main>;
   if (item === null) {
@@ -22,27 +40,31 @@ export default function WorthItem({ params }: { params: Promise<{ id: string }> 
     );
   }
 
-  const copy = async () => {
-    try { await navigator.clipboard.writeText(listingText(item)); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch {}
+  const copy = async (text: string, what: string) => {
+    try { await navigator.clipboard.writeText(text); setCopied(what); setTimeout(() => setCopied(""), 1800); } catch {}
   };
-  const toggleSell = async () => {
-    const next = item.pick === "sell" ? null : "sell";
-    setItem({ ...item, pick: next });
-    await setPick(item.id, next);
+  // Copies the whole post, marks the piece for sale, and opens the site's sell page.
+  const post = async () => {
+    const all = [title, price && `$${price}`, body].filter(Boolean).join("\n\n");
+    await copy(all, "post");
+    if (item.pick !== "sell") { setItem({ ...item, pick: "sell" }); await setPick(item.id, "sell"); }
+    window.open(s.url, "_blank", "noopener");
   };
+  const field = { width: "100%", boxSizing: "border-box" as const, border: "1.5px solid var(--line)", borderRadius: 14, padding: "10px 12px", font: "15px var(--font-sans), sans-serif", background: "#fff", color: "var(--ink)" };
+  const chip = (on: boolean) => ({ flex: "none", height: 36, padding: "0 14px", borderRadius: 999, border: `1.5px solid ${on ? "var(--ink)" : "var(--line)"}`, background: on ? "var(--ink)" : "#fff", color: on ? "#fff" : "var(--ink)", font: "700 13px var(--font-sans), sans-serif", cursor: "pointer" });
 
   return (
     <main className="tabscreen">
       <div className="scroll" style={{ paddingTop: 0 }}>
-        <div style={{ background: tint(item.store), padding: "20px 20px 26px", borderRadius: "0 0 36px 36px" }}>
+        <div style={{ background: tint(item.store), padding: "20px 20px 24px", borderRadius: "0 0 36px 36px" }}>
           <Link href="/earn/worth" style={{ display: "inline-flex", alignItems: "center", height: 40, padding: "0 14px", borderRadius: 999, background: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none" }}>← Worth</Link>
-          <div style={{ display: "flex", gap: 16, alignItems: "flex-end", marginTop: 20 }}>
-            <div style={{ transform: "rotate(-3deg)", boxShadow: "0 10px 24px rgba(20,18,16,.12)", borderRadius: 22 }}>
-              <ItemImage src={item.image_url} store={item.store} name={item.name} w={110} h={138} radius={22} size={52} />
+          <div style={{ display: "flex", gap: 16, alignItems: "flex-end", marginTop: 18 }}>
+            <div className="float" style={{ boxShadow: "0 10px 24px rgba(20,18,16,.12)", borderRadius: 22 }}>
+              <ItemImage src={item.image_url} store={item.store} name={item.name} w={104} h={128} radius={22} />
             </div>
             <div style={{ flex: 1, minWidth: 0, paddingBottom: 4 }}>
               <div className="kicker">{item.brand || item.store}{item.size ? ` · size ${item.size}` : ""}</div>
-              <h1 className="serif" style={{ fontWeight: 400, fontSize: 30, lineHeight: 1.05, margin: "6px 0 0" }}>{item.name}</h1>
+              <h1 className="serif" style={{ fontWeight: 400, fontSize: 26, lineHeight: 1.1, margin: "6px 0 0", overflowWrap: "normal", wordBreak: "normal" }}>{item.name}</h1>
               <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 6 }}>
                 {item.price != null ? `You paid ${money(item.price)} ` : "Bought "}in {new Date(item.ordered_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}.
               </div>
@@ -50,27 +72,74 @@ export default function WorthItem({ params }: { params: Promise<{ id: string }> 
           </div>
         </div>
 
-        <div style={{ margin: "18px 16px 0", background: "var(--ink)", color: "#fff", borderRadius: 26, padding: "20px 18px" }}>
-          <div style={{ fontSize: 14, color: "#C9C3BC" }}>Worth about</div>
-          <div className="serif" style={{ fontSize: 44, lineHeight: 1, marginTop: 4 }}>{money(item.resale_low ?? 0)}–{money(item.resale_high ?? 0)}</div>
-          {item.resale_note && <div style={{ fontSize: 14, color: "#C9C3BC", marginTop: 10, lineHeight: 1.45 }}>{item.resale_note}</div>}
-          <div style={{ fontSize: 12, color: "#8F8983", marginTop: 8 }}>AI estimate for good used condition.</div>
+        {item.resale_high != null && (
+          <div className="up" style={{ margin: "16px 16px 0", background: "#FFF6F3", borderRadius: 24, padding: "16px 18px" }}>
+            <div style={{ fontSize: 13, color: "#8A3A2F", fontWeight: 700 }}>Worth about</div>
+            <div style={{ fontWeight: 700, fontSize: 36, lineHeight: 1.1, letterSpacing: "-0.02em" }}>{money(item.resale_low ?? item.resale_high)}–{money(item.resale_high)}</div>
+            {item.resale_note && <div style={{ fontSize: 13, color: "var(--soft)", marginTop: 6, lineHeight: 1.45 }}>{item.resale_note}</div>}
+            <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 6 }}>An estimate for good used condition.</div>
+          </div>
+        )}
+
+        <div className="section"><div>Where to sell it</div></div>
+        <div style={{ margin: "8px 16px 0", display: "flex", flexDirection: "column", gap: 8 }}>
+          {SITES.map((x, n) => {
+            const p = askPrice(item, x);
+            const on = n === site;
+            return (
+              <button key={x.name} type="button" onClick={() => setSite(n)} className="up press" style={{ ...delay(n, 50), display: "flex", alignItems: "center", gap: 12, textAlign: "left", background: on ? "#fff" : "#FAF8F6", border: `1.5px solid ${on ? "var(--ink)" : "transparent"}`, borderRadius: 20, padding: "12px 16px", font: "inherit", color: "var(--ink)", cursor: "pointer" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15 }}>{x.name}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.35 }}>{x.note}</div>
+                </div>
+                {!x.bag && p != null && <div style={{ fontWeight: 700, fontSize: 15, whiteSpace: "nowrap" }}>List at ${p}</div>}
+              </button>
+            );
+          })}
         </div>
 
-        <div className="section"><div>Sell it</div></div>
-        <div style={{ margin: "12px 16px 0", display: "flex", flexDirection: "column", gap: 8 }}>
-          <button onClick={copy} className="btn" style={{ height: 50, fontSize: 15 }}>{copied ? "Listing copied" : "Copy listing"}</button>
-          <div style={{ fontSize: 12, color: "var(--muted)", textAlign: "center", marginBottom: 4 }}>Title, size and description, ready to paste.</div>
-          {SITES.map(s => (
-            <a key={s.name} href={s.url} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", borderRadius: 20, padding: "12px 16px", textDecoration: "none" }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{s.name}</div>
-                <div style={{ fontSize: 12, color: "var(--muted)" }}>{s.note}</div>
+        {s.bag ? (
+          <div style={{ margin: "16px 16px 0", display: "flex", flexDirection: "column", gap: 8 }}>
+            <a href={s.url} target="_blank" rel="noreferrer" className="btn press" style={{ height: 52, fontSize: 15 }}>Order a free bag from ThredUp</a>
+            <div style={{ fontSize: 12, color: "var(--muted)", textAlign: "center" }}>Fill the bag, send it back, and ThredUp lists everything for you.</div>
+          </div>
+        ) : (
+          <>
+            <div className="section"><div>Your post for {s.name}</div></div>
+            <div style={{ margin: "8px 16px 0", display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", gap: 6, overflowX: "auto" }}>
+                {CONDITIONS.map(c => <button key={c} type="button" onClick={() => setCond(c)} style={chip(c === cond)}>{c}</button>)}
               </div>
-              <span style={{ fontSize: 13, fontWeight: 700 }}>Open →</span>
-            </a>
-          ))}
-          <button onClick={toggleSell} className="btn btn-line" style={{ height: 48, fontSize: 15 }}>{item.pick === "sell" ? "✓ Marked to sell" : "Mark to sell"}</button>
+              {s.titleMax > 0 && (
+                <label style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>Title <span style={{ fontWeight: 500 }}>({title.length}/{s.titleMax})</span>
+                  <input value={title} maxLength={s.titleMax} onChange={e => setTitle(e.target.value)} style={{ ...field, marginTop: 4 }} />
+                </label>
+              )}
+              <label style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>Price
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                  <span style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)" }}>$</span>
+                  <input inputMode="decimal" value={price} onChange={e => setPrice(e.target.value.replace(/[^0-9.]/g, ""))} style={{ ...field, width: 120 }} />
+                </div>
+              </label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>Description
+                <textarea value={body} rows={6} onChange={e => setBody(e.target.value)} style={{ ...field, marginTop: 4, resize: "vertical", lineHeight: 1.45 }} />
+              </label>
+              <button type="button" onClick={post} className="btn press" style={{ height: 52, fontSize: 15 }}>{copied === "post" ? "Copied. Paste it on " + s.name : `Copy and open ${s.name}`}</button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" onClick={() => copy(title || body.split("\n")[0], "title")} className="btn btn-ghost" style={{ height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>{copied === "title" ? "Copied" : "Copy title"}</button>
+                <button type="button" onClick={() => copy(body, "body")} className="btn btn-ghost" style={{ height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>{copied === "body" ? "Copied" : "Copy description"}</button>
+              </div>
+              <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.45, textAlign: "center" }}>
+                Add 3 or 4 photos you take yourself, in good light. Buyers trust real photos more than store pictures.
+              </div>
+            </div>
+          </>
+        )}
+
+        <div style={{ margin: "14px 16px 0" }}>
+          <button type="button" onClick={async () => { const next = item.pick === "sell" ? null : "sell"; setItem({ ...item, pick: next }); await setPick(item.id, next); }} className="btn btn-ghost" style={{ height: 44, fontSize: 14 }}>
+            {item.pick === "sell" ? "✓ On your sell list" : "Add to my sell list"}
+          </button>
         </div>
       </div>
       <TabBar />
