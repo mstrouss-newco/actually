@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- No-photo pieces and orders now show a small drawing of what they are (sunglasses, pants, tee, garden, beauty and more) instead of a big letter.
+
 - QA round 10: smaller brand names (no cut-off letters), pieces on the way can go on your feed, closet card says "Add pieces to your feed", in-store returns count from purchase day (Sunglass Resort: 5 days, exchange or store credit), Worth counts pieces on the way and prices a color twin the same, sharper Amazon photos, no-photo tiles use the brand's letter, "Levi's" spelling, "nothing new" after a points check, clearer returnable counts, Orders tabs fade at the edge, smaller feed tabs, empty cancelled orders hidden, unnumbered shipping emails read for stores with no order email (J.Crew Factory), Clare V. receipts re-read.
 
 - Blind QA round 9: expected delivery dates (read from the store's email, or "Arriving tomorrow" style subjects) on Today and the order page; orders on the way without one get their email read once. Today: Recent shows the newest orders, "Just landed" only pieces from the last 45 days and opens that piece, the top card keeps one height and holds still while touched, headlines say "8 pieces from Huckberry". Orders: Clothes and shoes leaves out key cards and device cases; Today's search opens it ready to type. Earn prices only pieces that have arrived and names them with colors; different points programs are never added together. Brand pages split Window and Policy. No-photo tiles never split words and show a letter where the name is printed below. Closet rails show the color on its own line; short shelves skip the repeat grid. The month story ends instead of looping.
