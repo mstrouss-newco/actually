@@ -194,8 +194,8 @@ export default function Closet() {
             {unsorted > 0 && (
               <Link href="/sort" style={{ margin: "16px 16px 0", display: "flex", alignItems: "center", gap: 12, background: "var(--ink)", color: "#fff", borderRadius: 22, padding: "14px 16px", textDecoration: "none" }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15 }}>Sort your pieces</div>
-                  <div style={{ fontSize: 12, color: "#C9C3BC", marginTop: 2 }}>{unsorted} to go. Share, sell or keep private.</div>
+                  <div style={{ fontWeight: 700, fontSize: 15 }}>Add pieces to your feed</div>
+                  <div style={{ fontSize: 12, color: "#C9C3BC", marginTop: 2 }}>{unsorted} ready. Swipe to share, sell or keep private.</div>
                 </div>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
               </Link>
@@ -240,7 +240,7 @@ export default function Closet() {
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
                     <StoreTile store={b.name} w={48} h={48} radius={14} size={22} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="serif" style={{ fontSize: 32, lineHeight: 1, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name}</div>
+                      <div className="serif" style={{ fontSize: 24, lineHeight: 1.2, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", paddingBottom: 2 }}>{b.name}</div>
                       <div style={{ fontSize: 13, color: "var(--soft)", marginTop: 4 }}>{b.pieces} {b.pieces === 1 ? "piece" : "pieces"} · last one {fmtDate(b.last)}</div>
                     </div>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2" strokeLinecap="round" style={{ marginTop: 6 }}><path d="M9 6l6 6-6 6" /></svg>
@@ -343,7 +343,7 @@ export default function Closet() {
               <ItemImage src={sel.image_url} store={sel.store} name={sel.name} w={96} h={120} radius={20} size={44} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="kicker">{sel.brand || sel.store}</div>
-                <div className="serif" style={{ fontSize: 24, lineHeight: 1.08, marginTop: 4 }}>{sel.name}</div>
+                <div className="serif" style={{ fontSize: 24, lineHeight: 1.08, marginTop: 4, overflowWrap: "normal", wordBreak: "normal", hyphens: "none" }}>{sel.name}</div>
                 <div style={{ fontSize: 13, color: "var(--soft)", marginTop: 6 }}>
                   {[sel.size && `Size ${sel.size}`, sel.color, sel.price != null && `$${sel.price.toFixed(2)}`].filter(Boolean).join(" · ")}
                 </div>
@@ -356,6 +356,7 @@ export default function Closet() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 18 }}>
               {rets.get(sel.gmail_id ?? "")?.returned && <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center" }}>You sent this back, so it can&apos;t go on your feed.</div>}
+              {!rets.get(sel.gmail_id ?? "")?.returned && !sel.pick && <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center" }}>Not on your feed yet.</div>}
               {!rets.get(sel.gmail_id ?? "")?.returned && PICKS.map(([k, label]) => (
                 <button key={k} onClick={() => choose(k)} className="btn" style={{ height: 48, fontSize: 15, background: sel.pick === k ? "var(--ink)" : "#fff", color: sel.pick === k ? "#fff" : "var(--ink)", border: "1.5px solid var(--ink)" }}>
                   {sel.pick === k ? "✓ " : ""}{label}

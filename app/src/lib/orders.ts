@@ -294,7 +294,9 @@ async function fetchOrders(): Promise<OrderGroup[] | null> {
     pieces.set(i.gmail_id, [...(pieces.get(i.gmail_id) ?? []), { name: i.name, img: i.image_url || null, wear: isWear, color: i.color }]);
   }
   // Orders that are only pet prescriptions don't show anywhere.
-  return groupOrders((data ?? []) as FullRow[], names, wear, pieces).filter(g => !(g.items.length && g.items.every(n => PET_RX.test(n))));
+  return groupOrders((data ?? []) as FullRow[], names, wear, pieces).filter(g => !(g.items.length && g.items.every(n => PET_RX.test(n))))
+    // A cancelled order with nothing known about it (often a pet pharmacy Autoship) isn't worth showing.
+    .filter(g => !(g.stage === "cancelled" && !g.items.length && !g.pieces?.length));
 }
 
 const DAY = 86400000;
@@ -372,7 +374,10 @@ export function returnDaysLeft(g: OrderGroup) {
 // The last day to send it back.
 export const returnBy = (g: OrderGroup) => Date.parse(deliveredAt(g)) + windowDays(g) * DAY;
 // When it was delivered: the delivery email, else the last email.
-export const deliveredAt = (g: OrderGroup) => g.events.filter(e => e.kind === "delivered").map(e => e.at).sort().at(-1) ?? g.last_at;
+// Bought in a store: the window starts the day of the receipt.
+const boughtInStore = (g: OrderGroup) => g.inStore || (!g.events.some(e => e.kind === "delivered" || e.kind === "shipping") && g.events.some(e => e.kind === "receipt"));
+export { boughtInStore };
+export const deliveredAt = (g: OrderGroup) => boughtInStore(g) ? g.events.filter(e => e.kind === "receipt").map(e => e.at).sort()[0] : g.events.filter(e => e.kind === "delivered").map(e => e.at).sort().at(-1) ?? g.last_at;
 // Whole days on her calendar, so "Sep 21" is the same day all day long.
 function calendarDaysSince(iso: string) {
   const d = new Date(iso), now = new Date();

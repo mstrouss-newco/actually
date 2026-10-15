@@ -90,15 +90,20 @@ export function closetWorth(mine: Item[], groups: OrderGroup[] | null) {
   const byEmail = new Map<string, OrderGroup>();
   for (const g of groups ?? []) for (const e of g.events) byEmail.set(e.gmail_id, g);
   const counted: Item[] = [], skipped: Skip[] = [];
-  for (const i of mine) {
+  // The same product in another color sells for about the same.
+  const priced = new Map<string, Item>();
+  for (const i of mine) if (i.resale_high != null) priced.set(`${i.store}|${i.name}`.toLowerCase(), i);
+  for (const raw of mine) {
+    const twin = raw.resale_high == null ? priced.get(`${raw.store}|${raw.name}`.toLowerCase()) : undefined;
+    const i = twin ? { ...raw, resale_low: twin.resale_low, resale_high: twin.resale_high } : raw;
     const g = byEmail.get(i.gmail_id ?? "");
-    if (g && isArriving(g)) skipped.push({ item: i, why: "On its way. Counted once it arrives." });
+    if (g && isArriving(g) && i.resale_high != null && i.resale_high >= 10) counted.push(i);
     else if (g && isReturn(g)) skipped.push({ item: i, why: "Sent back" });
     else if (i.resale_high == null) skipped.push({ item: i, why: "Not priced yet" });
     else if (i.resale_high < 10) skipped.push({ item: i, why: "Sells for under $10" });
     else counted.push(i);
   }
-  return { counted, skipped, unpriced: mine.filter(i => i.resale_high == null).length };
+  return { counted, skipped, unpriced: skipped.filter(s => s.why === "Not priced yet").length };
 }
 
 export const worth = (items: Item[]) => items.reduce((s, i) => [s[0] + (i.resale_low ?? 0), s[1] + (i.resale_high ?? 0)], [0, 0]);

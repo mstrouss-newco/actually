@@ -119,7 +119,8 @@ export function NameTile({ name, store, w, h, radius = 18, size = 28, letterOnly
   const longest = Math.max(...label.split(/\s+/).map(x => x.length));
   const room = typeof w === "number" ? w - 24 : 120;
   const fit = Math.min(20, Math.max(14, size * 0.45), Math.floor(room / (longest * 0.66)));
-  const letter = (label.match(/[A-Za-z]/)?.[0] ?? label.charAt(0)).toUpperCase();
+  // The brand's first letter, so Levi's 501 shows "L", not "O".
+  const letter = ((store || label).match(/[A-Za-z]/)?.[0] ?? label.charAt(0)).toUpperCase();
   return (
     <div className="serif" aria-label={label} style={{ width: w, height: h, borderRadius: radius, background: tint(store), flex: "none", display: "flex", alignItems: "center", justifyContent: "center", padding: big ? 12 : 0, overflow: "hidden", textAlign: "center" }}>
       {big
@@ -133,6 +134,8 @@ export function NameTile({ name, store, w, h, radius = 18, size = 28, letterOnly
 // `label=""` keeps the no-photo tile to a single letter, for places that print the name right below.
 export function ItemImage({ src, store, name, label, w, h, radius = 18, size = 28 }: { src: string | null; store: string; name?: string; label?: string; domain?: string | null; w: number | string; h: number | string; radius?: number; size?: number }) {
   const [bad, setBad] = useState(false);
+  // Amazon emails link a tiny 90px photo. Ask Amazon for a sharp one instead.
+  if (src && /media-amazon\.com/.test(src)) src = src.replace(/\._[^/]*_\.(jpg|jpeg|png)$/i, "._SL600_.$1");
   if (!src || bad) return <NameTile name={name ?? store} store={store} w={w} h={h} radius={radius} size={size} letterOnly={label === ""} />;
   return (
     <div style={{ width: w, height: h, borderRadius: radius, background: "var(--tile)", flex: "none", overflow: "hidden" }}>

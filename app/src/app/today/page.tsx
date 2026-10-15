@@ -106,7 +106,7 @@ export default function Today() {
   const go = (d: number) => setAt(a => (a + d + n) % n);
 
   const line = [
-    canReturn.length && `${canReturn.length} still returnable`,
+    canReturn.length && `${canReturn.length} ${canReturn.length === 1 ? "order" : "orders"} still returnable`,
     arriving.length && `${arriving.length} ${arriving.length === 1 ? "order" : "orders"} on the way`,
   ].filter(Boolean).join(". ");
   const recent = all.filter(g => !isArriving(g) && g.stage !== "cancelled").slice(0, 4);

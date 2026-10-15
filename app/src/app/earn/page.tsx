@@ -19,10 +19,10 @@ export default function Earn() {
   const cash = (rewards ?? []).reduce((s, r) => s + (r.value ?? 0), 0);
   const soon = (rewards ?? []).find(r => r.expires_on && daysUntil(r.expires_on) <= 30);
   const priced = (items ?? []).filter(i => i.resale_high != null);
-  // Counted: arrived, priced and worth listing. Same rule as the Worth page.
+  // Counted: priced and worth listing. Same rule as the Worth page.
   const { counted: valued } = closetWorth(items ?? [], groups);
-  // Only pieces that have arrived are worth pricing; the rest wait.
-  const toPrice = (items ?? []).filter(i => i.resale_high == null && !i.arriving);
+  // Price everything you own, including pieces on the way.
+  const toPrice = (items ?? []).filter(i => i.resale_high == null);
   const unpriced = toPrice.length;
   const [lo, hi] = worth(valued);
   const loN = useCountUp(Math.round(lo)), hiN = useCountUp(Math.round(hi)), cashN = useCountUp(Math.round(cash));
@@ -71,7 +71,7 @@ export default function Earn() {
             <>
               <div className="serif" style={{ fontSize: 24, lineHeight: 1.1, marginTop: 8 }}>Find points and credit stores owe you.</div>
               <div style={{ fontSize: 14, color: "#7A6A3A", margin: "8px 0 14px", lineHeight: 1.4 }}>We check your rewards and store credit emails and list what&apos;s still good.</div>
-              {rewards !== null && <Job run={scanRewards} label="Find my points" working="Checking email" noun={["balance found", "balances found"]} onDone={load} />}
+              {rewards !== null && <Job run={scanRewards} label="Find my points" working="Checking email" noun={["new balance", "new balances"]} onDone={load} />}
             </>
           )}
         </div>

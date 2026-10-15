@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { CATS, type Item, brandOf, loadItems, sizesByBrand, whoFor } from "@/lib/items";
-import { type OrderGroup, dayLabel, fmtDate, isArriving, isReturn, loadOrders, orderTitle, returnBy, returnDaysLeft, ruleText, windowDays } from "@/lib/orders";
+import { type OrderGroup, boughtInStore, dayLabel, fmtDate, isArriving, isReturn, loadOrders, orderTitle, returnBy, returnDaysLeft, ruleText, windowDays } from "@/lib/orders";
 import { ItemImage, StoreTile, TabBar, tint } from "@/lib/tabs";
 import { delay } from "@/lib/motion";
 
@@ -26,6 +26,9 @@ function OrderRow({ g }: { g: OrderGroup }) {
     </Link>
   );
 }
+
+// "Levi's" + "'s" reads badly; names ending in s just get an apostrophe.
+const owns = (n: string) => /s$/i.test(n) ? `${n}'` : `${n}'s`;
 
 export default function Brand({ params }: { params: Promise<{ name: string }> }) {
   const name = decodeURIComponent(use(params).name);
@@ -69,7 +72,7 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>Brands
           </Link>
           <div style={{ marginTop: 24 }}><StoreTile store={name} w={64} h={64} radius={18} size={28} /></div>
-          <h1 className="serif" style={{ fontWeight: 400, fontSize: name.length > 20 ? 34 : name.length > 12 ? 44 : 64, lineHeight: 1.05, letterSpacing: "-0.03em", margin: "14px 0 0", overflowWrap: "break-word", hyphens: "auto" }}>{name}</h1>
+          <h1 className="serif" style={{ fontWeight: 400, fontSize: name.length > 20 ? 30 : name.length > 12 ? 36 : 48, lineHeight: 1.15, letterSpacing: "-0.03em", margin: "14px 0 0", overflowWrap: "break-word", hyphens: "auto" }}>{name}</h1>
           {items && <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 6 }}>{count} {count === 1 ? "order" : "orders"}{first && new Date(first).getFullYear() < new Date().getFullYear() ? ` since ${new Date(first).getFullYear()}` : ""}{mine[0] ? ` · last one ${fmtDate(mine[0].ordered_at)}` : ""}</div>}
         </div>
 
@@ -96,10 +99,10 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
 
         {(mine.length > 0 || theirs.length > 0) && <div style={{ margin: "22px 16px 0", background: "var(--ink)", color: "#fff", borderRadius: 26, padding: "20px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
           <div className="serif" style={{ fontSize: 24 }}>Returning to {returnTo}</div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, gap: 12 }}><span style={{ color: "#B9B3AC" }}>Window</span><span style={{ fontWeight: 700, textAlign: "right" }}>{ruled?.returnDays ? `${windowDays(ruled)} days from delivery` : "Not stated, usually 30 days"}</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, gap: 12 }}><span style={{ color: "#B9B3AC" }}>Window</span><span style={{ fontWeight: 700, textAlign: "right" }}>{ruled?.returnDays ? `${windowDays(ruled)} days from ${boughtInStore(ruled) ? "purchase" : "delivery"}` : "Not stated, usually 30 days"}</span></div>
           {ruled?.returnNote && !/^final sale$/i.test(ruled.returnNote) && <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, gap: 12 }}><span style={{ color: "#B9B3AC" }}>Policy</span><span style={{ fontWeight: 700, textAlign: "right" }}>{ruled.returnNote}</span></div>}
           <div style={{ height: 1, background: "#2E2B28" }} />
-          <div style={{ fontSize: 13, color: "#B9B3AC", lineHeight: 1.4 }}>{rule ? `From ${ruled!.store}'s email: ${rule}.` : `${returnTo}'s emails don't say. Most stores allow 30 days, so check their site before you send something back.`}</div>
+          <div style={{ fontSize: 13, color: "#B9B3AC", lineHeight: 1.4 }}>{rule ? `From ${owns(ruled!.store)} email: ${rule}.` : `${owns(returnTo)} emails don't say. Most stores allow 30 days, so check their site before you send something back.`}</div>
         </div>}
 
         {mine.length > 0 && (

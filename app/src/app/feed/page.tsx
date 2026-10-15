@@ -43,7 +43,7 @@ export default function Feed() {
       <div className="scroll">
         <div style={{ display: "flex", alignItems: "baseline", gap: 14, padding: "0 20px", whiteSpace: "nowrap" }}>
           {TABS.map(([k, label]) => (
-            <button key={k} onClick={() => { setTab(k); history.replaceState(history.state, "", k === "friends" ? location.pathname : `?tab=${k}`); }} className="serif" style={{ border: 0, borderBottom: `2px solid ${tab === k ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 26, color: tab === k ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
+            <button key={k} onClick={() => { setTab(k); history.replaceState(history.state, "", k === "friends" ? location.pathname : `?tab=${k}`); }} className="serif" style={{ border: 0, borderBottom: `2px solid ${tab === k ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 22, whiteSpace: "nowrap", color: tab === k ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
               {label}
             </button>
           ))}

@@ -62,7 +62,7 @@ export default function Points() {
 
         {rewards !== null && (
           <div style={{ padding: "18px 16px 0" }}>
-            <Job run={scanRewards} label="Check for new points" working="Checking email" noun={["balance found", "balances found"]} onDone={load} />
+            <Job run={scanRewards} label="Check for new points" working="Checking email" noun={["new balance", "new balances"]} onDone={load} />
           </div>
         )}
         <div style={{ fontSize: 12, color: "var(--muted)", padding: "14px 20px 0", lineHeight: 1.45 }}>Balances come from the latest email each store sent. Check the store&apos;s app to be sure before you shop.</div>

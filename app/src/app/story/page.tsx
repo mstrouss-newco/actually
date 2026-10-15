@@ -97,7 +97,7 @@ export default function Story() {
           ) : (
             <div key="end">
               {kick("Before you go")}
-              {big(<>{returnable ? <>{returnable} still <em>returnable.</em></> : <>Nothing to <em>return.</em></>}{hi ? <> Up to {money(hi)} in your closet.</> : null}</>, 42)}
+              {big(<>{returnable ? <>{returnable} clothes {returnable === 1 ? "order" : "orders"} still <em>returnable.</em></> : <>Nothing to <em>return.</em></>}{hi ? <> Up to {money(hi)} in your closet.</> : null}</>, 42)}
               {row(photos.slice(0, 3))}
             </div>
           )}
