@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Sign in: the home page button just says "Sign in", and people who already have an account go straight in instead of being asked to pick a shopping email (a name left on the device from an earlier sign-up no longer gets in the way).
+
 - Sign-up: "Email ready" and "What we read" are now one page. Gmail button sits on the email-ready page with one small line ("Only shopping emails. Disconnect anytime.") instead of the we read / we never boxes. Same change in the demo. /permission (from Today, Reveal, Import) is the calm version too.
 
 - No-photo pieces and orders now show a small drawing of what they are (sunglasses, pants, tee, garden, beauty and more) instead of a big letter.
