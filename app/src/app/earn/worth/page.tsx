@@ -40,7 +40,7 @@ export default function Worth() {
         <div style={{ margin: "18px 16px 0", background: "#EBE3FF", borderRadius: 26, padding: "20px 18px" }}>
           <div style={{ fontSize: 14, color: "#5B4A8A" }}>Your closet could sell for about</div>
           <div className="serif" style={{ fontSize: list.length ? 46 : 30, lineHeight: 1.05, marginTop: 6 }}>{items === null ? "…" : list.length ? `${money(lo)}–${money(hi)}` : "Not priced yet"}</div>
-          <div style={{ fontSize: 13, color: "#5B4A8A", marginTop: 8, lineHeight: 1.4 }}>Counting {list.length} of the {total} pieces in your closet.{skipped.length ? " The rest are listed below with why." : ""}</div>
+          <div style={{ fontSize: 13, color: "#5B4A8A", marginTop: 8, lineHeight: 1.4 }}>Counting {list.length} of the {total} {total === 1 ? "piece" : "pieces"} in your closet.{skipped.length ? " The rest are listed below with why." : ""}</div>
           <div style={{ fontSize: 12, color: "#5B4A8A", marginTop: 6, lineHeight: 1.4 }}>AI estimates for good used condition. Real prices depend on wear and demand.</div>
         </div>
 

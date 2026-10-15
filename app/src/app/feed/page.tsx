@@ -117,8 +117,8 @@ export default function Feed() {
                   <div className="serif" style={{ fontSize: 24, lineHeight: 1.1 }}>Find people who shop like <em>you.</em></div>
                   <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 8, lineHeight: 1.45 }}>Matches show up when people share pieces from brands you buy. Share a few of yours to get started.</div>
                   <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                    <Link href="/sort" className="btn" style={{ marginTop: 0, height: 46, fontSize: 14 }}>Share pieces</Link>
-                    <Link href="/people" className="btn btn-line" style={{ marginTop: 0, height: 46, fontSize: 14 }}>Find people</Link>
+                    <Link href="/sort" className="btn" style={{ marginTop: 0, height: 46, fontSize: 14, flex: "1 1 0", minWidth: 0, width: "auto" }}>Share pieces</Link>
+                    <Link href="/people" className="btn btn-line" style={{ marginTop: 0, height: 46, fontSize: 14, flex: "1 1 0", minWidth: 0, width: "auto" }}>Find people</Link>
                   </div>
                 </div>
               )}

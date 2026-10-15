@@ -115,11 +115,16 @@ export function Progress({ step, h = 4 }: { step: number; h?: number }) {
 export function NameTile({ name, store, w, h, radius = 18, size = 28 }: { name: string; store: string; w: number | string; h: number | string; radius?: number; size?: number }) {
   const big = typeof w === "string" || w >= 90;
   const label = name.trim() || store;
+  // Shrink long words so they fit whole ("Sunglasses" never splits).
+  const longest = Math.max(...label.split(/\s+/).map(x => x.length));
+  const room = typeof w === "number" ? w - 24 : 140;
+  const fit = Math.min(20, Math.max(14, size * 0.45), Math.floor(room / (longest * 0.56)));
+  const letter = (label.match(/[A-Za-z]/)?.[0] ?? label.charAt(0)).toUpperCase();
   return (
     <div className="serif" aria-label={label} style={{ width: w, height: h, borderRadius: radius, background: tint(store), flex: "none", display: "flex", alignItems: "center", justifyContent: "center", padding: big ? 12 : 0, overflow: "hidden", textAlign: "center" }}>
       {big
-        ? <span style={{ fontSize: Math.min(20, Math.max(14, size * 0.45)), lineHeight: 1.15, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "anywhere" }}>{label}</span>
-        : <span style={{ fontSize: size, fontStyle: "italic" }}>{label.charAt(0).toUpperCase()}</span>}
+        ? <span style={{ fontSize: Math.max(11, fit), lineHeight: 1.15, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "break-word" }}>{label}</span>
+        : <span style={{ fontSize: size, fontStyle: "italic" }}>{letter}</span>}
     </div>
   );
 }

@@ -84,7 +84,7 @@ export default function Today() {
           <Link href={`/order/${encodeURIComponent(hero.key)}`} style={{ margin: "14px 16px 0", background: "#FFE1DC", borderRadius: 28, padding: "20px 18px", display: "flex", gap: 14, position: "relative", textDecoration: "none" }}>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
               <div className="kicker" style={{ color: "#C9402F" }}>Still returnable</div>
-              <div className="serif" style={{ fontSize: 28, lineHeight: 1.04, letterSpacing: "-0.02em", overflowWrap: "anywhere" }}>{orderTitle(hero)}, {hero.inStore ? "bought" : "delivered"} <em>{fmtDate(hero.last_at)}</em></div>
+              <div className="serif" style={{ fontSize: 28, lineHeight: 1.04, letterSpacing: "-0.02em", overflowWrap: "break-word" }}>{orderTitle(hero)}, {hero.inStore ? "bought" : "delivered"} <em>{fmtDate(hero.last_at)}</em></div>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#6B4A44" }}>From {hero.store}</div>
               <div style={{ fontSize: 13, color: "#6B4A44" }}>Return by {dayLabel(returnBy(hero))}{ruleText(hero) ? ` · ${ruleText(hero)}` : ""}</div>
             </div>

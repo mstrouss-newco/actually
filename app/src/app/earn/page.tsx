@@ -86,7 +86,7 @@ export default function Earn() {
                 )}
               </div>
               <div style={{ fontSize: 14, color: "#5B4A8A", marginTop: 6, lineHeight: 1.4 }}>
-                Estimated resale value of {valued.length} of your {(items ?? []).length} pieces.{top && top.resale_high ? ` Your ${top.brand || top.store} ${top.name} could sell for up to ${money(top.resale_high)}.` : ""}
+                Estimated resale value of {valued.length} of your {(items ?? []).length} {(items ?? []).length === 1 ? "piece" : "pieces"}.{top && top.resale_high ? ` Your ${top.brand || top.store} ${top.name} could sell for up to ${money(top.resale_high)}.` : ""}
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, marginTop: 12 }}>See what sells →</div>
             </Link>

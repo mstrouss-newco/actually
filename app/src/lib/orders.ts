@@ -192,7 +192,14 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
       if (!had || p.name.length > had.name.length) best.set(k, { ...p, img: p.img || had?.img || null });
       else if (!had.img && p.img) had.img = p.img;
     }
-    g.pieces = [...best.values()].sort((a, b) => Number(b.wear) - Number(a.wear) || Number(!!b.img) - Number(!!a.img));
+    // "Lima" and "Lima shoe" in the same color from two emails: one piece.
+    const core = (n: string) => baseName(n).replace(/(shoes?|sneakers?|boots?|sandals?)$/, "");
+    const merged: Piece[] = [];
+    for (const p of [...best.values()].sort((a, b) => b.name.length - a.name.length)) {
+      const t = merged.find(m => (m.color ?? "").toLowerCase() === (p.color ?? "").toLowerCase() && (core(m.name).includes(core(p.name)) || core(p.name).includes(core(m.name))));
+      if (!t) merged.push(p); else if (!t.img && p.img) t.img = p.img;
+    }
+    g.pieces = merged.sort((a, b) => Number(b.wear) - Number(a.wear) || Number(!!b.img) - Number(!!a.img));
     // The title and the photo describe the same piece.
     g.items = g.pieces.length ? g.pieces.map(p => p.name) : dedupeNames(g.items);
     g.photo = g.pieces[0]?.img ?? null;
