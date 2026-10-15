@@ -12,7 +12,7 @@ function OrderRow({ g }: { g: OrderGroup }) {
   const left = returnDaysLeft(g);
   const [sub, pill, bg] = isArriving(g) ? ["On its way", "Arriving", "#FFF0BF"]
     : left ? [`Delivered ${fmtDate(g.last_at)}`, `${left} ${left === 1 ? "day" : "days"} to return`, "#FFE1DC"]
-    : isReturn(g) ? [`Ordered ${fmtDate(g.ordered_at)}`, g.stage === "refunded" ? "Refunded" : "Return started", "#F4F1EE"]
+    : isReturn(g) ? [`${g.stage === "refunded" ? "Refunded" : "Return started"} ${fmtDate(g.last_at)}`, g.stage === "refunded" ? "Refunded" : "Returning", "#F4F1EE"]
     : [`Ordered ${fmtDate(g.ordered_at)}`, null, ""];
   return (
     <Link href={`/order/${encodeURIComponent(g.key)}`} className="orow" style={{ display: "flex", alignItems: "center", gap: 14, background: "#FAF8F6", borderRadius: 22, padding: "12px 16px 12px 12px", textDecoration: "none" }}>
@@ -50,6 +50,9 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
   const past = theirs.filter(g => !open.includes(g)).slice(0, 8);
   const sizes = sizesByBrand(mine)[0]?.sizes.slice(0, 4) ?? [];
   const first = [...theirs.map(g => g.ordered_at), ...mine.map(i => i.ordered_at)].sort()[0];
+  // Bought through another shop (Relwen at Huckberry): returns go to that shop.
+  const shops = [...new Set(mine.map(i => i.store))];
+  const returnTo = shops.length === 1 ? shops[0] : name;
   const count = theirs.length || new Set(mine.map(i => i.gmail_id)).size;
 
   return (
@@ -79,13 +82,13 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
 
         {open.length > 0 && (
           <>
-            <div className="serif" style={{ padding: "24px 20px 0", fontSize: 24 }}>Open with {name}</div>
+            <div className="serif" style={{ padding: "24px 20px 0", fontSize: 24 }}>Open orders</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "12px 16px 0" }}>{open.map(g => <OrderRow key={g.key} g={g} />)}</div>
           </>
         )}
 
         {(mine.length > 0 || theirs.length > 0) && <div style={{ margin: "22px 16px 0", background: "var(--ink)", color: "#fff", borderRadius: 26, padding: "20px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
-          <div className="serif" style={{ fontSize: 24 }}>Returning to {name}</div>
+          <div className="serif" style={{ fontSize: 24 }}>Returning to {returnTo}</div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}><span style={{ color: "#B9B3AC" }}>Window</span><span style={{ fontWeight: 700 }}>About 30 days</span></div>
           <div style={{ height: 1, background: "#2E2B28" }} />
           <div style={{ fontSize: 13, color: "#B9B3AC", lineHeight: 1.4 }}>Our estimate for now. We&apos;ll add each store&apos;s own rules soon.</div>

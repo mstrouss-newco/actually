@@ -25,14 +25,15 @@ export default function Today() {
   const expiring = rewards.filter(r => r.expires_on && daysUntil(r.expires_on) <= 30);
 
   const arriving = (orders ?? []).filter(isArriving);
-  const returnable = (orders ?? []).filter(g => g.wear && returnDaysLeft(g) != null).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!);
+  const canReturn = (orders ?? []).filter(g => returnDaysLeft(g) != null);
+  const returnable = canReturn.filter(g => g.wear).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!);
   const returns = (orders ?? []).filter(g => g.stage === "returning");
   const hero = returnable[0];
   const left = hero ? returnDaysLeft(hero)! : 0;
   const greet = name ? name.split(".")[0].replace(/^./, c => c.toUpperCase()) : "";
 
   const line = [
-    returnable.length && `${returnable.length} still returnable`,
+    canReturn.length && `${canReturn.length} still returnable`,
     arriving.length && `${arriving.length} ${arriving.length === 1 ? "order" : "orders"} on the way`,
   ].filter(Boolean).join(". ");
 

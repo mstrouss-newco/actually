@@ -76,8 +76,8 @@ export function parse(id: string, from: string, subjectRaw: string, snippetRaw: 
 
   const text = `${subject} ${snippet}`;
   const kind: Kind =
-    /\brefund(ed| issued| processed| is on| on its way| has been)|your refund|advance refund|dropoff confirmed/i.test(text) ? "refund" :
-    /return (label|request|started|received)|your return/i.test(text) ? "return" :
+    /\brefund(ed| issued| processed| is on| on its way| has been)|your refund|advance refund/i.test(text) ? "refund" :
+    /return (label|request|started|received)|your return|dropoff confirmed/i.test(text) ? "return" :
     /delivered|has arrived/i.test(subject) ? "delivered" :
     /shipped|on (its|the) way|out for delivery|tracking|delivery estimate|arriving|arrives/i.test(subject) ? "shipping" :
     /receipt/i.test(subject) ? "receipt" :
