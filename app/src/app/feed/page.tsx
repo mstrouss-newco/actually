@@ -134,6 +134,7 @@ export default function Feed() {
               <div style={{ minWidth: 0 }}>
                 <div className="serif" style={{ fontSize: 28, lineHeight: 1, overflowWrap: "anywhere" }}>{displayName(handle)}</div>
                 <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 4 }}>{mine ? `${mine.followers} ${mine.followers === 1 ? "follower" : "followers"} · ${mine.following} following` : "Loading…"}</div>
+                <div style={{ display: "inline-flex", marginTop: 8, background: "#DCEFDF", color: "#2F5C3E", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 700 }}>Earn when friends buy what you share</div>
               </div>
             </div>
             <div style={{ display: "flex", gap: 8, padding: "16px 20px 0" }}>

@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Sharing copy: Sort, My feed and the Closet piece sheet say you could earn when a friend buys something you shared; public pages say the person may earn a small reward. (Assumes the cash back partner, Wildfire, is in place before launch.)
+
 - iPhone: the bottom menu tucks away while scrolling down and comes back on the way up; screens leave room for the phone's edges (safe areas). Added to the Home Screen, Actually opens full screen with its own icon (`manifest.ts`, `apple-icon.png`, `public/icon-*.png`), and Today shows a one-time "Keep Actually on your Home Screen" tip in iPhone Safari (`lib/home-tip.tsx`).
 
 - Feed: My feed is the first tab and opens by default until people you follow have shared something. My feed tiles match the design (tall photo, brand, name) and each piece can carry a short note ("Size down one"), shown on your public page too (migration items_note, `profile_page` returns `note`).
