@@ -20,18 +20,18 @@ const Result = z.object({
     category: z.enum(CATEGORIES),
   })),
   return_days: z.number().int().nullable().describe("How many days the shopper has to return items, exactly as this email states. Null if it doesn't say."),
-  return_note: z.string().nullable().describe("A few plain words on how returns work, from this email only, e.g. 'Free and easy returns'. Null if not mentioned."),
+  return_note: z.string().nullable().describe("The return policy in 6 words or fewer, from this email only, e.g. 'Free and easy returns', 'Store credit only'. Not instructions on how to start a return. Null if no policy is stated."),
   final_sale: z.boolean().describe("True only if the email says the items are final sale or can't be returned."),
 });
 
 // Each store's return rules, as the email states them.
 const Rules = z.object({
   return_days: z.number().int().nullable().describe("How many days the shopper has to return items, exactly as this email states. Null if the email does not say."),
-  note: z.string().nullable().describe("A few plain words on how returns work, from this email only, e.g. 'Free returns', 'Free and easy returns', 'Returns in store only'. Null if the email says nothing about returns."),
+  note: z.string().nullable().describe("The return policy in 6 words or fewer, from this email only, e.g. 'Free returns', 'Free and easy returns', 'Store credit only'. Not instructions on how to start a return. Null if the email states no policy."),
   final_sale: z.boolean().describe("True only if the email says these items are final sale or can't be returned."),
 });
 const RULES_SYSTEM = `You read one online shopping email and report the store's return rules as written in it.
-Only use what the email says. Never use what you know about the store. If returns aren't mentioned, return nulls and final_sale false.`;
+Only use what the email says. Never use what you know about the store. The shopper is in the US: ignore rules that only apply to other countries (for example "EU customers only"). If returns aren't mentioned, return nulls and final_sale false.`;
 
 // Matches product photos to pieces that came in without one.
 const Photos = z.object({
@@ -47,7 +47,7 @@ Rules:
 - If the email is a shipping or receipt update that repeats the items, list them anyway.
 - If no specific products are listed, return is_order false and no items.
 - Use null when a detail is not in the email. Never guess sizes or prices.
-- Also report the return rules only if this email states them (days to return, free returns, final sale). Never use outside knowledge.
+- Also report the return rules only if this email states them (days to return, free returns, final sale) for a US shopper. Ignore rules for other countries. Never use outside knowledge.
 - The same product in two colors is two items. List each color separately with its own photo.`;
 
 const cors = {
@@ -85,7 +85,7 @@ Deno.serve(async req => {
     let r: z.infer<typeof Rules> | null = null;
     try { r = await ask(Rules, RULES_SYSTEM, `Store: ${row.store}\n\n${text.slice(0, 40000)}`); } catch { return json({ error: "ai failed" }, 502); }
     const days = r?.final_sale ? 0 : r?.return_days != null && r.return_days > 0 && r.return_days <= 400 ? r.return_days : null;
-    const note = r?.final_sale ? "Final sale" : r?.note?.trim().slice(0, 120) || null;
+    const note = r?.final_sale ? "Final sale" : r?.note?.trim().slice(0, 60) || null;
     await admin.from("orders").update({ rules_read: true, return_days: days, return_note: note }).eq("user_id", auth.user.id).eq("gmail_id", gmail_id);
     return json({ return_days: days, note });
   }
@@ -144,7 +144,7 @@ Deno.serve(async req => {
   }));
   if (items.length) await admin.from("items").upsert(items, { onConflict: "user_id,gmail_id,name,size,color", ignoreDuplicates: true });
   const days = parsed?.final_sale ? 0 : parsed?.return_days != null && parsed.return_days > 0 && parsed.return_days <= 400 ? parsed.return_days : null;
-  const note = parsed?.final_sale ? "Final sale" : parsed?.return_note?.trim().slice(0, 120) || null;
+  const note = parsed?.final_sale ? "Final sale" : parsed?.return_note?.trim().slice(0, 60) || null;
   await admin.from("orders").update({ items_read: true, rules_read: true, return_days: days, return_note: note }).eq("user_id", auth.user.id).eq("gmail_id", gmail_id);
   return json({ items: items.length });
 });
