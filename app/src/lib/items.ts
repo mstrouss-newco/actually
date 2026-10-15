@@ -297,3 +297,10 @@ export const monthPieces = (items: Item[]) => {
 // Each color family's swatch, in the same order as HUES.
 export const HUE_SWATCH: [string, string][] = [["cream", "#EFE6D6"], ["pink", "#F2B8C6"], ["red", "#B83A35"], ["orange", "#E0874A"], ["yellow", "#EBC855"],
   ["tan", "#B8916A"], ["green", "#6F8A5B"], ["navy", "#2B3A5C"], ["purple", "#7B5EA7"], ["gray", "#8E8B86"], ["black", "#1E1C1A"]];
+
+// "Large / 9.5-10.5 D(M) US" reads as "9.5-10.5" for shoes and "Large" for the rest.
+export function shortSize(size: string, cat?: string) {
+  const parts = size.split(/\s*\/\s*/).filter(Boolean);
+  const pick = (cat === "shoes" ? parts.find(p => /\d/.test(p)) : null) ?? parts[0] ?? size;
+  return pick.replace(/\s*[A-Z]?\(?[A-Z]\)?\s*US$/i, "").replace(/\s+US$/i, "").trim() || pick;
+}

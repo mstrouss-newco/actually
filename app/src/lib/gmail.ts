@@ -169,8 +169,24 @@ export async function readFullText(id: string, token: string) {
 
 // ---------- rewards emails (points, store credit, gift cards) ----------
 
-const REWARDS_QUERY = '(subject:(points OR rewards OR "store credit" OR "gift card" OR balance OR expiring OR expire) OR "points balance" OR "reward balance") newer_than:1y';
-const REWARD_SUBJECT = /point|reward|credit|gift card|balance|expir|certificate/i;
+const REWARDS_QUERY = '(subject:(points OR rewards OR miles OR "cash back" OR "store credit" OR "gift card" OR balance OR expiring OR expire) OR "points balance" OR "reward balance" OR "miles balance") newer_than:1y';
+const REWARD_SUBJECT = /point|reward|mile|cash ?back|credit|gift card|balance|expir|certificate/i;
+
+// Credit card points are the one thing we read from banks. Only these senders, only
+// rewards subjects, and never anything about statements, payments or the account.
+export const CARD_PROGRAMS: [RegExp, string][] = [
+  [/(^|\.)chase\.com$/i, "Chase Ultimate Rewards"],
+  [/(^|\.)(americanexpress|aexp)\.com$/i, "Amex Membership Rewards"],
+  [/(^|\.)capitalone\.com$/i, "Capital One Rewards"],
+  [/(^|\.)(citi|citibank)\.com$/i, "Citi ThankYou Points"],
+  [/(^|\.)discover\.com$/i, "Discover Cashback"],
+  [/(^|\.)bankofamerica\.com$/i, "Bank of America Rewards"],
+  [/(^|\.)wellsfargo\.com$/i, "Wells Fargo Rewards"],
+  [/(^|\.)(barclays|barclaycardus)\.com$/i, "Barclays Rewards"],
+];
+export const cardProgram = (domain: string | null | undefined) => (domain && CARD_PROGRAMS.find(([re]) => re.test(domain))?.[1]) || null;
+const CARD_REWARD = /ultimate rewards|membership rewards|thankyou|\brewards? (points?|balance|summary|update)|\bpoints? (balance|summary|expir|update)|cash ?back (balance|summary|rewards?|update)|\bmiles (balance|summary|expir)/i;
+const BANK_WORDS = /statement|payment|\bdue\b|autopay|fraud|alert|transaction|purchase|charge|security|sign[- ]?in|verify|password|credit limit|\bapr\b|account|application|approved|declined|overdraft|deposit|transfer|minimum|card ending|ending in/i;
 
 export type RewardEmail = { gmail_id: string; store: string; store_domain: string; subject: string; sent_at: string };
 
@@ -189,6 +205,12 @@ export async function listRewardEmails(token: string, skip: Set<string>): Promis
       const h = (n: string) => m.payload?.headers?.find(x => x.name.toLowerCase() === n.toLowerCase())?.value ?? "";
       const from = h("From"), subject = h("Subject");
       const domain = ((from.match(/<([^>]+)>/)?.[1] ?? from).trim().toLowerCase().split("@")[1]) ?? "";
+      const card = cardProgram(domain);
+      if (card) {
+        if (!CARD_REWARD.test(subject) || BANK_WORDS.test(subject)) continue;
+        out.push({ gmail_id: id, store: card, store_domain: rootDomain(domain), subject, sent_at: new Date(Number(m.internalDate)).toISOString() });
+        continue;
+      }
       if (!domain || SKIP.test(domain) || NOT_STORE.test(domain) || FREE_MAIL.test(domain) || SENSITIVE.test(domain) || !REWARD_SUBJECT.test(subject)) continue;
       out.push({ gmail_id: id, store: storeName(from, domain), store_domain: rootDomain(domain), subject, sent_at: new Date(Number(m.internalDate)).toISOString() });
     }

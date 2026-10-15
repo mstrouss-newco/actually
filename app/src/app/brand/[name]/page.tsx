@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { CATS, type Item, brandOf, loadItems, sizesByBrand, whoFor } from "@/lib/items";
+import { CATS, type Item, brandOf, loadItems, shortSize, sizesByBrand, whoFor } from "@/lib/items";
 import { type OrderGroup, boughtInStore, dayLabel, fmtDate, isArriving, isReturn, loadOrders, orderTitle, returnBy, returnDaysLeft, ruleText, windowDays } from "@/lib/orders";
 import { ItemImage, StoreTile, TabBar, tint } from "@/lib/tabs";
 import { delay } from "@/lib/motion";
@@ -80,8 +80,8 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
           <>
             <div style={{ display: "flex", justifyContent: "center", gap: 10, padding: "0 20px", marginTop: -40, position: "relative" }}>
               {sizes.map(s => (
-                <div key={s.cat} className="tilt" style={{ flex: "1 1 0", maxWidth: 84, minWidth: 0, background: "#fff", borderRadius: 20, padding: "10px 4px 12px", boxShadow: "0 10px 24px rgba(20,18,16,.12)", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <span style={{ fontWeight: 700, fontSize: s.size.split(/\s*\/\s*/)[0].length > 4 ? 18 : 26, lineHeight: 1.1, whiteSpace: "nowrap" }}>{s.size.split(/\s*\/\s*/)[0]}</span>
+                <div key={s.cat} className="tilt" style={{ flex: "0 1 auto", minWidth: 64, background: "#fff", borderRadius: 16, padding: "8px 12px 9px", boxShadow: "0 8px 20px rgba(20,18,16,.10)", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <span style={{ fontWeight: 700, fontSize: 16, lineHeight: 1.15, whiteSpace: "nowrap" }}>{shortSize(s.size, s.cat)}</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", marginTop: 2 }}>{CATS.find(c => c[0] === s.cat)?.[1]}</span>
                 </div>
               ))}

@@ -126,6 +126,7 @@ SQL to `supabase/migrations/<version>_<name>.sql`. Run the security advisor afte
   mail. Layers: sender domains (`SENSITIVE` in `lib/sensitive.ts` and the functions),
   brand names (`SENSITIVE_BRAND`, for mail sent through shipping services like Narvar),
   subject words (`SENSITIVE_SUBJECT`), then the AI screen.
+- One narrow exception for banks: credit card points. `CARD_PROGRAMS` in `lib/gmail.ts` lists the card companies; their mail is read only when the subject is about rewards and has none of `BANK_WORDS` (statement, payment, account...), and `read-reward` saves only points or cash back from them, never balances owed or spending. People can also type points in (`gmail_id` starting `manual:`).
 - Also never saved: eyewear (glasses, contacts), carrier notices (UPS, FedEx, USPS, DHL),
   phone and cable bills, restaurants, kids' teams, camps and school sign-ups (`NOT_STORE`,
   `KIDS_FROM`, `KIDS_SUBJECT` in `lib/gmail.ts`, plus the AI prompt).

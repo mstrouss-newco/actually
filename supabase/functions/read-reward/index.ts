@@ -12,9 +12,14 @@ const Result = z.object({
   expires_on: z.string().nullable().describe("Expiry date as YYYY-MM-DD, only if the email states one."),
 });
 
-const SYSTEM = `You read emails from stores about loyalty points, rewards, store credit and gift cards.
+const SYSTEM = `You read emails from stores, airlines, hotels and credit card rewards programs about loyalty points, miles, cash back, store credit and gift cards.
 Report the shopper's current balance only if the email states it. Generic promotions ("earn double points this weekend") have no balance.
+Miles count as points.
+For a credit card or bank email, report ONLY the rewards points or cash back rewards balance. Never report an account balance, statement balance, amount owed, payment, credit limit or spending; if that is all the email has, has_balance is false.
 Use null for anything the email does not say. Never guess values or dates.`;
+
+// Card issuers: only points or a cash back reward are ever saved from them.
+const CARD = /(^|\.)(chase|americanexpress|aexp|capitalone|citi|citibank|discover|bankofamerica|wellsfargo|barclays|barclaycardus)\.com$/i;
 
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const anthropic = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") });
@@ -48,7 +53,8 @@ Deno.serve(async req => {
     return json({ error: "ai failed" }, e instanceof Anthropic.RateLimitError ? 429 : 502);
   }
 
-  const ok = r?.has_balance && r.kind && (r.points != null || r.value != null);
+  const card = typeof b.store_domain === "string" && CARD.test(b.store_domain);
+  const ok = r?.has_balance && r.kind && (r.points != null || r.value != null) && (!card || r.kind === "points" || r.kind === "reward");
   const expires = r?.expires_on && /^\d{4}-\d{2}-\d{2}$/.test(r.expires_on) ? r.expires_on : null;
   await admin.from("rewards").insert({
     user_id: auth.user.id, gmail_id: b.gmail_id, store: b.store.slice(0, 80), store_domain: typeof b.store_domain === "string" ? b.store_domain.slice(0, 100) : null,

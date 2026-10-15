@@ -1,16 +1,16 @@
 import { gmailToken, supabase } from "./supabase";
-import { listRewardEmails, readFullText } from "./gmail";
+import { cardProgram, listRewardEmails, readFullText } from "./gmail";
 import { type Item, WEAR } from "./items";
 import { type OrderGroup, isArriving, isReturn } from "./orders";
 
-export type Reward = { store: string; store_domain: string | null; kind: string; points: number | null; value: number | null; expires_on: string | null; sent_at: string };
+export type Reward = { gmail_id: string; store: string; store_domain: string | null; kind: string; points: number | null; value: number | null; expires_on: string | null; sent_at: string };
 
 const NOT_REWARD = /\b(card|visa|mastercard|amex|credit union|bank)\b|openai|anthropic|chatgpt/i;
 const NOT_REWARD_DOMAIN = /(^|\.)(openai|anthropic|chase|citi|capitalone|americanexpress|discover|barclays|synchronybank|bankofamerica|wellsfargo)\.com$/i;
 
 // Her current balance at each store: the newest email per store and kind, skipping anything expired or stale.
 export async function loadRewards(): Promise<Reward[]> {
-  const { data } = await supabase().from("rewards").select("store, store_domain, kind, points, value, expires_on, sent_at").not("kind", "is", null).order("sent_at", { ascending: false }).limit(1000);
+  const { data } = await supabase().from("rewards").select("gmail_id, store, store_domain, kind, points, value, expires_on, sent_at").not("kind", "is", null).order("sent_at", { ascending: false }).limit(1000);
   const today = new Date().toISOString().slice(0, 10);
   const stale = new Date(Date.now() - 365 * 86400000).toISOString();
   const seen = new Set<string>();
@@ -20,8 +20,9 @@ export async function loadRewards(): Promise<Reward[]> {
     seen.add(key);
     // Nothing to show: no money value and no points.
     if (!r.value && !r.points) return false;
-    // Bank cards and app or AI credit aren't store rewards.
-    if (NOT_REWARD.test(r.store) || (r.store_domain && NOT_REWARD_DOMAIN.test(r.store_domain))) return false;
+    // Card points programs and points she typed in are kept. Other bank and app or AI credit aren't rewards.
+    const kept = r.gmail_id.startsWith("manual:") || cardProgram(r.store_domain);
+    if (!kept && (NOT_REWARD.test(r.store) || (r.store_domain && NOT_REWARD_DOMAIN.test(r.store_domain)))) return false;
     return (!r.expires_on || r.expires_on >= today) && r.sent_at > stale;
   }).sort((a, b) => (a.expires_on ?? "9999").localeCompare(b.expires_on ?? "9999"));
 }
@@ -34,6 +35,22 @@ export const listNames = (xs: string[]) => xs.length < 2 ? xs.join("") : `${xs.s
 export const daysUntil = (d: string) => Math.ceil((Date.parse(`${d}T23:59:59`) - Date.now()) / 86400000);
 export const fmtDay = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 export const KIND: Record<string, string> = { points: "Points", credit: "Store credit", gift_card: "Gift card", reward: "Reward" };
+
+// Points she types in herself, for programs whose emails we don't read.
+export async function addPoints(name: string, points: number | null, value: number | null, expires: string | null) {
+  const sb = supabase();
+  const { data } = await sb.auth.getUser();
+  if (!data.user) return false;
+  const { error } = await sb.from("rewards").insert({
+    user_id: data.user.id, gmail_id: `manual:${crypto.randomUUID()}`, store: name.trim().slice(0, 80), store_domain: null,
+    kind: points != null ? "points" : "reward", points, value, expires_on: expires || null, sent_at: new Date().toISOString(),
+  });
+  return !error;
+}
+
+export async function removeReward(gmail_id: string) {
+  await supabase().from("rewards").delete().eq("gmail_id", gmail_id);
+}
 
 type Progress = (done: number, total: number, found: number) => void;
 type Outcome = "done" | "expired" | "not-ready";
