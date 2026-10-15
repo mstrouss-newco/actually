@@ -27,7 +27,7 @@ a { color: var(--ink); }
 
 .screen {
   width: 100%; height: 100%; overflow-y: auto; background: #fff; color: var(--ink);
-  font-family: var(--font-sans), sans-serif; display: flex; flex-direction: column; padding: 22px 20px 28px;
+  font-family: var(--font-sans), sans-serif; display: flex; flex-direction: column; padding: calc(22px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom));
   animation: screenIn .38s cubic-bezier(.22,.8,.2,1) both;
 }
 @keyframes screenIn { from { transform: translateX(24px); opacity: 0 } to { transform: none; opacity: 1 } }
@@ -96,12 +96,15 @@ a { color: var(--ink); }
 
 /* Tab screens: scroll area above the bottom bar */
 .tabscreen { position: relative; width: 100%; height: 100%; background: #fff; color: var(--ink); font-family: var(--font-sans), sans-serif; animation: fadeIn .22s ease-out both; }
-.tabscreen > .scroll { height: 100%; overflow-y: auto; padding: 22px 0 140px; }
+.tabscreen > .scroll { height: 100%; overflow-y: auto; padding: calc(22px + env(safe-area-inset-top)) 0 calc(140px + env(safe-area-inset-bottom)); }
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
 .tabbar {
-  position: absolute; z-index: 10; left: 12px; right: 12px; bottom: 16px; height: 66px; background: var(--ink); border-radius: 30px;
+  position: absolute; z-index: 10; left: 12px; right: 12px; bottom: max(16px, env(safe-area-inset-bottom)); height: 66px; background: var(--ink); border-radius: 30px;
   display: flex; align-items: center; gap: 2px; padding: 0 6px; box-shadow: 0 12px 30px rgba(20,18,16,.28);
+  transition: transform .3s cubic-bezier(.2,.8,.2,1), opacity .3s;
 }
+/* Tucks away while scrolling down, back on the way up. */
+.tabbar.away { transform: translateY(calc(100% + 40px)); opacity: 0; pointer-events: none; }
 .tabbar a { flex: 1; height: 54px; border-radius: 22px; color: #B9B3AC; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; font-weight: 700; }
 .tabbar a.on { background: #fff; color: var(--ink); }
 .tabbar a:active { scale: .94; }

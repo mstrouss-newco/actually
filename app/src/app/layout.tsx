@@ -8,6 +8,8 @@ const serif = Fraunces({ variable: "--font-serif", subsets: ["latin"], weight: [
 export const metadata: Metadata = {
   title: "Actually",
   description: "All your orders in one place.",
+  // Opened from the Home Screen, it runs full screen without Safari's bars.
+  appleWebApp: { capable: true, title: "Actually", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = { themeColor: "#EDEAE6", viewportFit: "cover" };

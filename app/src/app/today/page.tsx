@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { HomeScreenTip } from "@/lib/home-tip";
 import { type OrderGroup, SOON, cleanupOnce, dayLabel, etaText, isArriving, loadOrders, orderTitle, refreshArriving, returnBy, returnDaysLeft, ruleText, shortTitle, fmtDate, trackStep, justArrived, paid, usd, isReturn } from "@/lib/orders";
 import { gmailToken } from "@/lib/supabase";
 import { loadProfile } from "@/lib/profile";
@@ -136,6 +137,8 @@ export default function Today() {
             {orders === undefined ? "Checking your orders…" : orders === null ? "Sign in to see your orders." : orders.length === 0 ? "No orders yet." : line ? <>{line}. {canReturn.length > 0 && <Link href="/orders?tab=canreturn" style={{ fontWeight: 700, color: "var(--ink)" }}>See returns</Link>}</> : "All quiet. Nothing due."}
           </div>
         </div>
+
+        <HomeScreenTip />
 
         {(orders === null || orders?.length === 0) && (
           <div style={{ margin: "18px 16px 0", background: "var(--chip)", borderRadius: 28, padding: "22px 18px" }}>
