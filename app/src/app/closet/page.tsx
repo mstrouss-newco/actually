@@ -2,18 +2,31 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CATS, type Item, type Who, confirmMine, hideItem, loadItems, needsAsk, setPick, setWho, sizesByBrand, toSort, whoFor } from "@/lib/items";
-import { fmtDate } from "@/lib/orders";
+import { CATS, type Item, type Who, brandOf, confirmMine, hideItem, hueRank, loadItems, needsAsk, setPick, setWho, sizesByBrand, toSort, whoFor } from "@/lib/items";
+import { type Ret, dayLabel, fmtDate, loadOrders, returnsByEmail } from "@/lib/orders";
 import { ReadItems } from "@/lib/read-items";
-import { ItemImage, TabBar } from "@/lib/tabs";
+import { ItemImage, TabBar, tint } from "@/lib/tabs";
 
 const PICKS: [NonNullable<Item["pick"]>, string][] = [["share", "Show on my feed"], ["sell", "Want to sell"], ["private", "Keep private"]];
 const WHO: [Who, string][] = [["me", "Me"], ["kids", "Kids"], ["partner", "Partner"], ["other", "Someone else"]];
+type SortKey = "new" | "color" | "brand" | "ret";
+const SORTS: [SortKey, string, string][] = [["new", "Newest", "What just came in"], ["color", "By color", "The rail turns into a rainbow"], ["brand", "By brand", "A to Z"], ["ret", "Returnable first", "Decide before the window closes"]];
+const BSORT: [string, string][] = [["most", "Most ordered"], ["recent", "Recent"], ["az", "A to Z"]];
+const isNew = (i: Item) => Date.now() - Date.parse(i.ordered_at) < 14 * 86400000;
+const ReturnIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 14L4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-3" /></svg>;
 const chip = (on: boolean): React.CSSProperties => ({ border: "1.5px solid var(--ink)", background: on ? "var(--ink)" : "#fff", color: on ? "#fff" : "var(--ink)", borderRadius: 999, padding: "7px 12px", font: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" });
 
 export default function Closet() {
   const [items, setItems] = useState<Item[] | null>(null);
-  const [view, setView] = useState<"pieces" | "sizes">("pieces");
+  const [view, setView] = useState<"pieces" | "brands">("pieces");
+  const [rets, setRets] = useState<Map<string, Ret>>(new Map());
+  const [sort, setSort] = useState<SortKey>("new");
+  const [sortOpen, setSortOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const [bsort, setBsort] = useState("most");
+  // Coming back from a brand page opens the Brands tab.
+  useEffect(() => { if (new URLSearchParams(location.search).get("view") === "brands") setView("brands"); }, []);
+  useEffect(() => { loadOrders().then(g => g && setRets(returnsByEmail(g))); }, []);
   const [cat, setCatState] = useState<string | null>(null);
   // Opening a shelf adds a step to the browser history, so Back returns to the closet.
   const setCat = (k: string | null) => {
@@ -80,6 +93,26 @@ export default function Closet() {
   const shelves = CATS.map(([k, label]) => ({ k, label, items: list.filter(i => i.category === k) })).filter(s => s.items.length);
   const cur = shelves.find(s => s.k === cat);
   const unsorted = toSort(everything).length;
+  const retLeft = (i: Item) => rets.get(i.gmail_id ?? "")?.by ?? Infinity;
+  const sorted = cur ? [...cur.items].sort(
+    sort === "color" ? (a, b) => hueRank(a.color) - hueRank(b.color) || b.ordered_at.localeCompare(a.ordered_at)
+    : sort === "brand" ? (a, b) => brandOf(a).localeCompare(brandOf(b))
+    : sort === "ret" ? (a, b) => retLeft(a) - retLeft(b) || b.ordered_at.localeCompare(a.ordered_at)
+    : (a, b) => b.ordered_at.localeCompare(a.ordered_at)) : [];
+
+  // Brands tab: her own pieces only, one card per brand with her usual sizes.
+  const mine = everything.filter(i => whoFor(i, everything) === "me");
+  const sizes = new Map(sizesByBrand(mine).map(b => [b.brand, b.sizes]));
+  const byBrand = new Map<string, Item[]>();
+  for (const i of mine) byBrand.set(brandOf(i), [...(byBrand.get(brandOf(i)) ?? []), i]);
+  const brands = [...byBrand.entries()].map(([name, its]) => {
+    const open = its.map(i => rets.get(i.gmail_id ?? "")?.by).filter((t): t is number => !!t).sort((a, b) => a - b)[0];
+    return {
+      name, orders: new Set(its.map(i => i.gmail_id ?? i.id)).size, last: its.map(i => i.ordered_at).sort().at(-1)!,
+      sizes: sizes.get(name) ?? [], open: open ? `Return window closes ${dayLabel(open)}` : null,
+    };
+  }).filter(b => b.name.toLowerCase().includes(q.trim().toLowerCase()))
+    .sort(bsort === "az" ? (a, b) => a.name.localeCompare(b.name) : bsort === "recent" ? (a, b) => b.last.localeCompare(a.last) : (a, b) => b.orders - a.orders || b.last.localeCompare(a.last));
 
   return (
     <main className="tabscreen">
@@ -87,27 +120,27 @@ export default function Closet() {
         {!cur && (
           <>
             <div style={{ display: "flex", alignItems: "baseline", gap: 18, padding: "0 20px" }}>
-              {(["pieces", "sizes"] as const).map(v => (
-                <button key={v} onClick={() => setView(v)} className="serif" style={{ border: 0, background: "none", padding: 0, cursor: "pointer", fontSize: v === view ? 36 : 22, color: v === view ? "var(--ink)" : "var(--muted)", letterSpacing: "-0.02em", lineHeight: 1 }}>
-                  {v === "pieces" ? "Closet" : "Sizes"}
+              {(["pieces", "brands"] as const).map(v => (
+                <button key={v} onClick={() => setView(v)} className="serif" style={{ border: 0, borderBottom: `2px solid ${v === view ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 38, color: v === view ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+                  {v === "pieces" ? "Pieces" : "Brands"}
                 </button>
               ))}
             </div>
             <div style={{ fontSize: 14, color: "var(--muted)", padding: "8px 20px 0" }}>
-              {items === null ? "Loading…" : list.length ? `${list.length} ${who === "me" ? "pieces you've bought" : "pieces"}` : "Everything you've bought, in one place."}
+              {items === null ? "Loading…" : view === "brands" ? "Your size and their return rules, ready while you shop." : list.length ? `${list.length} ${who === "me" ? "pieces you've bought" : "pieces"}` : "Everything you've bought, in one place."}
             </div>
-            {people.length > 1 && (
+            {view === "pieces" && people.length > 1 && (
               <div style={{ display: "flex", gap: 6, padding: "12px 20px 0" }}>
                 {people.map(([k, label]) => <button key={k} onClick={() => setWhoView(k)} style={chip(who === k)}>{k === "me" ? "Mine" : label}</button>)}
               </div>
             )}
-            {!toAsk[0] && unchecked.length > 0 && (
+            {view === "pieces" && !toAsk[0] && unchecked.length > 0 && (
               <button onClick={() => setReview(unchecked.map(i => i.id))} style={{ margin: "16px 16px 0", width: "calc(100% - 32px)", textAlign: "left", border: 0, background: "#FAF8F6", borderRadius: 22, padding: "14px 16px", font: "inherit", color: "var(--ink)", cursor: "pointer" }}>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>Is all of this yours?</div>
                 <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Take 10 seconds to move anything bought for kids or a partner. {unchecked.length} to check.</div>
               </button>
             )}
-            {toAsk[0] && (
+            {view === "pieces" && toAsk[0] && (
               <div style={{ margin: "16px 16px 0", background: "#FAF8F6", borderRadius: 22, padding: 14, display: "flex", gap: 12, alignItems: "center" }}>
                 <ItemImage src={toAsk[0].image_url} store={toAsk[0].store} w={56} h={70} radius={14} size={22} />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -141,65 +174,132 @@ export default function Closet() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
               </Link>
             )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "16px 16px 0" }}>
-              {shelves.map(s => (
-                <button key={s.k} onClick={() => setCat(s.k)} className="orow" style={{ display: "flex", alignItems: "center", gap: 14, border: "1.5px solid var(--line)", background: "#fff", borderRadius: 24, padding: "12px 14px 12px 18px", cursor: "pointer", font: "inherit", color: "var(--ink)", textAlign: "left" }}>
-                  <div style={{ flex: 1 }}>
-                    <div className="serif" style={{ fontSize: 24 }}>{s.label}</div>
-                    <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>{s.items.length} {s.items.length === 1 ? "piece" : "pieces"}</div>
-                  </div>
-                  <div style={{ display: "flex" }}>
-                    {s.items.slice(0, 3).map((i, n) => (
-                      <div key={i.id} style={{ marginLeft: n ? -18 : 0, transform: `rotate(${(n - 1) * 8}deg)`, zIndex: n === 1 ? 1 : 0 }}>
-                        <ItemImage src={i.image_url} store={i.store} w={54} h={68} radius={14} size={22} />
-                      </div>
-                    ))}
-                  </div>
-                </button>
-              ))}
+            <div style={{ marginTop: 14, borderTop: "1px solid var(--line)" }}>
+              {shelves.map(s => {
+                const back = s.items.filter(i => rets.get(i.gmail_id ?? "")?.left).length;
+                const [a, b, c] = s.items;
+                return (
+                  <button key={s.k} onClick={() => setCat(s.k)} className="shelf" style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "18px 20px", border: 0, borderBottom: "1px solid var(--line)", background: "#fff", cursor: "pointer", font: "inherit", color: "var(--ink)", textAlign: "left" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="serif" style={{ fontSize: 28, lineHeight: 1.05, letterSpacing: "-0.01em" }}>{s.label}</div>
+                      {back > 0 && <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 8, fontSize: 12, fontWeight: 700, color: "#C9402F" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#FF6159" }} />{back} can still go back</div>}
+                    </div>
+                    <div style={{ position: "relative", width: 112, height: 92, flex: "none" }}>
+                      {b && <div className="fan1" style={{ position: "absolute", left: 4, top: 10, transform: "rotate(-9deg)", boxShadow: "0 4px 10px rgba(20,18,16,.08)", borderRadius: 12 }}><ItemImage src={b.image_url} store={b.store} w={56} h={72} radius={12} size={20} /></div>}
+                      {c && <div className="fan3" style={{ position: "absolute", right: 4, top: 10, transform: "rotate(9deg)", boxShadow: "0 4px 10px rgba(20,18,16,.08)", borderRadius: 12 }}><ItemImage src={c.image_url} store={c.store} w={56} h={72} radius={12} size={20} /></div>}
+                      <div style={{ position: "absolute", left: 28, top: 2, boxShadow: "0 8px 16px rgba(20,18,16,.12)", borderRadius: 12 }}><ItemImage src={a.image_url} store={a.store} w={56} h={76} radius={12} size={20} /></div>
+                    </div>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B9B3AC" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
+                  </button>
+                );
+              })}
             </div>
           </>
         )}
 
-        {!cur && view === "sizes" && list.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "16px 16px 0" }}>
-            {sizesByBrand(list).map(b => (
-              <div key={b.brand} style={{ background: "#FAF8F6", borderRadius: 22, padding: "14px 16px" }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{b.brand}</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-                  {b.sizes.map(s => (
-                    <span key={s.cat} style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 999, padding: "5px 10px", fontSize: 13 }}>
-                      {CATS.find(c => c[0] === s.cat)?.[1]} <b>{s.size}</b>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-            {sizesByBrand(list).length === 0 && <div style={{ color: "var(--muted)", fontSize: 14 }}>No sizes found in your orders yet.</div>}
-          </div>
+        {!cur && view === "brands" && items !== null && (
+          <>
+            <label style={{ margin: "16px 16px 0", height: 50, borderRadius: 999, background: "var(--chip)", display: "flex", alignItems: "center", gap: 10, padding: "0 18px" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A746D" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+              <input value={q} onChange={e => setQ(e.target.value)} placeholder="Find a brand" aria-label="Find a brand" style={{ border: 0, outline: 0, background: "transparent", font: "500 15px var(--font-sans), sans-serif", flex: 1, color: "var(--ink)", minWidth: 0 }} />
+            </label>
+            <div style={{ display: "flex", gap: 20, margin: "16px 20px 0", borderBottom: "1px solid var(--line)" }}>
+              {BSORT.map(([k, label]) => (
+                <button key={k} onClick={() => setBsort(k)} style={{ border: 0, background: "none", padding: "12px 0", marginBottom: -1, borderBottom: `2px solid ${bsort === k ? "var(--ink)" : "transparent"}`, color: bsort === k ? "var(--ink)" : "var(--muted)", font: "700 15px var(--font-sans), sans-serif", cursor: "pointer" }}>{label}</button>
+              ))}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: "16px 16px 0" }}>
+              {brands.map(b => (
+                <Link key={b.name} href={`/brand/${encodeURIComponent(b.name)}`} className="lift" style={{ display: "block", textDecoration: "none", background: tint(b.name), borderRadius: 28, padding: 18 }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="serif" style={{ fontSize: 32, lineHeight: 1, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name}</div>
+                      <div style={{ fontSize: 13, color: "var(--soft)", marginTop: 4 }}>{b.orders} {b.orders === 1 ? "order" : "orders"} · last one {fmtDate(b.last)}</div>
+                    </div>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2" strokeLinecap="round" style={{ marginTop: 6 }}><path d="M9 6l6 6-6 6" /></svg>
+                  </div>
+                  {b.sizes.length > 0 && (
+                    <div style={{ display: "flex", gap: 8, marginTop: 14, overflowX: "auto" }}>
+                      {b.sizes.map(s => (
+                        <div key={s.cat} style={{ flex: "none", background: "#fff", borderRadius: 18, padding: "8px 14px", display: "flex", flexDirection: "column", alignItems: "center", minWidth: 64 }}>
+                          <div style={{ fontWeight: 700, fontSize: 24, lineHeight: 1.1, letterSpacing: "-0.01em" }}>{s.size}</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)" }}>{CATS.find(c => c[0] === s.cat)?.[1]}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ marginTop: 12, background: "rgba(255,255,255,.65)", borderRadius: 18, padding: "10px 14px", display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}><ReturnIcon />About 30 days to return (our estimate)</div>
+                    {b.open && <div style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 700 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6159", margin: "0 4px" }} />{b.open}</div>}
+                  </div>
+                </Link>
+              ))}
+              {brands.length === 0 && <div style={{ color: "var(--muted)", fontSize: 14, padding: "0 4px" }}>{q ? "No brand by that name in your closet." : "No brands yet. They show up as your orders are read."}</div>}
+            </div>
+          </>
         )}
 
         {cur && (
-          <>
-            <div style={{ padding: "0 20px", position: "sticky", top: -22, zIndex: 5, background: "#fff", paddingTop: 22, marginTop: -22, paddingBottom: 6 }}>
+          <div className="slideIn">
+            <div style={{ padding: "0 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <button onClick={() => setCat(null)} className="back" style={{ border: 0, cursor: "pointer", font: "inherit", fontSize: 13, fontWeight: 700 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>Closet
               </button>
-              <h1 className="serif" style={{ fontWeight: 400, fontSize: 40, lineHeight: 1, letterSpacing: "-0.02em", margin: "18px 0 0" }}>{cur.label}</h1>
+              <button onClick={() => setSortOpen(true)} style={{ height: 36, padding: "0 14px", borderRadius: 999, border: "1.5px solid #E2DDD7", background: "#fff", font: "700 13px var(--font-sans), sans-serif", display: "flex", alignItems: "center", gap: 6, cursor: "pointer", color: "var(--ink)" }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M4 7h16M7 12h10M10 17h4" /></svg>{SORTS.find(o => o[0] === sort)![1]}
+              </button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, padding: "18px 16px 0" }}>
-              {cur.items.map(i => (
-                <button key={i.id} onClick={() => setSel(i)} className="lift" style={{ border: 0, background: "none", padding: 0, cursor: "pointer", textAlign: "left", font: "inherit", color: "var(--ink)" }}>
-                  <ItemImage src={i.image_url} store={i.store} w="100%" h={190} radius={22} size={56} />
-                  <div className="kicker" style={{ marginTop: 8 }}>{i.brand || i.store}</div>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginTop: 2, lineHeight: 1.25 }}>{i.name}</div>
-                  {i.size && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Size {i.size}</div>}
+            <h1 className="serif" style={{ fontWeight: 400, fontSize: 44, lineHeight: 1, letterSpacing: "-0.02em", margin: "18px 20px 0" }}>{cur.label}</h1>
+            <div style={{ position: "relative", marginTop: 16 }}>
+              <div style={{ position: "absolute", left: 12, right: 0, top: 10, height: 5, borderRadius: 3, background: "#D9D3CC" }} />
+              <div className="hangrail" style={{ display: "flex", gap: 12, overflowX: "auto", padding: "0 40px 14px 20px", scrollPaddingLeft: 20, position: "relative" }}>
+                {sorted.slice(0, 12).map(i => {
+                  const r = rets.get(i.gmail_id ?? "");
+                  return (
+                    <button key={i.id} onClick={() => setSel(i)} className="hang" style={{ opacity: r?.returned ? 0.4 : 1, flex: "none", width: 140, border: 0, background: "transparent", padding: 0, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", font: "inherit", color: "inherit" }}>
+                      <svg width="44" height="26" viewBox="0 0 44 26" fill="none" stroke="#8C857D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4a3 3 0 1 1 3 3c-1.6.5-3 1.2-3 2.8V11" /><path d="M4 24 22 11l18 13z" /></svg>
+                      <div style={{ marginTop: -6, position: "relative", borderRadius: 24, boxShadow: "0 10px 20px rgba(20,18,16,.08)" }}>
+                        <ItemImage src={i.image_url} store={i.store} w={140} h={178} radius={24} size={48} />
+                        {r?.by && <div style={{ position: "absolute", bottom: -8, right: -6, background: "#FF6159", borderRadius: 999, padding: "5px 9px", fontSize: 11, fontWeight: 700, transform: "rotate(-6deg)" }}>Return by {dayLabel(r.by)}</div>}
+                        {r?.returned && <div style={{ position: "absolute", bottom: -8, right: -6, background: "var(--ink)", color: "#fff", borderRadius: 999, padding: "5px 9px", fontSize: 11, fontWeight: 700 }}>Returned</div>}
+                        {isNew(i) && <div style={{ position: "absolute", top: 10, left: 10, background: "#fff", borderRadius: 999, padding: "4px 8px", fontSize: 11, fontWeight: 700 }}>New</div>}
+                      </div>
+                      <div style={{ marginTop: 12, fontSize: 13, fontWeight: 700, maxWidth: 140, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{brandOf(i)}</div>
+                      <div style={{ fontSize: 12, color: "var(--muted)", maxWidth: 140, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{i.name}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="serif" style={{ padding: "22px 20px 0", fontSize: 22 }}>All {cur.label.toLowerCase()}</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, padding: "12px 16px 0" }}>
+              {sorted.map(i => (
+                <button key={i.id} onClick={() => setSel(i)} style={{ opacity: rets.get(i.gmail_id ?? "")?.returned ? 0.4 : 1, border: 0, padding: 0, background: "transparent", cursor: "pointer", display: "flex", flexDirection: "column", gap: 5, font: "inherit", color: "inherit", textAlign: "left", minWidth: 0 }}>
+                  <ItemImage src={i.image_url} store={i.store} w="100%" h={140} radius={16} size={36} />
+                  <div style={{ fontSize: 12, fontWeight: 700, width: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{brandOf(i)}</div>
                 </button>
               ))}
             </div>
-          </>
+          </div>
         )}
       </div>
+
+      {sortOpen && (
+        <div onClick={() => setSortOpen(false)} style={{ position: "absolute", inset: 0, zIndex: 20, background: "rgba(20,18,16,.45)", display: "flex", alignItems: "flex-end" }}>
+          <div onClick={e => e.stopPropagation()} className="sheetUp" style={{ width: "100%", background: "#fff", borderRadius: "30px 30px 0 0", padding: "14px 20px 34px" }}>
+            <div style={{ width: 40, height: 5, borderRadius: 3, background: "#E2DDD7", margin: "0 auto" }} />
+            <div className="serif" style={{ fontSize: 28, marginTop: 16 }}>Sort</div>
+            <div style={{ display: "flex", flexDirection: "column", marginTop: 8 }}>
+              {SORTS.map(([k, label, hint]) => (
+                <button key={k} onClick={() => { setSort(k); setSortOpen(false); }} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 58, border: 0, borderBottom: "1px solid var(--line)", background: "#fff", font: "inherit", color: "var(--ink)", cursor: "pointer", textAlign: "left", padding: 0 }}>
+                  <span><span style={{ display: "block", fontWeight: 700, fontSize: 15 }}>{label}</span><span style={{ display: "block", fontSize: 13, color: "var(--muted)" }}>{hint}</span></span>
+                  <span style={{ width: 22, height: 22, borderRadius: "50%", border: `2px solid ${sort === k ? "var(--ink)" : "#D9D3CC"}`, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ width: 10, height: 10, borderRadius: "50%", background: sort === k ? "var(--ink)" : "transparent" }} /></span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {sel && (
         <div onClick={() => setSel(null)} style={{ position: "absolute", inset: 0, zIndex: 20, background: "rgba(20,18,16,.35)", display: "flex", alignItems: "flex-end" }}>

@@ -5,7 +5,7 @@ export type Item = {
   id: string; store: string; name: string; brand: string | null; size: string | null; color: string | null;
   price: number | null; image_url: string | null; category: string; ordered_at: string; pick: "share" | "sell" | "private" | null;
   resale_low?: number | null; resale_high?: number | null; resale_note?: string | null;
-  for_whom?: Who | null;
+  for_whom?: Who | null; gmail_id?: string;
 };
 export type Who = "me" | "kids" | "partner" | "other";
 
@@ -18,7 +18,7 @@ const NOT_WEAR = /\b(i?pad|iphone|phone|tablet|laptop|kindle)\b.*\b(case|cover|s
 const pieceKey = (i: Item) => `${(i.brand || i.store).toLowerCase()}|${i.size ?? ""}|${i.name.toLowerCase().replace(/\b(men|women|boy|girl|kid)s?['’]?s?\b/g, "").replace(/[^a-z0-9]/g, "")}|${i.ordered_at.slice(0, 7)}`;
 
 export async function loadItems(): Promise<Item[]> {
-  const { data } = await supabase().from("items").select("id, store, name, brand, size, color, price, image_url, category, ordered_at, pick, resale_low, resale_high, resale_note, for_whom").in("category", WEAR).eq("hidden", false).order("ordered_at", { ascending: false }).limit(3000);
+  const { data } = await supabase().from("items").select("id, store, name, brand, size, color, price, image_url, category, ordered_at, pick, resale_low, resale_high, resale_note, for_whom, gmail_id").in("category", WEAR).eq("hidden", false).order("ordered_at", { ascending: false }).limit(3000);
   // Keep the more specific name ("Women's Lima" over "Lima"): it tells us who it's for.
   const best = new Map<string, Item>();
   for (const i of (data ?? []) as Item[]) {
@@ -31,6 +31,11 @@ export async function loadItems(): Promise<Item[]> {
 
 export async function setPick(id: string, pick: Item["pick"]) {
   await supabase().from("items").update({ pick }).eq("id", id);
+}
+
+// Same choice for many pieces at once ("Keep the other 12 private").
+export async function setPicks(ids: string[], pick: Item["pick"]) {
+  for (let n = 0; n < ids.length; n += 200) await supabase().from("items").update({ pick }).in("id", ids.slice(n, n + 200));
 }
 
 // Removes a piece from her closet. It stays hidden after later imports; the order stays in Orders.
@@ -158,4 +163,16 @@ export function sizesByBrand(items: Item[]) {
     brand,
     sizes: [...cats.entries()].map(([cat, sizes]) => ({ cat, size: [...sizes.entries()].sort((a, b) => b[1] - a[1])[0][0], n: [...sizes.values()].reduce((a, b) => a + b, 0) })),
   })).sort((a, b) => b.sizes.reduce((s, x) => s + x.n, 0) - a.sizes.reduce((s, x) => s + x.n, 0));
+}
+
+// The brand a piece is filed under.
+export const brandOf = (i: Item) => i.brand || i.store;
+
+// Rainbow order for "By color". Unknown colors go last.
+const HUES = [/white|ivory|cream|ecru|natural/, /pink|blush|rose/, /red|burgundy|wine/, /orange|rust|coral|peach/, /yellow|butter|mustard/,
+  /tan|beige|camel|khaki|brown|chocolate/, /green|olive|sage/, /blue|navy|denim|indigo|sky/, /purple|lilac|lavender/, /gr[ae]y|silver|charcoal/, /black/];
+export function hueRank(color: string | null) {
+  const c = (color ?? "").toLowerCase();
+  const n = HUES.findIndex(r => r.test(c));
+  return n < 0 ? HUES.length : n;
 }
