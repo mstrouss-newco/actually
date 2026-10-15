@@ -96,7 +96,7 @@ export default function People() {
                   <Link href={`/u/${m.handle}`} style={{ display: "block", textDecoration: "none" }}>
                     <div style={{ display: "flex", gap: 6 }}>
                       {[0, 1, 2].map(n => m.picks[n]
-                        ? <div key={n} style={{ flex: 1, minWidth: 0 }}><ItemImage src={m.picks[n].image_url} store={m.picks[n].store} w="100%" h={76} radius={12} size={20} /></div>
+                        ? <div key={n} style={{ flex: 1, minWidth: 0 }}><ItemImage src={m.picks[n].image_url} store={m.picks[n].store} name={m.picks[n].name} w="100%" h={76} radius={12} size={20} /></div>
                         : <div key={n} style={{ flex: 1, height: 76, borderRadius: 12, background: "var(--tile)" }} />)}
                     </div>
                     <div style={{ fontWeight: 700, fontSize: 15, marginTop: 10 }}>{m.handle}</div>

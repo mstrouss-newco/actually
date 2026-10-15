@@ -38,7 +38,7 @@ export default function WorthItem({ params }: { params: Promise<{ id: string }> 
           <Link href="/earn/worth" style={{ display: "inline-flex", alignItems: "center", height: 40, padding: "0 14px", borderRadius: 999, background: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none" }}>← Worth</Link>
           <div style={{ display: "flex", gap: 16, alignItems: "flex-end", marginTop: 20 }}>
             <div style={{ transform: "rotate(-3deg)", boxShadow: "0 10px 24px rgba(20,18,16,.12)", borderRadius: 22 }}>
-              <ItemImage src={item.image_url} store={item.store} w={110} h={138} radius={22} size={52} />
+              <ItemImage src={item.image_url} store={item.store} name={item.name} w={110} h={138} radius={22} size={52} />
             </div>
             <div style={{ flex: 1, minWidth: 0, paddingBottom: 4 }}>
               <div className="kicker">{item.brand || item.store}{item.size ? ` · size ${item.size}` : ""}</div>

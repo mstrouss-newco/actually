@@ -4,11 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { Art } from "@/lib/ui";
 import { signIn } from "@/lib/signin";
+import { SkipIfSignedIn } from "@/lib/signed-in";
 
 export default function Login() {
   const [busy, setBusy] = useState(false);
   return (
     <main className="screen">
+      <SkipIfSignedIn />
       <Link href="/" className="logo" style={{ textDecoration: "none" }}>Actually</Link>
       <div style={{ display: "flex", justifyContent: "center", marginTop: 48 }}>
         <Art src="shoes-runner-sky" w={92} h={116} radius={20} style={{ transform: "rotate(-9deg) translateX(16px)" }} />

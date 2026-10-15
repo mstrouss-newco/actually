@@ -65,11 +65,13 @@ const KNOWN: Record<string, string> = {
   homedepot: "homedepot.com", lowes: "lowes.com", bestbuy: "bestbuy.com", macys: "macys.com", kohls: "kohls.com",
   dickssportinggoods: "dickssportinggoods.com", underarmour: "underarmour.com", nike: "nike.com", adidas: "adidas.com",
   lululemon: "lululemon.com", patagonia: "patagonia.com", sunglassresort: "sunglassresort.com",
+  doen: "shopdoen.com", tck: "tck.com", tckkrazisox: "tck.com", champion: "champion.com", championsports: "championsports.com",
+  rainbowsandals: "rainbowsandals.com", flintandtinder: "flintandtinder.com", relwen: "relwen.com", kizik: "kizik.com",
 };
 // The store's web address: the one from the email, else a good guess from its name.
 export function storeDomain(store: string, domain?: string | null) {
   if (domain) return domain;
-  const key = store.toLowerCase().replace(/[’']s\b/g, "s").replace(/\.(com|co|net|shop)$/, "").replace(/[^a-z0-9]/g, "");
+  const key = store.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']s\b/g, "s").replace(/\.(com|co|net|shop)$/, "").replace(/[^a-z0-9]/g, "");
   if (!key) return null;
   return KNOWN[key] ?? `${key}.com`;
 }
@@ -108,10 +110,24 @@ export function Progress({ step, h = 4 }: { step: number; h?: number }) {
   );
 }
 
-// Product photo from the order email, or the store logo if there isn't one or it won't load.
-export function ItemImage({ src, store, domain, w, h, radius = 18, size = 28 }: { src: string | null; store: string; domain?: string | null; w: number | string; h: number | string; radius?: number; size?: number }) {
+// When a product has no photo: a plain tile with its name (big tiles) or first letter (small ones).
+// Never a store logo, since logos are for brands.
+export function NameTile({ name, store, w, h, radius = 18, size = 28 }: { name: string; store: string; w: number | string; h: number | string; radius?: number; size?: number }) {
+  const big = typeof w === "string" || w >= 90;
+  const label = name.trim() || store;
+  return (
+    <div className="serif" aria-label={label} style={{ width: w, height: h, borderRadius: radius, background: tint(store), flex: "none", display: "flex", alignItems: "center", justifyContent: "center", padding: big ? 12 : 0, overflow: "hidden", textAlign: "center" }}>
+      {big
+        ? <span style={{ fontSize: Math.min(20, Math.max(14, size * 0.45)), lineHeight: 1.15, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "anywhere" }}>{label}</span>
+        : <span style={{ fontSize: size, fontStyle: "italic" }}>{label.charAt(0).toUpperCase()}</span>}
+    </div>
+  );
+}
+
+// Product photo from the order email. Without one, a tile with the product's name.
+export function ItemImage({ src, store, name, w, h, radius = 18, size = 28 }: { src: string | null; store: string; name?: string; domain?: string | null; w: number | string; h: number | string; radius?: number; size?: number }) {
   const [bad, setBad] = useState(false);
-  if (!src || bad) return <StoreTile store={store} domain={domain} w={w} h={h} radius={radius} size={size} />;
+  if (!src || bad) return <NameTile name={name ?? store} store={store} w={w} h={h} radius={radius} size={size} />;
   return (
     <div style={{ width: w, height: h, borderRadius: radius, background: "var(--tile)", flex: "none", overflow: "hidden" }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}

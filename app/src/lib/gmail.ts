@@ -2,7 +2,7 @@ import { SENSITIVE, SENSITIVE_BRAND, SENSITIVE_IN_SUBJECT } from "./sensitive";
 
 // Reads shopping emails from Gmail in the browser, using the read-only access she granted.
 
-export type Kind = "order" | "shipping" | "delivered" | "return" | "refund" | "receipt" | "other";
+export type Kind = "order" | "shipping" | "delivered" | "return" | "refund" | "receipt" | "cancel" | "other";
 export type Order = {
   from?: string; snippet?: string;
   gmail_id: string; store: string; store_domain: string | null; subject: string;
@@ -10,7 +10,9 @@ export type Order = {
 };
 
 const API = "https://gmail.googleapis.com/gmail/v1/users/me/messages";
-const QUERY = '(category:purchases OR subject:(order OR receipt OR shipped OR delivered OR refund OR return)) -category:promotions -category:social -category:forums newer_than:3y';
+const QUERY = '(category:purchases OR subject:(order OR receipt OR shipped OR delivered OR refund OR return OR cancelled OR canceled)) -category:promotions -category:social -category:forums newer_than:3y';
+// Cancellations and refunds often land in Promotions, so they get their own search.
+const CANCEL_QUERY = '(subject:(cancel OR cancelled OR canceled OR cancellation OR refund) OR "cancelled order" OR "canceled order" OR "order has been cancelled" OR "order has been canceled") -category:social -category:forums newer_than:3y';
 const MAX = 1500;
 
 // Senders that aren't stores.
@@ -36,10 +38,15 @@ async function get<T>(url: string, token: string): Promise<T> {
 }
 
 export async function listIds(token: string, since?: string | null): Promise<string[]> {
+  // After the first scan, only look at mail since the last one (with a day of overlap).
+  const after = since ? ` after:${Math.floor(Date.parse(since) / 1000) - 86400}` : "";
+  const [main, cancels] = await Promise.all([listQuery(token, QUERY + after), listQuery(token, CANCEL_QUERY + after)]);
+  return [...new Set([...main, ...cancels])];
+}
+
+async function listQuery(token: string, query: string): Promise<string[]> {
   const ids: string[] = [];
   let page = "";
-  // After the first scan, only look at mail since the last one (with a day of overlap).
-  const query = since ? `${QUERY} after:${Math.floor(Date.parse(since) / 1000) - 86400}` : QUERY;
   do {
     const q = new URLSearchParams({ q: query, maxResults: "500", ...(page ? { pageToken: page } : {}) });
     const res = await get<{ messages?: { id: string }[]; nextPageToken?: string }>(`${API}?${q}`, token);
@@ -62,6 +69,8 @@ export async function readOne(id: string, token: string): Promise<Order | null> 
 // Order contents that point to health. Never saved, even from regular stores.
 const SENSITIVE_SUBJECT = /health ?care|medical|pharmacy|prescription|vitamin|\bhealth|hair (loss|fiber|regrowth)|minoxidil|rogaine|toppik|wellness|eye ?glasses|contact lens|supplement|sexual|incontinence|pregnan|ovulation|fertility|covid|test kit|first aid/i;
 const NOT_ORDER = /order (today|now|by)\b|last chance|don't miss|ends (soon|tonight|today)|reminder|time to review|review it|meet your expectations|rate (your|us)|how did we do|survey|feedback|tell us what you think|write a review|recommended for you/i;
+// "Your order has been cancelled", "We have cancelled order #1103923".
+const CANCELLED = /\border (has been |was |is )?cancel+ed\b|\b(we('ve| have)|has been|have been|was|were) cancel+ed\b|\bcancel+ation (confirm|of (your )?order)|\bcancel+ed (order|item)s?\b|^cancel+ed\b/i;
 // Invisible direction marks some stores put around order numbers.
 const INVISIBLE = /[\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g;
 
@@ -76,12 +85,13 @@ export function parse(id: string, from: string, subjectRaw: string, snippetRaw: 
 
   const text = `${subject} ${snippet}`;
   const kind: Kind =
+    CANCELLED.test(text) && !/\b(shipped|delivered)\b/i.test(subject) ? "cancel" :
     /\brefund(ed| issued| processed| is on| on its way| has been)|your refund|advance refund/i.test(text) ? "refund" :
     /return (label|request|started|received)|your return|dropoff confirmed/i.test(text) ? "return" :
     /delivered|has arrived/i.test(subject) ? "delivered" :
     /shipped|on (its|the) way|out for delivery|tracking|delivery estimate|arriving|arrives/i.test(subject) ? "shipping" :
     /receipt/i.test(subject) ? "receipt" :
-    /\b(your|new|online|web) order\b|\border (confirm|number|no\b|#|received|placed|details|summary|from|is|has|was)|thank(s| you) for (your )?(order|purchase|shopping)|\bpurchase (confirm|receipt)|^ordered\b|^order\b/i.test(subject) ? "order" : "other";
+    /\b(your|new|online|web) order\b|\byour (?!next|first|last|new)[\w&'’.-]+ order\b|details inside|\border (confirm|number|no\b|#|received|placed|details|summary|from|is|has|was)|thank(s| you) for (your )?(order|purchase|shopping)|\bpurchase (confirm|receipt)|^ordered\b|^order\b/i.test(subject) ? "order" : "other";
   if (kind === "other") return null;
 
   const order_no = [...text.matchAll(/(?:order|confirmation)\s*(?:number|no\.?|#)?\s*[:#]?\s*(?=[A-Z0-9-]*\d)([A-Z0-9][A-Z0-9-]{4,24})/gi)]

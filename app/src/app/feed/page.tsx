@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { type FeedItem, type Profile, loadFeed, loadProfilePage, myHandle, similarPeople } from "@/lib/social";
-import { Avatar, FeedCard, FollowButton, MyGrid, ShareLink } from "@/lib/feed-ui";
+import { Avatar, FeedCard, FollowButton, MyGrid, ShareLink, displayName } from "@/lib/feed-ui";
 import { loadItems, toSort } from "@/lib/items";
 import { ItemImage, TabBar } from "@/lib/tabs";
 
@@ -103,7 +103,7 @@ export default function Feed() {
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginTop: 8 }}>
                         {m.picks.map(k => (
                           <div key={k.id} style={{ minWidth: 0 }}>
-                            <ItemImage src={k.image_url} store={k.store} w="100%" h={124} radius={16} size={30} />
+                            <ItemImage src={k.image_url} store={k.store} name={k.name} w="100%" h={124} radius={16} size={30} />
                             <div style={{ fontSize: 12, fontWeight: 700, marginTop: 6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{k.name}</div>
                           </div>
                         ))}
@@ -112,7 +112,16 @@ export default function Feed() {
                   )}
                 </div>
               ))}
-              {matches && matches.length === 0 && <p className="lead" style={{ padding: "0 4px", margin: 0 }}>No matches yet. They show up as more people share pieces from brands you buy.</p>}
+              {matches && matches.length === 0 && (
+                <div style={{ background: "var(--chip)", borderRadius: 26, padding: "20px 18px" }}>
+                  <div className="serif" style={{ fontSize: 24, lineHeight: 1.1 }}>Find people who shop like <em>you.</em></div>
+                  <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 8, lineHeight: 1.45 }}>Matches show up when people share pieces from brands you buy. Share a few of yours to get started.</div>
+                  <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                    <Link href="/sort" className="btn" style={{ marginTop: 0, height: 46, fontSize: 14 }}>Share pieces</Link>
+                    <Link href="/people" className="btn btn-line" style={{ marginTop: 0, height: 46, fontSize: 14 }}>Find people</Link>
+                  </div>
+                </div>
+              )}
             </div>
           </>
         )}
@@ -120,9 +129,9 @@ export default function Feed() {
         {handle && tab === "mine" && (
           <>
             <div style={{ padding: "22px 20px 0", display: "flex", alignItems: "center", gap: 16 }}>
-              <div className="serif" style={{ width: 76, height: 76, borderRadius: "50%", background: "#EBE3FF", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 30, color: "#5B44B0", flex: "none" }}>{handle.charAt(0).toUpperCase()}</div>
+              <Avatar handle={handle} size={76} />
               <div style={{ minWidth: 0 }}>
-                <div className="serif" style={{ fontSize: 28, lineHeight: 1, overflowWrap: "anywhere" }}>{handle}</div>
+                <div className="serif" style={{ fontSize: 28, lineHeight: 1, overflowWrap: "anywhere" }}>{displayName(handle)}</div>
                 <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 4 }}>{mine ? `${mine.followers} ${mine.followers === 1 ? "follower" : "followers"} · ${mine.following} following` : "Loading…"}</div>
               </div>
             </div>

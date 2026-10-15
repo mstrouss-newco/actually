@@ -72,6 +72,7 @@ design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPAB
    into `items` (also numbered shipping emails for orders with no order email, except Amazon). After the first import, only mail since `profiles.last_import_at` is read.
 3. **Shopping email:** mail to name@shop.myocto.co → Resend → `inbound-email` forwards
    it to the user's inbox, screens it and saves orders and items.
+3b. **Catch-up pass:** when `profiles.backfill_v` is below `BACKFILL` in `lib/importer.ts`, the next import re-lists all past mail (new emails only), then `fillPhotos()` finds missing product photos and `readReturnRules()` reads return rules for recent orders. Cancellations have their own Gmail search (`CANCEL_QUERY`, includes Promotions).
 4. **Grouping:** `groupOrders()` in `lib/orders.ts` turns emails into orders in the
    browser: store key (web address, or name for relay senders) + order number, else store +
    contents within 21 days (Amazon), else an email with neither joins the store's latest
@@ -103,6 +104,10 @@ Deploying a function: use the Supabase connector's deploy tool with the file con
 from this repo. Keep repo and deployed code identical.
 
 ## Database
+
+Orders kinds: order, shipping, delivered, return, refund, receipt, cancel. A cancel email, or a refund within 3 days of ordering with nothing shipped, makes the order "cancelled": it shows under Orders > Cancelled and its pieces stay out of Closet and Worth.
+Order pieces are one per product and color (`groupOrders`), so three colors of a tee are three pieces.
+Product images never fall back to a store logo: `ItemImage` shows a plain name tile. Logos (`StoreTile`) are for brands and stores only.
 
 Tables: `profiles`, `orders`, `items`, `rewards`, `follows`, `blocked_stores`, `gmail_tokens` (no policies; server only).
 `items.for_whom` (me / kids / partner / other, guessed by `whoFor()` in `lib/items.ts` when empty)
@@ -158,4 +163,4 @@ SQL to `supabase/migrations/<version>_<name>.sql`. Run the security advisor afte
 - Google app is in Testing: each tester's Gmail must be added in Google Cloud. Going
   past 100 users needs Google's review plus privacy policy, terms and delete-account.
 - Restaurants, tickets, groceries and digital purchases are skipped on purpose.
-- Return windows are a 30-day estimate, not per-store policy.
+- Return windows use each store's rule when its emails state one (`orders.return_days`, `return_note`, read by `read-order`); otherwise the usual 30 days, and the order page says so.

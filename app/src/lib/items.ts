@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { readFullText } from "./gmail";
+import { cancelledEmails } from "./orders";
 
 export type Item = {
   id: string; store: string; name: string; brand: string | null; size: string | null; color: string | null;
@@ -9,8 +10,8 @@ export type Item = {
 };
 export type Who = "me" | "kids" | "partner" | "other";
 
-// Closet, Sort and Worth only show things you wear. Same list as the value-items function.
-export const WEAR = ["tops", "bottoms", "dresses", "outerwear", "shoes", "bags", "accessories"];
+import { WEAR } from "./wear";
+export { WEAR };
 
 // Things the reader sometimes files under accessories or bags that you don't wear.
 const NOT_WEAR = /\b(i?pad|iphone|phone|tablet|laptop|kindle)\b.*\b(case|cover|stand|sleeve)\b|\b(case|cover) for\b|adapter|charger|cable|key ?card|compression bags?|packing cubes?|vacuum bags?|luggage tags?/i;
@@ -18,13 +19,15 @@ const NOT_WEAR = /\b(i?pad|iphone|phone|tablet|laptop|kindle)\b.*\b(case|cover|s
 const pieceKey = (i: Item) => `${(i.brand || i.store).toLowerCase()}|${i.size ?? ""}|${i.name.toLowerCase().replace(/\b(men|women|boy|girl|kid)s?['’]?s?\b/g, "").replace(/[^a-z0-9]/g, "")}|${i.ordered_at.slice(0, 7)}`;
 
 export async function loadItems(): Promise<Item[]> {
+  // Pieces from cancelled orders never arrived, so they stay out of the closet.
+  const cancelled = await cancelledEmails();
   const { data } = await supabase().from("items").select("id, store, name, brand, size, color, price, image_url, category, ordered_at, pick, resale_low, resale_high, resale_note, for_whom, gmail_id").in("category", WEAR).eq("hidden", false).order("ordered_at", { ascending: false }).limit(3000);
   // Keep the more specific name ("Women's Lima" over "Lima"): it tells us who it's for.
   // Two colors of one piece (a tee in Black and White) stay separate; a missing color matches any.
   const best = new Map<string, Item[]>();
   const sameColor = (a: Item, b: Item) => !a.color || !b.color || a.color.toLowerCase() === b.color.toLowerCase();
   for (const i of (data ?? []) as Item[]) {
-    if (NOT_WEAR.test(i.name)) continue;
+    if (NOT_WEAR.test(i.name) || cancelled.has(i.gmail_id ?? "")) continue;
     const list = best.get(pieceKey(i)) ?? [];
     const n = list.findIndex(c => sameColor(c, i));
     if (n < 0) list.push(i);
@@ -66,6 +69,8 @@ export function whoFor(i: Item, all: Item[]): Who {
   if (KID.test(i.name) || (i.size && KID.test(i.size))) return "kids";
   // Same piece as a kids' one ("Uniform Belt" with and without "Youth").
   if (all.some(o => o !== i && o.name === i.name && (KID.test(o.name) || (o.size && KID.test(o.size))))) return "kids";
+  // Bought the same week as kids' pieces in the same size (baseball socks with kids' baseball pants).
+  if (i.size && all.some(o => o !== i && o.for_whom === "kids" && o.size === i.size && Math.abs(Date.parse(o.ordered_at) - Date.parse(i.ordered_at)) < 7 * 86400000 && (o.brand || o.store) !== (i.brand || i.store) && o.store === i.store)) return "kids";
   return "me";
 }
 
@@ -105,11 +110,11 @@ export async function setWho(i: Item, who: Who, all: Item[]) {
 // Order emails the AI hasn't read yet. One email per order is enough.
 export async function unreadOrderEmails(): Promise<string[]> {
   // Order emails first. Shipping emails too, for orders that never sent one (Chewy Autoship,
-  // Huckberry). Amazon's shipping emails already say what's inside, so they're skipped.
+  // Huckberry, Amazon), so they get real names and photos.
   const { data } = await supabase().from("orders").select("gmail_id, store, store_domain, order_no, kind").eq("items_read", false)
     .in("kind", ["order", "receipt", "shipping"]).order("sent_at", { ascending: false }).limit(1500);
   const rows = ((data ?? []) as { gmail_id: string; store: string; store_domain: string | null; order_no: string | null; kind: string }[])
-    .filter(r => r.kind !== "shipping" || (r.order_no && !/amazon/i.test(r.store_domain ?? "")))
+    .filter(r => r.kind !== "shipping" || r.order_no)
     .sort((a, b) => (a.kind === "shipping" ? 1 : 0) - (b.kind === "shipping" ? 1 : 0));
   // Orders already read through another email don't need their shipping email read too.
   const { data: read } = await supabase().from("orders").select("store, store_domain, order_no").eq("items_read", true).in("kind", ["order", "receipt", "shipping"]).not("order_no", "is", null).limit(5000);
@@ -146,6 +151,74 @@ export async function readItems(token: string, onProgress: Progress): Promise<"d
   };
   await Promise.all(Array.from({ length: 4 }, worker));
   return state;
+}
+
+// ---------- catch-up passes ----------
+
+const tried = (key: string) => {
+  try { return new Set<string>(JSON.parse(localStorage.getItem(key) ?? "[]")); } catch { return new Set<string>(); }
+};
+const remember = (key: string, set: Set<string>) => { try { localStorage.setItem(key, JSON.stringify([...set].slice(-3000))); } catch {} };
+
+// Finds product photos for pieces that came in without one, from that order's other emails too.
+export async function fillPhotos(token: string) {
+  const sb = supabase();
+  const { data } = await sb.from("items").select("id, gmail_id").in("category", WEAR).eq("hidden", false).or("image_url.is.null,image_url.eq.").limit(200);
+  const done = tried("photos-tried");
+  const need = ((data ?? []) as { id: string; gmail_id: string }[]).filter(i => !done.has(i.id));
+  if (!need.length) return;
+  const byEmail = new Map<string, string[]>();
+  for (const i of need) byEmail.set(i.gmail_id, [...(byEmail.get(i.gmail_id) ?? []), i.id]);
+  const { data: rows } = await sb.from("orders").select("gmail_id, store_domain, order_no").in("gmail_id", [...byEmail.keys()]);
+  let reads = 0;
+  for (const [gmail_id, ids] of byEmail) {
+    const row = ((rows ?? []) as { gmail_id: string; store_domain: string | null; order_no: string | null }[]).find(r => r.gmail_id === gmail_id);
+    // The order's own confirmation email first, then this one.
+    let emails = [gmail_id];
+    if (row?.order_no && row.store_domain) {
+      const { data: sib } = await sb.from("orders").select("gmail_id, kind").eq("store_domain", row.store_domain).eq("order_no", row.order_no).limit(10);
+      const list = ((sib ?? []) as { gmail_id: string; kind: string }[]).sort((a, b) => Number(b.kind === "order") - Number(a.kind === "order")).map(r => r.gmail_id);
+      emails = [...new Set([...list, gmail_id])];
+    }
+    let left = ids;
+    for (const e of emails) {
+      if (!left.length || reads >= 30) break;
+      reads++;
+      try {
+        const text = await readFullText(e, token);
+        await sb.functions.invoke("read-order", { body: { gmail_id: e, text, mode: "photos", item_ids: left } });
+        const { data: still } = await sb.from("items").select("id").in("id", left).or("image_url.is.null,image_url.eq.");
+        left = ((still ?? []) as { id: string }[]).map(r => r.id);
+      } catch (err) { if ((err as Error).message === "expired") throw err; }
+    }
+    ids.forEach(id => done.add(id));
+  }
+  remember("photos-tried", done);
+}
+
+// Reads each recent order's return rules from its email, once.
+export async function readReturnRules(token: string) {
+  const sb = supabase();
+  const since = new Date(Date.now() - 75 * 86400000).toISOString();
+  const { data } = await sb.from("orders").select("gmail_id, store, store_domain, order_no, kind").eq("rules_read", false)
+    .in("kind", ["order", "receipt", "shipping", "delivered"]).gte("sent_at", since).order("sent_at", { ascending: false }).limit(300);
+  const rows = ((data ?? []) as { gmail_id: string; store: string; store_domain: string | null; order_no: string | null; kind: string }[])
+    .sort((a, b) => Number(b.kind === "order" || b.kind === "receipt") - Number(a.kind === "order" || a.kind === "receipt"));
+  const seen = new Set<string>();
+  const pick = rows.filter(r => {
+    const key = r.order_no ? `${r.store_domain ?? r.store}|${r.order_no}` : r.gmail_id;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 40);
+  for (let n = 0; n < pick.length; n += 4) {
+    await Promise.all(pick.slice(n, n + 4).map(async r => {
+      try {
+        const text = await readFullText(r.gmail_id, token);
+        await sb.functions.invoke("read-order", { body: { gmail_id: r.gmail_id, text, mode: "rules" } });
+      } catch (err) { if ((err as Error).message === "expired") throw err; }
+    }));
+  }
 }
 
 export const CATS: [string, string][] = [

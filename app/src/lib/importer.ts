@@ -4,7 +4,7 @@
 // and any screen can show its progress.
 import { gmailToken, supabase } from "./supabase";
 import { type Order, listIds, readOne } from "./gmail";
-import { readItems } from "./items";
+import { fillPhotos, readItems, readReturnRules } from "./items";
 import { scanRewards } from "./earn";
 
 export type ImportState = {
@@ -16,6 +16,9 @@ export type ImportState = {
 let state: ImportState = { stage: "idle", read: 0, total: 0, orders: 0, skipped: 0, latest: [], itemsDone: 0, itemsTotal: 0, itemsFound: 0 };
 const listeners = new Set<(s: ImportState) => void>();
 const set = (patch: Partial<ImportState>) => { state = { ...state, ...patch }; listeners.forEach(l => l(state)); };
+
+// Bump to run the catch-up pass once more for everyone.
+const BACKFILL = 1;
 
 export const importState = () => state;
 export function onImport(fn: (s: ImportState) => void) { listeners.add(fn); return () => { listeners.delete(fn); }; }
@@ -29,11 +32,18 @@ export async function startImport() {
   const token = await gmailToken();
   if (!token || !data.session) return set({ stage: "reconnect" });
   const uid = data.session.user.id;
-  const { data: me } = await sb.from("profiles").select("last_import_at").eq("id", uid).maybeSingle();
+  const { data: me } = await sb.from("profiles").select("last_import_at, backfill_v").eq("id", uid).maybeSingle();
   const started = new Date().toISOString();
+  // One catch-up pass over all past mail: finds cancellations and order emails the old rules missed.
+  const catchUp = !!me?.last_import_at && (me?.backfill_v ?? 0) < BACKFILL;
 
   try {
-    const ids = await listIds(token, me?.last_import_at);
+    let ids = await listIds(token, catchUp ? null : me?.last_import_at);
+    if (catchUp) {
+      const { data: have } = await sb.from("orders").select("gmail_id").limit(10000);
+      const known = new Set(((have ?? []) as { gmail_id: string }[]).map(r => r.gmail_id));
+      ids = ids.filter(id => !known.has(id));
+    }
     set({ total: ids.length });
     const pending: Order[] = [];
     const keys = new Set<string>();
@@ -81,6 +91,10 @@ export async function startImport() {
     // Then read what was in each new order.
     set({ stage: "items" });
     await readItems(token, (done, total, found) => set({ itemsDone: done, itemsTotal: total, itemsFound: found }));
+    // Photos for pieces that came in without one, and each store's return rules.
+    await fillPhotos(token).catch(() => null);
+    await readReturnRules(token).catch(() => null);
+    if ((catchUp || !me?.last_import_at) && !state.skipped) await sb.from("profiles").update({ backfill_v: BACKFILL }).eq("id", uid);
     // Points and credit too, while Google's pass is still fresh.
     set({ stage: "points" });
     await scanRewards(() => {}).catch(() => null);

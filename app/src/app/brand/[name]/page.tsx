@@ -3,20 +3,20 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { CATS, type Item, brandOf, loadItems, sizesByBrand, whoFor } from "@/lib/items";
-import { type OrderGroup, fmtDate, isArriving, isReturn, loadOrders, orderTitle, returnDaysLeft } from "@/lib/orders";
-import { ItemImage, TabBar, tint } from "@/lib/tabs";
+import { type OrderGroup, dayLabel, fmtDate, isArriving, isReturn, loadOrders, orderTitle, returnBy, returnDaysLeft, ruleText, windowDays } from "@/lib/orders";
+import { ItemImage, StoreTile, TabBar, tint } from "@/lib/tabs";
 
 const month = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", year: "numeric" });
 
 function OrderRow({ g }: { g: OrderGroup }) {
   const left = returnDaysLeft(g);
   const [sub, pill, bg] = isArriving(g) ? ["On its way", "Arriving", "#FFF0BF"]
-    : left ? [`Delivered ${fmtDate(g.last_at)}`, `${left} ${left === 1 ? "day" : "days"} to return`, "#FFE1DC"]
+    : left ? [`Return by ${dayLabel(returnBy(g))}`, `${left} ${left === 1 ? "day" : "days"} left`, "#FFE1DC"]
     : isReturn(g) ? [`${g.stage === "refunded" ? "Refunded" : "Return started"} ${fmtDate(g.last_at)}`, g.stage === "refunded" ? "Refunded" : "Returning", "#F4F1EE"]
     : [`Ordered ${fmtDate(g.ordered_at)}`, null, ""];
   return (
     <Link href={`/order/${encodeURIComponent(g.key)}`} className="orow" style={{ display: "flex", alignItems: "center", gap: 14, background: "#FAF8F6", borderRadius: 22, padding: "12px 16px 12px 12px", textDecoration: "none" }}>
-      <ItemImage src={g.photo} store={g.store} domain={g.store_domain} w={56} h={68} radius={14} size={22} />
+      <ItemImage src={g.photo} store={g.store} name={g.items[0] ?? g.what ?? undefined} domain={g.store_domain} w={56} h={68} radius={14} size={22} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{orderTitle(g)}</div>
         <div style={{ fontSize: 13, color: "var(--muted)" }}>{sub}</div>
@@ -54,6 +54,9 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
   const shops = [...new Set(mine.map(i => i.store))];
   const returnTo = shops.length === 1 ? shops[0] : name;
   const count = theirs.length || new Set(mine.map(i => i.gmail_id)).size;
+  // The shop's own rule, from any of its emails.
+  const ruled = theirs.find(g => ruleText(g));
+  const rule = ruled ? ruleText(ruled) : null;
 
   return (
     <main className="tabscreen">
@@ -62,8 +65,9 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
           <Link href="/closet?view=brands" className="back" style={{ height: 40, padding: "0 14px 0 8px", background: "#fff", fontSize: 14 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>Brands
           </Link>
-          <h1 className="serif" style={{ fontWeight: 400, fontSize: name.length > 20 ? 34 : name.length > 12 ? 44 : 64, lineHeight: 1.05, letterSpacing: "-0.03em", margin: "28px 0 0", overflowWrap: "break-word", hyphens: "auto" }}>{name}</h1>
-          {items && <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 6 }}>{count} {count === 1 ? "order" : "orders"}{first ? ` since ${new Date(first).getFullYear()}` : ""}{mine[0] ? ` · last one ${fmtDate(mine[0].ordered_at)}` : ""}</div>}
+          <div style={{ marginTop: 24 }}><StoreTile store={name} w={64} h={64} radius={18} size={28} /></div>
+          <h1 className="serif" style={{ fontWeight: 400, fontSize: name.length > 20 ? 34 : name.length > 12 ? 44 : 64, lineHeight: 1.05, letterSpacing: "-0.03em", margin: "14px 0 0", overflowWrap: "break-word", hyphens: "auto" }}>{name}</h1>
+          {items && <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 6 }}>{count} {count === 1 ? "order" : "orders"}{first && new Date(first).getFullYear() < new Date().getFullYear() ? ` since ${new Date(first).getFullYear()}` : ""}{mine[0] ? ` · last one ${fmtDate(mine[0].ordered_at)}` : ""}</div>}
         </div>
 
         {sizes.length > 0 && (
@@ -89,9 +93,9 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
 
         {(mine.length > 0 || theirs.length > 0) && <div style={{ margin: "22px 16px 0", background: "var(--ink)", color: "#fff", borderRadius: 26, padding: "20px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
           <div className="serif" style={{ fontSize: 24 }}>Returning to {returnTo}</div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}><span style={{ color: "#B9B3AC" }}>Window</span><span style={{ fontWeight: 700 }}>About 30 days</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, gap: 12 }}><span style={{ color: "#B9B3AC" }}>Window</span><span style={{ fontWeight: 700, textAlign: "right" }}>{ruled?.returnDays ? `${windowDays(ruled)} days from delivery` : rule ?? "Not in their emails"}</span></div>
           <div style={{ height: 1, background: "#2E2B28" }} />
-          <div style={{ fontSize: 13, color: "#B9B3AC", lineHeight: 1.4 }}>Our estimate for now. We&apos;ll add each store&apos;s own rules soon.</div>
+          <div style={{ fontSize: 13, color: "#B9B3AC", lineHeight: 1.4 }}>{rule ? `From ${ruled!.store}'s email: ${rule}.` : `${returnTo}'s emails don't say. Most stores allow 30 days, so check their site before you send something back.`}</div>
         </div>}
 
         {mine.length > 0 && (
@@ -100,9 +104,9 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
             <div style={{ display: "flex", gap: 12, overflowX: "auto", padding: "12px 20px 4px" }}>
               {mine.slice(0, 20).map(i => (
                 <div key={i.id} style={{ flex: "none", width: 132, display: "flex", flexDirection: "column", gap: 6 }}>
-                  <ItemImage src={i.image_url} store={i.store} w={132} h={164} radius={22} size={44} />
+                  <ItemImage src={i.image_url} store={i.store} name={i.name} w={132} h={164} radius={22} size={44} />
                   <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{i.name}</div>
-                  <div style={{ fontSize: 12, color: "var(--muted)" }}>{[i.size && `Size ${i.size}`, month(i.ordered_at)].filter(Boolean).join(" · ")}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)" }}>{[mine.some(o => o !== i && o.name === i.name) && i.color, i.size && `Size ${i.size}`, month(i.ordered_at)].filter(Boolean).join(" · ")}</div>
                 </div>
               ))}
             </div>

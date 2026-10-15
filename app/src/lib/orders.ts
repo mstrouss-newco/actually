@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { WEAR } from "./items";
+import { WEAR } from "./wear";
 
 export type Summary = {
   orders: number; stores: number; since: number | null;
@@ -53,7 +53,7 @@ export type OrderGroup = {
   key: string; store: string; store_domain: string | null; order_no: string | null; amount: number | null;
   ordered_at: string; last_at: string; events: Event[];
   what: string | null; items: string[];
-  stage: "placed" | "shipped" | "delivered" | "returning" | "refunded";
+  stage: "placed" | "shipped" | "delivered" | "returning" | "refunded" | "cancelled";
   inStore: boolean;
   // Counted as delivered because it went quiet, not because a delivery email came ("Likely arrived").
   assumed: boolean;
@@ -62,10 +62,12 @@ export type OrderGroup = {
   // Product photo for the order (clothes first), and each piece with its photo.
   photo: string | null;
   pieces: Piece[];
+  // Return rules from the store's emails. Null days means the emails don't say.
+  returnDays: number | null; returnNote: string | null;
 };
-export type Piece = { name: string; img: string | null; wear: boolean };
+export type Piece = { name: string; img: string | null; wear: boolean; color?: string | null };
 
-type FullRow = Row & { subject: string | null; store_domain: string | null };
+type FullRow = Row & { subject: string | null; store_domain: string | null; return_days?: number | null; return_note?: string | null };
 const STAGE: Record<string, number> = { order: 0, receipt: 0, shipping: 1, delivered: 2, return: 3, refund: 4 };
 const STAGES = ["placed", "shipped", "delivered", "returning", "refunded"] as const;
 
@@ -81,7 +83,7 @@ export function describe(subject: string | null): string | null {
     s.match(/(?:return request confirmed|refund issued|dropoff confirmed|advance refund issued) for (.+?)\.*$/i)?.[1] ??
     s.match(/^(?:delivery estimate update|out for delivery|arriving[^:]*):\s*(?!\d)([^"\u201c#]{3,80})$/i)?.[1] ??
     null;
-  return m ? m.replace(/,? and (more|other)( items)?$/i, "").replace(/\.{2,}$/, "").trim() || null : null;
+  return m ? m.replace(/,? and (more|other)( items)?$/i, "").replace(/\.{2,}$/, "").replace(/[\s,;:–-]+$/, "").trim() || null : null;
 }
 
 const WINDOW = 21 * 86400000;
@@ -119,7 +121,7 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
     const at = Date.parse(r.sent_at);
     // The store's latest order from the last 10 days that hasn't arrived yet.
     const open = () => all.filter(o => keyOf.get(o) === sk && at - Date.parse(o.last_at) < 10 * DAY_MS
-      && !o.events.some(e => e.kind === "delivered" || e.kind === "refund")).sort((a, b) => b.last_at.localeCompare(a.last_at))[0];
+      && !o.events.some(e => e.kind === "delivered" || e.kind === "refund" || e.kind === "cancel")).sort((a, b) => b.last_at.localeCompare(a.last_at))[0];
     // 1. Same order number. 2. Same store and contents within three weeks (Amazon).
     let g = r.order_no ? byKey.get(`${sk}|${r.order_no}`) : undefined;
     const whatKey = what ? `${sk}|${what.toLowerCase()}` : null;
@@ -133,7 +135,7 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
     }
     if (!g) {
       g = { key: r.order_no ? `${sk}|${r.order_no}` : r.gmail_id, store: r.store, store_domain: sk.includes(".") ? sk : null,
-        order_no: r.order_no, amount: null, ordered_at: r.sent_at, last_at: r.sent_at, events: [], stage: "placed", what, items: [], inStore: false, assumed: false, wear: false, photo: null, pieces: [] };
+        order_no: r.order_no, amount: null, ordered_at: r.sent_at, last_at: r.sent_at, events: [], stage: "placed", what, items: [], inStore: false, assumed: false, wear: false, photo: null, pieces: [], returnDays: null, returnNote: null };
       all.push(g);
       keyOf.set(g, sk);
       if (r.order_no) byKey.set(g.key, g);
@@ -141,6 +143,8 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
     }
     g.events.push({ kind: r.kind, at: r.sent_at, gmail_id: r.gmail_id, subject: r.subject });
     if (r.amount != null && (g.amount == null || r.amount > g.amount)) g.amount = r.amount;
+    if (r.return_days != null) g.returnDays = r.return_days;
+    if (r.return_note) g.returnNote = r.return_note;
     if (!g.what && what) g.what = what;
     if (r.sent_at > g.last_at) g.last_at = r.sent_at;
     g.items.push(...(itemNames.get(r.gmail_id) ?? []));
@@ -163,6 +167,13 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
     g.store = nm ? [...nm.entries()].sort((a, b) => (b[1] + (b[0].includes(" ") ? 0.5 : 0)) - (a[1] + (a[0].includes(" ") ? 0.5 : 0)))[0][0] : cleanStore(g.store);
     g.events.sort((a, b) => a.at.localeCompare(b.at));
     g.stage = STAGES[Math.max(...g.events.map(e => STAGE[kindOf(e)] ?? 0))];
+    // Cancelled: the store said so, or it was refunded before anything shipped.
+    const moved = g.events.some(e => ["shipping", "delivered", "receipt"].includes(kindOf(e)));
+    // Refunded within three days of ordering, before anything shipped, counts as cancelled.
+    const placedAt = g.events.find(e => e.kind === "order")?.at;
+    const refundAt = g.events.find(e => e.kind === "refund")?.at;
+    const cancelled = g.events.some(e => e.kind === "cancel") ? !g.events.some(e => e.kind === "delivered")
+      : g.stage === "refunded" && !moved && !!placedAt && !!refundAt && Date.parse(refundAt) - Date.parse(placedAt) < 3 * DAY_MS;
     // A receipt with no shipping at all was bought in person.
     g.inStore = g.events.every(e => e.kind === "receipt");
     const quiet = now - Date.parse(g.last_at);
@@ -171,11 +182,27 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
     if (g.inStore || (g.stage === "shipped" && outForDelivery && quiet > 2 * DAY_MS)) g.stage = "delivered";
     // Shipped a week ago, or ordered two weeks ago, with no news since: it most likely arrived.
     else if ((g.stage === "shipped" && quiet > 7 * DAY_MS) || (g.stage === "placed" && quiet > 14 * DAY_MS)) { g.stage = "delivered"; g.assumed = true; }
-    g.items = dedupeNames(g.items);
-    const seen = new Set<string>();
-    g.pieces = g.pieces.filter(p => { const k = baseName(p.name); if (seen.has(k)) return false; seen.add(k); return true; })
-      .sort((a, b) => Number(b.wear) - Number(a.wear) || Number(!!b.img) - Number(!!a.img));
-    g.photo = g.pieces.find(p => p.img)?.img ?? null;
+    if (cancelled) { g.stage = "cancelled"; g.assumed = false; }
+    // One piece per product and color: a tee in Black, White and Charcoal is three pieces.
+    // "Lima" and "Men's Lima" in the same color, from two emails, are one (keep the fuller name).
+    const best = new Map<string, Piece>();
+    for (const p of g.pieces) {
+      const k = `${baseName(p.name)}|${(p.color ?? "").toLowerCase()}`;
+      const had = best.get(k);
+      if (!had || p.name.length > had.name.length) best.set(k, { ...p, img: p.img || had?.img || null });
+      else if (!had.img && p.img) had.img = p.img;
+    }
+    g.pieces = [...best.values()].sort((a, b) => Number(b.wear) - Number(a.wear) || Number(!!b.img) - Number(!!a.img));
+    // The title and the photo describe the same piece.
+    g.items = g.pieces.length ? g.pieces.map(p => p.name) : dedupeNames(g.items);
+    g.photo = g.pieces[0]?.img ?? null;
+  }
+  // A store's rules apply to its other orders too ("Free and easy returns" on every Huckberry order).
+  const rules = new Map<string, OrderGroup>();
+  for (const g of [...all].sort((a, b) => a.last_at.localeCompare(b.last_at))) if (g.returnDays != null || g.returnNote) rules.set(keyOf.get(g)!, g);
+  for (const g of all) {
+    const r = rules.get(keyOf.get(g)!);
+    if (r && g.returnDays == null && !g.returnNote) { g.returnDays = r.returnDays; g.returnNote = r.returnNote; }
   }
   return all.sort((a, b) => b.last_at.localeCompare(a.last_at));
 }
@@ -191,21 +218,34 @@ function dedupeNames(list: string[]) {
   return [...out.values()];
 }
 
-export async function loadOrders(): Promise<OrderGroup[] | null> {
+// One load shared by every screen part that asks within a few seconds.
+let cache: { at: number; p: Promise<OrderGroup[] | null> } | null = null;
+export function loadOrders(): Promise<OrderGroup[] | null> {
+  if (cache && Date.now() - cache.at < 5000) return cache.p;
+  cache = { at: Date.now(), p: fetchOrders() };
+  return cache.p;
+}
+// Emails that belong to cancelled orders.
+export async function cancelledEmails(): Promise<Set<string>> {
+  const groups = await loadOrders();
+  return new Set((groups ?? []).filter(g => g.stage === "cancelled").flatMap(g => g.events.map(e => e.gmail_id)));
+}
+
+async function fetchOrders(): Promise<OrderGroup[] | null> {
   const sb = supabase();
   const { data: auth } = await sb.auth.getSession();
   if (!auth.session) return null;
   const [{ data }, { data: items }] = await Promise.all([
-    sb.from("orders").select("store, store_domain, kind, order_no, amount, sent_at, gmail_id, subject").neq("kind", "other").order("sent_at", { ascending: false }).limit(5000),
-    sb.from("items").select("gmail_id, name, category, image_url").limit(5000),
+    sb.from("orders").select("store, store_domain, kind, order_no, amount, sent_at, gmail_id, subject, return_days, return_note").neq("kind", "other").order("sent_at", { ascending: false }).limit(5000),
+    sb.from("items").select("gmail_id, name, category, image_url, color").limit(5000),
   ]);
   const names = new Map<string, string[]>();
   const wear = new Set<string>();
   const pieces = new Map<string, Piece[]>();
-  for (const i of (items ?? []) as { gmail_id: string; name: string; category: string; image_url: string | null }[]) {
+  for (const i of (items ?? []) as { gmail_id: string; name: string; category: string; image_url: string | null; color: string | null }[]) {
     names.set(i.gmail_id, [...(names.get(i.gmail_id) ?? []), i.name]);
     if (WEAR.includes(i.category)) wear.add(i.gmail_id);
-    pieces.set(i.gmail_id, [...(pieces.get(i.gmail_id) ?? []), { name: i.name, img: i.image_url, wear: WEAR.includes(i.category) }]);
+    pieces.set(i.gmail_id, [...(pieces.get(i.gmail_id) ?? []), { name: i.name, img: i.image_url || null, wear: WEAR.includes(i.category), color: i.color }]);
   }
   return groupOrders((data ?? []) as FullRow[], names, wear, pieces);
 }
@@ -217,12 +257,30 @@ export const daysAgo = (iso: string) => Math.floor((Date.now() - Date.parse(iso)
 export const isArriving = (g: OrderGroup) => g.stage === "shipped" || g.stage === "placed";
 export const isReturn = (g: OrderGroup) => g.stage === "returning" || g.stage === "refunded";
 
-// Most stores give 30 days from delivery. This is a guess until we read each store's policy.
+// Prescription pet medicine and food can't go back.
+const NO_RETURN = /prescription|\brx\b|bravecto|simparica|nexgard|heartgard|apoquel|credelio|revolution plus/i;
+export const returnable = (g: OrderGroup) => g.returnDays !== 0 && !g.items.some(n => NO_RETURN.test(n)) && !NO_RETURN.test(g.what ?? "");
+// How many days this store allows: its own rule when an email says, else the usual 30.
+export const windowDays = (g: OrderGroup) => g.returnDays ?? 30;
+// The store's rule in plain words, only when its emails say something.
+export function ruleText(g: OrderGroup): string | null {
+  const days = g.returnDays ? `${g.returnDays} days to return` : null;
+  const note = g.returnNote && !/^final sale$/i.test(g.returnNote) ? g.returnNote : null;
+  if (days && note) return /\d/.test(note) ? note : `${note} · ${g.returnDays} days`;
+  return note ?? days;
+}
+
+// Three days or less to send it back: the in-app reminder.
+export const SOON = 3;
+
+// Days left to send it back, counted from delivery.
 export function returnDaysLeft(g: OrderGroup) {
-  if (g.stage !== "delivered" || g.assumed) return null;
-  const left = 30 - calendarDaysSince(deliveredAt(g));
+  if (g.stage !== "delivered" || g.assumed || !returnable(g)) return null;
+  const left = windowDays(g) - calendarDaysSince(deliveredAt(g));
   return left > 0 ? left : null;
 }
+// The last day to send it back.
+export const returnBy = (g: OrderGroup) => Date.parse(deliveredAt(g)) + windowDays(g) * DAY;
 // When it was delivered: the delivery email, else the last email.
 export const deliveredAt = (g: OrderGroup) => g.events.filter(e => e.kind === "delivered").map(e => e.at).sort().at(-1) ?? g.last_at;
 // Whole days on her calendar, so "Sep 21" is the same day all day long.
@@ -232,12 +290,12 @@ function calendarDaysSince(iso: string) {
 }
 
 // Return status for each email, so a piece can say "Return by Fri" or "Returned".
-export type Ret = { left: number | null; returned: boolean; by: number | null };
+export type Ret = { left: number | null; returned: boolean; by: number | null; rule: string | null; store: string };
 export function returnsByEmail(groups: OrderGroup[]) {
   const out = new Map<string, Ret>();
   for (const g of groups) {
     const left = returnDaysLeft(g);
-    const r = { left, returned: isReturn(g), by: left ? Date.parse(deliveredAt(g)) + 30 * DAY : null };
+    const r = { left, returned: isReturn(g), by: left ? returnBy(g) : null, rule: ruleText(g), store: g.store };
     for (const e of g.events) out.set(e.gmail_id, r);
   }
   return out;
@@ -245,6 +303,13 @@ export function returnsByEmail(groups: OrderGroup[]) {
 // "Fri" when it's this week, else "Oct 30".
 export const dayLabel = (t: number) =>
   t - Date.now() < 6 * DAY ? new Date(t).toLocaleDateString("en-US", { weekday: "short" }) : fmtDate(new Date(t).toISOString());
+
+// Search that ignores case, accents and punctuation: "levis" finds Levi's, "doen" finds DÔEN.
+export const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+export const matches = (hay: string, q: string) => {
+  const h = norm(hay), n = norm(q);
+  return h.includes(n) || h.replace(/ /g, "").includes(n.replace(/ /g, ""));
+};
 
 // What to call an order: the items in it, else what the email says it is, else the order number.
 export function orderTitle(g: OrderGroup) {

@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { type OrderGroup, cleanupOnce, isArriving, loadOrders, orderTitle, returnDaysLeft, fmtDate } from "@/lib/orders";
+import { type OrderGroup, SOON, cleanupOnce, dayLabel, isArriving, loadOrders, orderTitle, returnBy, returnDaysLeft, ruleText, fmtDate } from "@/lib/orders";
 import { loadProfile } from "@/lib/profile";
 import { type Reward, daysUntil, fmtDay, loadRewards, money } from "@/lib/earn";
 import { ItemImage, Progress, TabBar } from "@/lib/tabs";
 
-const STEP = { placed: 0, shipped: 1, delivered: 3, returning: 3, refunded: 3 };
+const STEP = { placed: 0, shipped: 1, delivered: 3, returning: 3, refunded: 3, cancelled: 0 };
 
 export default function Today() {
   const [orders, setOrders] = useState<OrderGroup[] | null | undefined>(undefined);
@@ -25,8 +25,10 @@ export default function Today() {
   const expiring = rewards.filter(r => r.expires_on && daysUntil(r.expires_on) <= 30);
 
   const arriving = (orders ?? []).filter(isArriving);
-  const canReturn = (orders ?? []).filter(g => returnDaysLeft(g) != null);
-  const returnable = canReturn.filter(g => g.wear).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!);
+  // Most urgent first, whatever it is.
+  const canReturn = (orders ?? []).filter(g => returnDaysLeft(g) != null).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!);
+  const returnable = canReturn;
+  const closing = canReturn.filter(g => returnDaysLeft(g)! <= SOON);
   const returns = (orders ?? []).filter(g => g.stage === "returning");
   const hero = returnable[0];
   const left = hero ? returnDaysLeft(hero)! : 0;
@@ -55,7 +57,7 @@ export default function Today() {
         <div style={{ padding: "20px 20px 0" }}>
           <div className="serif" style={{ fontSize: 34, lineHeight: 1, letterSpacing: "-0.02em" }}>Hi{greet ? `, ${greet}` : ""}.</div>
           <div style={{ fontSize: 15, lineHeight: 1.4, color: "var(--soft)", marginTop: 8 }}>
-            {orders === undefined ? "Checking your orders…" : orders === null ? "Sign in to see your orders." : orders.length === 0 ? "No orders yet." : line ? `${line}.` : "All quiet. Nothing due."}
+            {orders === undefined ? "Checking your orders…" : orders === null ? "Sign in to see your orders." : orders.length === 0 ? "No orders yet." : line ? <>{line}. {canReturn.length > 0 && <Link href="/orders?tab=canreturn" style={{ fontWeight: 700, color: "var(--ink)" }}>See returns</Link>}</> : "All quiet. Nothing due."}
           </div>
         </div>
 
@@ -67,16 +69,27 @@ export default function Today() {
           </div>
         )}
 
+        {closing.length > 0 && (
+          <Link href="/orders?tab=canreturn" style={{ margin: "14px 16px 0", background: "#FF6159", borderRadius: 22, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>{closing.length === 1 ? "1 return closes soon" : `${closing.length} returns close soon`}</div>
+              <div style={{ fontSize: 13 }}>Last day {dayLabel(returnBy(closing[0]))}{closing.length > 1 ? " for the first one" : ""}. Decide now so you don&apos;t miss it.</div>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
+          </Link>
+        )}
+
         {hero && (
           <Link href={`/order/${encodeURIComponent(hero.key)}`} style={{ margin: "14px 16px 0", background: "#FFE1DC", borderRadius: 28, padding: "20px 18px", display: "flex", gap: 14, position: "relative", textDecoration: "none" }}>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
               <div className="kicker" style={{ color: "#C9402F" }}>Still returnable</div>
-              <div className="serif" style={{ fontSize: 28, lineHeight: 1.04, letterSpacing: "-0.02em" }}>{hero.items[0] || hero.what || `Your ${hero.store} order`}, {hero.inStore ? "bought" : "delivered"} <em>{fmtDate(hero.last_at)}</em></div>
-              {(hero.items[0] || hero.what) && <div style={{ fontSize: 13, fontWeight: 700, color: "#6B4A44" }}>From {hero.store}</div>}
-              <div style={{ fontSize: 13, color: "#6B4A44" }}>Most stores allow 30 days.</div>
+              <div className="serif" style={{ fontSize: 28, lineHeight: 1.04, letterSpacing: "-0.02em", overflowWrap: "anywhere" }}>{orderTitle(hero)}, {hero.inStore ? "bought" : "delivered"} <em>{fmtDate(hero.last_at)}</em></div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#6B4A44" }}>From {hero.store}</div>
+              <div style={{ fontSize: 13, color: "#6B4A44" }}>Return by {dayLabel(returnBy(hero))}{ruleText(hero) ? ` · ${ruleText(hero)}` : ""}</div>
             </div>
             <div className="lift" style={{ flex: "none", alignSelf: "center", transform: "rotate(4deg)", borderRadius: 20, boxShadow: "0 10px 24px rgba(201,64,47,.18)" }}>
-              <ItemImage src={hero.photo} store={hero.store} domain={hero.store_domain} w={104} h={136} radius={20} size={44} />
+              <ItemImage src={hero.photo} store={hero.store} name={hero.items[0] ?? hero.what ?? undefined} domain={hero.store_domain} w={104} h={136} radius={20} size={44} />
             </div>
             <div style={{ position: "absolute", top: -10, right: 14, width: 58, height: 58, borderRadius: "50%", background: "#FF6159", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transform: "rotate(10deg)", boxShadow: "0 6px 14px rgba(0,0,0,.12)" }}>
               <div className="serif" style={{ fontWeight: 600, fontSize: 22, lineHeight: 1 }}>{left}</div>
@@ -105,7 +118,7 @@ export default function Today() {
               {arriving.map(g => (
                 <Link key={g.key} href={`/order/${encodeURIComponent(g.key)}`} className="lift" style={{ width: 148, flex: "none", display: "flex", flexDirection: "column", gap: 8, textDecoration: "none" }}>
                   <div style={{ position: "relative" }}>
-                    <ItemImage src={g.photo} store={g.store} domain={g.store_domain} w={148} h={180} radius={22} size={64} />
+                    <ItemImage src={g.photo} store={g.store} name={g.items[0] ?? g.what ?? undefined} domain={g.store_domain} w={148} h={180} radius={22} size={64} />
                     <div style={{ position: "absolute", top: 10, left: 10, background: "#fff", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 700 }}>{g.stage === "shipped" ? "Shipped" : "Ordered"}</div>
                   </div>
                   <div>
@@ -123,9 +136,9 @@ export default function Today() {
           <>
             <div className="section"><div>Recent</div><Link href="/orders?tab=all">See all</Link></div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "14px 16px 0" }}>
-              {orders.filter(g => !isArriving(g)).slice(0, 5).map(g => (
+              {orders.filter(g => !isArriving(g) && g.stage !== "cancelled").slice(0, 5).map(g => (
                 <Link key={g.key} href={`/order/${encodeURIComponent(g.key)}`} className="orow" style={{ display: "flex", gap: 12, alignItems: "center", background: "#FAF8F6", borderRadius: 22, padding: "10px 14px 10px 10px", textDecoration: "none" }}>
-                  <ItemImage src={g.photo} store={g.store} domain={g.store_domain} w={52} h={64} radius={14} size={22} />
+                  <ItemImage src={g.photo} store={g.store} name={g.items[0] ?? g.what ?? undefined} domain={g.store_domain} w={52} h={64} radius={14} size={22} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="kicker">{g.store}</div>
                     <div style={{ fontWeight: 700, fontSize: 14, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{orderTitle(g)}</div>

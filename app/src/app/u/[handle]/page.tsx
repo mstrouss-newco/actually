@@ -4,7 +4,7 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { type Profile, loadProfilePage } from "@/lib/social";
 import { supabase } from "@/lib/supabase";
-import { Avatar, FollowButton, ItemGrid, ShareLink } from "@/lib/feed-ui";
+import { Avatar, FollowButton, ItemGrid, ShareLink, displayName } from "@/lib/feed-ui";
 import { TabBar } from "@/lib/tabs";
 
 // Public feed page. Works for anyone with the link, signed in or not.
@@ -31,7 +31,7 @@ export default function PublicFeed({ params }: { params: Promise<{ handle: strin
             <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "20px 20px 0" }}>
               <Avatar handle={p.handle} size={64} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="serif" style={{ fontSize: 30, lineHeight: 1 }}>{p.handle}</div>
+                <div className="serif" style={{ fontSize: 30, lineHeight: 1 }}>{displayName(p.handle)}</div>
                 <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 6 }}>{p.items.length} shared · {p.followers} {p.followers === 1 ? "follower" : "followers"} · {p.following} following</div>
               </div>
             </div>

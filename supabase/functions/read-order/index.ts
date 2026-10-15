@@ -16,8 +16,28 @@ const Result = z.object({
     color: z.string().nullable(),
     price: z.number().nullable().describe("Price paid for one unit, in dollars."),
     quantity: z.number().int(),
-    image_url: z.string().nullable().describe("The product photo URL from the email, if one clearly belongs to this item. Never a logo, banner or tracking pixel."),
+    image_url: z.string().nullable().describe("The product photo URL from the email that sits with this item. Each color usually has its own photo next to it; use that one. Never a logo, banner, tracking pixel or another item's photo."),
     category: z.enum(CATEGORIES),
+  })),
+  return_days: z.number().int().nullable().describe("How many days the shopper has to return items, exactly as this email states. Null if it doesn't say."),
+  return_note: z.string().nullable().describe("A few plain words on how returns work, from this email only, e.g. 'Free and easy returns'. Null if not mentioned."),
+  final_sale: z.boolean().describe("True only if the email says the items are final sale or can't be returned."),
+});
+
+// Each store's return rules, as the email states them.
+const Rules = z.object({
+  return_days: z.number().int().nullable().describe("How many days the shopper has to return items, exactly as this email states. Null if the email does not say."),
+  note: z.string().nullable().describe("A few plain words on how returns work, from this email only, e.g. 'Free returns', 'Free and easy returns', 'Returns in store only'. Null if the email says nothing about returns."),
+  final_sale: z.boolean().describe("True only if the email says these items are final sale or can't be returned."),
+});
+const RULES_SYSTEM = `You read one online shopping email and report the store's return rules as written in it.
+Only use what the email says. Never use what you know about the store. If returns aren't mentioned, return nulls and final_sale false.`;
+
+// Matches product photos to pieces that came in without one.
+const Photos = z.object({
+  photos: z.array(z.object({
+    n: z.number().int().describe("The number of the piece in the list."),
+    image_url: z.string().nullable().describe("The product photo URL from the email that shows this exact piece in this color. Null if none clearly does. Never a logo, banner or another color's photo."),
   })),
 });
 
@@ -26,7 +46,9 @@ Rules:
 - Only list items that were actually purchased in this order. Ignore ads, recommendations, "you may also like" and loyalty offers.
 - If the email is a shipping or receipt update that repeats the items, list them anyway.
 - If no specific products are listed, return is_order false and no items.
-- Use null when a detail is not in the email. Never guess sizes or prices.`;
+- Use null when a detail is not in the email. Never guess sizes or prices.
+- Also report the return rules only if this email states them (days to return, free returns, final sale). Never use outside knowledge.
+- The same product in two colors is two items. List each color separately with its own photo.`;
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -45,8 +67,52 @@ Deno.serve(async req => {
   if (!auth.user) return json({ error: "signed out" }, 401);
   if (!Deno.env.get("ANTHROPIC_API_KEY")) return json({ error: "ai not set up" }, 503);
 
-  const { gmail_id, text } = await req.json().catch(() => ({}));
+  const { gmail_id, text, mode, item_ids } = await req.json().catch(() => ({}));
   if (typeof gmail_id !== "string" || typeof text !== "string") return json({ error: "bad request" }, 400);
+  const ask = async <T extends z.ZodType>(schema: T, system: string, content: string): Promise<z.infer<T> | null> => {
+    const res = await anthropic.messages.parse({
+      model: "claude-haiku-5-5", max_tokens: 2000,
+      output_config: { effort: "low", format: zodOutputFormat(schema) },
+      system, messages: [{ role: "user", content }],
+    });
+    return res.stop_reason === "refusal" ? null : res.parsed_output as z.infer<T>;
+  };
+
+  // Return rules for one saved email.
+  if (mode === "rules") {
+    const { data: row } = await admin.from("orders").select("store").eq("user_id", auth.user.id).eq("gmail_id", gmail_id).maybeSingle();
+    if (!row) return json({ error: "unknown email" }, 404);
+    let r: z.infer<typeof Rules> | null = null;
+    try { r = await ask(Rules, RULES_SYSTEM, `Store: ${row.store}\n\n${text.slice(0, 40000)}`); } catch { return json({ error: "ai failed" }, 502); }
+    const days = r?.final_sale ? 0 : r?.return_days != null && r.return_days > 0 && r.return_days <= 400 ? r.return_days : null;
+    const note = r?.final_sale ? "Final sale" : r?.note?.trim().slice(0, 120) || null;
+    await admin.from("orders").update({ rules_read: true, return_days: days, return_note: note }).eq("user_id", auth.user.id).eq("gmail_id", gmail_id);
+    return json({ return_days: days, note });
+  }
+
+  // Photos for her pieces that have none. The email must be one of hers.
+  if (mode === "photos") {
+    if (!Array.isArray(item_ids) || !item_ids.length) return json({ error: "bad request" }, 400);
+    const { data: row } = await admin.from("orders").select("store").eq("user_id", auth.user.id).eq("gmail_id", gmail_id).maybeSingle();
+    if (!row) return json({ error: "unknown email" }, 404);
+    const { data: need } = await admin.from("items").select("id, name, brand, color, size").eq("user_id", auth.user.id)
+      .in("id", item_ids.slice(0, 40).map(String)).or("image_url.is.null,image_url.eq.");
+    if (!need?.length) return json({ filled: 0 });
+    const list = need.map((i, n) => `${n + 1}. ${i.brand ?? ""} ${i.name}${i.color ? `, color ${i.color}` : ""}${i.size ? `, size ${i.size}` : ""}`).join("\n");
+    let r: z.infer<typeof Photos> | null = null;
+    try { r = await ask(Photos, "You match product photos in a shopping email to the pieces listed. Photos appear as [image: alt | url]. Only pick a photo that clearly sits with that exact piece and color.", `Pieces:\n${list}\n\nEmail:\n${text.slice(0, 40000)}`); } catch { return json({ error: "ai failed" }, 502); }
+    let filled = 0;
+    const used = new Set<string>();
+    for (const p of r?.photos ?? []) {
+      const it = need[p.n - 1];
+      const url = p.image_url?.trim() ?? "";
+      if (!it || !url.startsWith("https://") || used.has(url) || !text.includes(url)) continue;
+      used.add(url);
+      await admin.from("items").update({ image_url: url.slice(0, 1000) }).eq("id", it.id).eq("user_id", auth.user.id);
+      filled++;
+    }
+    return json({ filled });
+  }
 
   // Only read emails we already saved for her, and only once.
   const { data: order } = await admin.from("orders").select("store, sent_at, items_read")
@@ -77,6 +143,8 @@ Deno.serve(async req => {
     image_url: i.image_url?.startsWith("https://") ? i.image_url.slice(0, 1000) : null, category: i.category,
   }));
   if (items.length) await admin.from("items").upsert(items, { onConflict: "user_id,gmail_id,name,size,color", ignoreDuplicates: true });
-  await admin.from("orders").update({ items_read: true }).eq("user_id", auth.user.id).eq("gmail_id", gmail_id);
+  const days = parsed?.final_sale ? 0 : parsed?.return_days != null && parsed.return_days > 0 && parsed.return_days <= 400 ? parsed.return_days : null;
+  const note = parsed?.final_sale ? "Final sale" : parsed?.return_note?.trim().slice(0, 120) || null;
+  await admin.from("orders").update({ items_read: true, rules_read: true, return_days: days, return_note: note }).eq("user_id", auth.user.id).eq("gmail_id", gmail_id);
   return json({ items: items.length });
 });
