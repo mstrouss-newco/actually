@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { KIND, type Reward, daysUntil, fmtDay, loadRewards, money, scanRewards } from "@/lib/earn";
+import { KIND, type Reward, daysUntil, fmtDay, loadRewards, money, programName, scanRewards } from "@/lib/earn";
 import { Job } from "@/lib/read-items";
 import { StoreTile, TabBar } from "@/lib/tabs";
 
@@ -13,6 +13,7 @@ export default function Points() {
 
   const list = rewards ?? [];
   const cash = list.reduce((s, r) => s + (r.value ?? 0), 0);
+  const pts = list.filter(r => !r.value).reduce((s, r) => s + (r.points ?? 0), 0);
   const expiring = list.filter(r => r.expires_on && daysUntil(r.expires_on) <= 30).reduce((s, r) => s + (r.value ?? 0), 0);
 
   return (
@@ -26,8 +27,9 @@ export default function Points() {
 
         {list.length > 0 && (
           <div style={{ margin: "18px 16px 0", background: "var(--ink)", color: "#fff", borderRadius: 26, padding: "20px 18px" }}>
-            <div className="kicker" style={{ color: "#C9C3BC" }}>Ready to use</div>
-            <div className="serif" style={{ fontSize: 52, lineHeight: 1, marginTop: 6 }}>{money(cash)}</div>
+            <div className="kicker" style={{ color: "#C9C3BC" }}>{cash ? "Ready to use" : "Points you have"}</div>
+            <div className="serif" style={{ fontSize: cash ? 52 : 44, lineHeight: 1, marginTop: 6 }}>{cash ? money(cash) : `${pts.toLocaleString("en-US")} points`}</div>
+            {cash > 0 && pts > 0 && <div style={{ fontSize: 14, color: "#C9C3BC", marginTop: 6 }}>Plus {pts.toLocaleString("en-US")} points.</div>}
             {expiring > 0 && <div style={{ fontSize: 14, color: "#FFB4AB", marginTop: 6 }}>{money(expiring)} of it expires in the next 30 days.</div>}
           </div>
         )}
@@ -40,15 +42,15 @@ export default function Points() {
               <div key={`${r.store}|${r.kind}`} style={{ display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", borderRadius: 22, padding: "12px 14px 12px 12px" }}>
                 <StoreTile store={r.store} domain={r.store_domain} w={46} h={46} radius={14} size={22} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15 }}>{r.store}</div>
+                  <div style={{ fontWeight: 700, fontSize: 15 }}>{programName(r.store)}</div>
                   <div style={{ fontSize: 13, color: "var(--soft)" }}>
                     {r.points != null ? `${r.points.toLocaleString("en-US")} points` : KIND[r.kind]}
                     {r.expires_on ? ` · gone after ${fmtDay(r.expires_on)}` : " · no expiry found"}
                   </div>
-                  {r.store_domain && <a href={`https://www.${r.store_domain}`} target="_blank" rel="noreferrer" style={{ fontSize: 13, fontWeight: 700 }}>Use at {r.store} →</a>}
+                  {r.store_domain && <a href={`https://www.${r.store_domain}`} target="_blank" rel="noreferrer" style={{ fontSize: 13, fontWeight: 700 }}>Use at {programName(r.store)} →</a>}
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div className="serif" style={{ fontSize: 22 }}>{r.value != null ? money(r.value) : "–"}</div>
+                  {r.value != null && <div className="serif" style={{ fontSize: 22 }}>{money(r.value)}</div>}
                   {left != null && left <= 30 && <div style={{ background: "#FF6159", borderRadius: 999, padding: "3px 8px", fontSize: 11, fontWeight: 700, marginTop: 4 }}>{left}d left</div>}
                 </div>
               </div>

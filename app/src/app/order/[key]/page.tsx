@@ -3,11 +3,11 @@
 import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type OrderGroup, blockStore, fmtDate, gmailLink, loadOrders, orderTitle, removeOrder, returnDaysLeft } from "@/lib/orders";
+import { type OrderGroup, blockStore, dayLabel, fmtDate, gmailLink, loadOrders, orderTitle, removeOrder, returnBy, returnDaysLeft, ruleText } from "@/lib/orders";
 import { ItemImage, TabBar, tint } from "@/lib/tabs";
 
 const LABEL: Record<string, string> = {
-  order: "Ordered", receipt: "Receipt", shipping: "Shipped", delivered: "Delivered", return: "Return started", refund: "Refunded",
+  order: "Ordered", receipt: "Receipt", shipping: "Shipped", delivered: "Delivered", return: "Return started", refund: "Refunded", cancel: "Cancelled",
 };
 
 // What each email means, in plain words.
@@ -66,7 +66,7 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
           </Link>
           <div style={{ display: "flex", gap: 16, alignItems: "flex-end", marginTop: 20 }}>
             <div style={{ transform: "rotate(-3deg)", boxShadow: "0 10px 24px rgba(20,18,16,.12)", borderRadius: 22 }}>
-              <ItemImage src={order.photo} store={order.store} domain={order.store_domain} w={110} h={138} radius={22} size={52} />
+              <ItemImage src={order.photo} store={order.store} name={order.items[0] ?? order.what ?? undefined} domain={order.store_domain} w={110} h={138} radius={22} size={52} />
             </div>
             <div style={{ flex: 1, minWidth: 0, paddingBottom: 4 }}>
               <div className="kicker">{order.store}</div>
@@ -76,13 +76,24 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
           </div>
         </div>
 
+        {order.stage === "cancelled" && (
+          <div style={{ margin: "18px 16px 0", background: "#F1EDE8", borderRadius: 26, padding: "18px" }}>
+            <div className="serif" style={{ fontSize: 24 }}>This order was cancelled</div>
+            <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 6, lineHeight: 1.45 }}>Nothing from it is in your closet or counted in what your closet is worth.</div>
+          </div>
+        )}
+
         {left != null && (
           <div style={{ margin: "18px 16px 0", background: "var(--ink)", color: "#fff", borderRadius: 26, padding: "20px 18px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }}>
-              <div className="serif" style={{ fontSize: 24 }}>Probably still returnable</div>
-              <div style={{ background: "#FF6159", color: "var(--ink)", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>~{left} days</div>
+              <div className="serif" style={{ fontSize: 24 }}>Return by {dayLabel(returnBy(order))}</div>
+              <div style={{ background: "#FF6159", color: "var(--ink)", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>{left} {left === 1 ? "day" : "days"} left</div>
             </div>
-            <div style={{ fontSize: 14, color: "#C9C3BC", marginTop: 8, lineHeight: 1.45 }}>Delivered {fmtDate(order.last_at)}. Most stores allow 30 days. Check {order.store}&apos;s policy to be sure.</div>
+            <div style={{ fontSize: 14, color: "#C9C3BC", marginTop: 8, lineHeight: 1.45 }}>
+              {ruleText(order)
+                ? <>{order.store}&apos;s email says: {ruleText(order)}. Counted from delivery on {fmtDate(order.last_at)}.</>
+                : <>Delivered {fmtDate(order.last_at)}. {order.store}&apos;s emails don&apos;t say how long you have, so this uses the usual 30 days. Check their site to be sure.</>}
+            </div>
           </div>
         )}
 
@@ -91,9 +102,12 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
             <div style={{ padding: "26px 20px 0" }} className="serif"><span style={{ fontSize: 24 }}>In this order</span></div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "12px 16px 0" }}>
               {order.pieces.map(p => (
-                <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", borderRadius: 20, padding: "8px 14px 8px 8px" }}>
-                  <ItemImage src={p.img} store={order.store} domain={order.store_domain} w={52} h={64} radius={14} size={20} />
-                  <div style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{p.name}</div>
+                <div key={`${p.name}|${p.color ?? ""}`} style={{ display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", borderRadius: 20, padding: "8px 14px 8px 8px" }}>
+                  <ItemImage src={p.img} store={order.store} name={p.name} domain={order.store_domain} w={52} h={64} radius={14} size={20} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{p.name}</div>
+                    {p.color && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{p.color}</div>}
+                  </div>
                 </div>
               ))}
             </div>

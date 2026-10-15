@@ -2,18 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { type OrderGroup, fmtDate, isArriving, isReturn, loadOrders, orderTitle, returnDaysLeft } from "@/lib/orders";
+import { type OrderGroup, dayLabel, fmtDate, isArriving, isReturn, loadOrders, matches, orderTitle, returnBy, returnDaysLeft, ruleText, SOON } from "@/lib/orders";
 import { Progress, ItemImage, TabBar } from "@/lib/tabs";
 
-type Tab = "arriving" | "delivered" | "returns" | "all";
-const TABS: [Tab, string][] = [["arriving", "Arriving"], ["delivered", "Delivered"], ["returns", "Returns"], ["all", "All"]];
+type Tab = "arriving" | "canreturn" | "delivered" | "returns" | "cancelled" | "all";
+const TABS: [Tab, string][] = [["arriving", "Arriving"], ["canreturn", "Can return"], ["delivered", "Delivered"], ["returns", "Returns"], ["cancelled", "Cancelled"], ["all", "All"]];
 const FILTER: Record<Tab, (g: OrderGroup) => boolean> = {
   arriving: isArriving,
+  canreturn: g => returnDaysLeft(g) != null,
   delivered: g => g.stage === "delivered",
   returns: isReturn,
+  cancelled: g => g.stage === "cancelled",
   all: () => true,
 };
-const STEP = { placed: 0, shipped: 1, delivered: 3, returning: 3, refunded: 3 };
+// Tabs that only show up when they have something in them.
+const OPTIONAL: Tab[] = ["returns", "cancelled"];
+const STEP = { placed: 0, shipped: 1, delivered: 3, returning: 3, refunded: 3, cancelled: 0 };
+
 
 function status(g: OrderGroup) {
   if (g.inStore) return `Bought in store ${fmtDate(g.ordered_at)}`;
@@ -24,12 +29,14 @@ function status(g: OrderGroup) {
     case "delivered": return `Delivered ${fmtDate(g.last_at)}`;
     case "returning": return `Return started ${fmtDate(g.last_at)}`;
     case "refunded": return `Refunded ${fmtDate(g.last_at)}`;
+    case "cancelled": return `Cancelled ${fmtDate(g.last_at)}`;
   }
 }
 
 function chip(g: OrderGroup): [string, string] | null {
   const left = returnDaysLeft(g);
-  if (left != null) return [`${left}d to return`, left <= 5 ? "#FF6159" : "#F1EDE8"];
+  if (left != null) return [`${left}d to return`, left <= SOON ? "#FF6159" : "#F1EDE8"];
+  if (g.stage === "cancelled") return ["Cancelled", "#F1EDE8"];
   if (g.stage === "refunded") return ["Refunded", "#DCEFDF"];
   if (g.stage === "returning") return ["Return", "#FFE1DC"];
   if (isArriving(g)) return [g.stage === "shipped" ? "On the way" : "Placed", "#FFF0BF"];
@@ -54,8 +61,10 @@ export default function Orders() {
   const all = orders ?? [];
   const query = q.trim().toLowerCase();
   const rows = query
-    ? all.filter(g => `${g.store} ${g.order_no ?? ""} ${g.what ?? ""} ${g.items.join(" ")} ${g.pieces.map(p => p.name).join(" ")} ${g.events.map(e => e.subject).join(" ")}`.toLowerCase().includes(query))
+    ? all.filter(g => matches(`${g.store} ${g.order_no ?? ""} ${g.what ?? ""} ${g.items.join(" ")} ${g.pieces.map(p => p.name).join(" ")} ${g.events.map(e => e.subject).join(" ")}`, query))
+    : tab === "canreturn" ? all.filter(FILTER.canreturn).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!)
     : all.filter(FILTER[tab]);
+  const soon = tab === "canreturn" && !query ? rows.filter(g => returnDaysLeft(g)! <= SOON) : [];
 
   return (
     <main className="tabscreen">
@@ -68,8 +77,8 @@ export default function Orders() {
 
         {!query && (
           <div style={{ display: "flex", gap: 20, padding: "18px 20px 0", borderBottom: "1px solid var(--line)", overflowX: "auto" }}>
-            {TABS.map(([k, label]) => (
-              <button key={k} type="button" onClick={() => { setTab(k); history.replaceState(history.state, "", `?tab=${k}`); }} style={{ border: 0, background: "transparent", padding: "10px 0 12px", font: "700 15px var(--font-sans), sans-serif", color: k === tab ? "var(--ink)" : "var(--muted)", borderBottom: `3px solid ${k === tab ? "var(--ink)" : "transparent"}`, cursor: "pointer", whiteSpace: "nowrap" }}>
+            {TABS.filter(([k]) => !OPTIONAL.includes(k) || all.some(FILTER[k])).map(([k, label]) => (
+              <button key={k} type="button" aria-pressed={k === tab} onClick={() => { setTab(k); history.replaceState(history.state, "", `?tab=${k}`); }} style={{ border: 0, background: "transparent", padding: "10px 0 12px", font: "700 15px var(--font-sans), sans-serif", color: k === tab ? "var(--ink)" : "var(--muted)", borderBottom: `3px solid ${k === tab ? "var(--ink)" : "transparent"}`, cursor: "pointer", whiteSpace: "nowrap" }}>
                 {label} <span style={{ fontSize: 11, marginLeft: 2, verticalAlign: "super" }}>{all.filter(FILTER[k]).length}</span>
               </button>
             ))}
@@ -79,22 +88,29 @@ export default function Orders() {
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "16px 16px 0" }}>
           {orders === undefined && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}>Loading your orders…</div>}
           {orders === null && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}><Link href="/login" style={{ fontWeight: 700 }}>Sign in</Link> to see your orders.</div>}
-          {orders && rows.length === 0 && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}>{query ? "No orders match that." : "Nothing here right now."}</div>}
-          {rows.slice(0, 200).map(g => {
+          {orders && rows.length === 0 && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}>{query ? "No orders match that." : tab === "canreturn" ? "Nothing to return right now. New orders show up here once they arrive." : "Nothing here right now."}</div>}
+          {tab === "canreturn" && !query && rows.length > 0 && <div style={{ fontSize: 13, color: "var(--muted)", padding: "0 4px", lineHeight: 1.45 }}>Return windows start on delivery day. We use each store&apos;s rules when its emails say them.</div>}
+          {soon.length > 0 && <div className="kicker" style={{ color: "#C9402F", padding: "6px 4px 0" }}>Closing soon</div>}
+          {rows.slice(0, 200).map((g, n) => {
+            const later = tab === "canreturn" && !query && soon.length > 0 && n === soon.length;
             const c = chip(g);
+            const rule = tab === "canreturn" ? ruleText(g) : null;
             return (
-              <Link key={g.key} href={`/order/${encodeURIComponent(g.key)}`} className="orow" style={{ textDecoration: "none", display: "flex", gap: 14, alignItems: "center", background: "#FAF8F6", borderRadius: 24, padding: "10px 14px 10px 10px" }}>
-                <ItemImage src={g.photo} store={g.store} domain={g.store_domain} w={78} h={96} radius={18} size={30} />
+              <div key={g.key} style={{ display: "contents" }}>
+              {later && <div className="kicker" style={{ padding: "8px 4px 0" }}>Later</div>}
+              <Link href={`/order/${encodeURIComponent(g.key)}`} className="orow" style={{ textDecoration: "none", display: "flex", gap: 14, alignItems: "center", background: "#FAF8F6", borderRadius: 24, padding: "10px 14px 10px 10px" }}>
+                <ItemImage src={g.photo} store={g.store} name={g.items[0] ?? g.what ?? undefined} domain={g.store_domain} w={78} h={96} radius={18} size={30} />
                 <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 5 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <div className="kicker" style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{g.store}</div>
                     {c && <div style={{ flex: "none", background: c[1], borderRadius: 999, padding: "4px 9px", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{c[0]}</div>}
                   </div>
                   <div style={{ fontWeight: 700, fontSize: 15, lineHeight: 1.25, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{orderTitle(g)}</div>
-                  <div style={{ fontSize: 13, color: "var(--soft)" }}>{status(g)}{g.amount != null ? ` · $${g.amount.toFixed(2)}` : ""}</div>
+                  <div style={{ fontSize: 13, color: "var(--soft)" }}>{tab === "canreturn" ? `Return by ${dayLabel(returnBy(g))}${rule ? ` · ${rule}` : ""}` : `${status(g)}${g.amount != null ? ` · $${g.amount.toFixed(2)}` : ""}`}</div>
                   {isArriving(g) && <div style={{ marginTop: 2 }}><Progress step={STEP[g.stage]} h={5} /></div>}
                 </div>
               </Link>
+              </div>
             );
           })}
         </div>

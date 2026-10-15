@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Art } from "@/lib/ui";
+import { SkipIfSignedIn } from "@/lib/signed-in";
 
 const MAILS = [
   ["Zara", "Your order has shipped #48213"],
@@ -22,6 +23,7 @@ const ALERTS = [
 export default function Welcome() {
   return (
     <main className="screen">
+      <SkipIfSignedIn />
       <div className="logo">Actually</div>
       <h1 className="h1" style={{ marginTop: 26 }}>Your order emails, <em>sorted out.</em></h1>
       <p className="lead" style={{ marginTop: 14, color: "var(--soft)" }}>

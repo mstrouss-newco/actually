@@ -1,6 +1,7 @@
 import { gmailToken, supabase } from "./supabase";
 import { listRewardEmails, readFullText } from "./gmail";
 import { type Item, WEAR } from "./items";
+import { type OrderGroup, isArriving, isReturn } from "./orders";
 
 export type Reward = { store: string; store_domain: string | null; kind: string; points: number | null; value: number | null; expires_on: string | null; sent_at: string };
 
@@ -24,6 +25,11 @@ export async function loadRewards(): Promise<Reward[]> {
     return (!r.expires_on || r.expires_on >= today) && r.sent_at > stale;
   }).sort((a, b) => (a.expires_on ?? "9999").localeCompare(b.expires_on ?? "9999"));
 }
+
+// "Dunkin' Rewards" and "MileagePlus Partner" read better as the program's own name.
+export const programName = (s: string) => s.replace(/\s+(rewards?|partners?|loyalty|perks|club|program)$/i, "").trim() || s;
+// Plain list: "A, B and C".
+export const listNames = (xs: string[]) => xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}`;
 
 export const daysUntil = (d: string) => Math.ceil((Date.parse(`${d}T23:59:59`) - Date.now()) / 86400000);
 export const fmtDay = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -76,6 +82,23 @@ export async function valueItems(onProgress: Progress): Promise<Outcome> {
     if (!data?.remaining) break;
   }
   return "done";
+}
+
+// Which of her pieces count toward what the closet is worth, and why the others don't.
+export type Skip = { item: Item; why: string };
+export function closetWorth(mine: Item[], groups: OrderGroup[] | null) {
+  const byEmail = new Map<string, OrderGroup>();
+  for (const g of groups ?? []) for (const e of g.events) byEmail.set(e.gmail_id, g);
+  const counted: Item[] = [], skipped: Skip[] = [];
+  for (const i of mine) {
+    const g = byEmail.get(i.gmail_id ?? "");
+    if (g && isArriving(g)) skipped.push({ item: i, why: "On its way. Counted once it arrives." });
+    else if (g && isReturn(g)) skipped.push({ item: i, why: "Sent back" });
+    else if (i.resale_high == null) skipped.push({ item: i, why: "Not priced yet" });
+    else if (i.resale_high < 10) skipped.push({ item: i, why: "Sells for under $10" });
+    else counted.push(i);
+  }
+  return { counted, skipped, unpriced: mine.filter(i => i.resale_high == null).length };
 }
 
 export const worth = (items: Item[]) => items.reduce((s, i) => [s[0] + (i.resale_low ?? 0), s[1] + (i.resale_high ?? 0)], [0, 0]);

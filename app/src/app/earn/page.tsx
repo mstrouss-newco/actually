@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { type Reward, daysUntil, fmtDay, loadRewards, money, scanRewards, valueItems, worth } from "@/lib/earn";
+import { type Reward, closetWorth, daysUntil, fmtDay, listNames, loadRewards, money, programName, scanRewards, valueItems, worth } from "@/lib/earn";
+import { type OrderGroup, loadOrders } from "@/lib/orders";
 import { type Item, loadItems, whoFor } from "@/lib/items";
 import { Job } from "@/lib/read-items";
 import { ItemImage, StoreTile, TabBar } from "@/lib/tabs";
@@ -10,21 +11,23 @@ import { ItemImage, StoreTile, TabBar } from "@/lib/tabs";
 export default function Earn() {
   const [rewards, setRewards] = useState<Reward[] | null>(null);
   const [items, setItems] = useState<Item[] | null>(null);
-  const load = useCallback(() => { loadRewards().then(setRewards); loadItems().then(all => setItems(all.filter(i => whoFor(i, all) === "me"))); }, []);
+  const [groups, setGroups] = useState<OrderGroup[] | null>(null);
+  const load = useCallback(() => { loadRewards().then(setRewards); loadOrders().then(setGroups); loadItems().then(all => setItems(all.filter(i => whoFor(i, all) === "me"))); }, []);
   useEffect(load, [load]);
 
   const cash = (rewards ?? []).reduce((s, r) => s + (r.value ?? 0), 0);
   const soon = (rewards ?? []).find(r => r.expires_on && daysUntil(r.expires_on) <= 30);
   const priced = (items ?? []).filter(i => i.resale_high != null);
-  const unpriced = (items ?? []).length - priced.length;
-  // Pieces worth under $10 (socks, cases) aren't worth listing, so they don't count.
-  const valued = priced.filter(i => (i.resale_high ?? 0) >= 10);
+  // Counted: arrived, priced and worth listing. Same rule as the Worth page.
+  const { counted: valued, unpriced } = closetWorth(items ?? [], groups);
   const [lo, hi] = worth(valued);
   const ranked = [...valued].sort((a, b) => (b.resale_high ?? 0) - (a.resale_high ?? 0));
   const top = ranked[0];
   // The three priciest pieces with a photo, fanned out like the design.
   const fan = ranked.filter(i => i.image_url).slice(0, 3);
-  const logos = (rewards ?? []).filter(r => r.value).slice(0, 3);
+  const logos = [...(rewards ?? [])].sort((a, b) => (b.value ?? 0) - (a.value ?? 0)).slice(0, 3);
+  const points = (rewards ?? []).filter(r => !r.value && r.points);
+  const pts = points.reduce((s, r) => s + (r.points ?? 0), 0);
 
   return (
     <main className="tabscreen">
@@ -39,7 +42,7 @@ export default function Earn() {
           {rewards && rewards.length > 0 ? (
             <Link href="/earn/points" style={{ textDecoration: "none", display: "block" }}>
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 10, marginTop: 8 }}>
-                <div className="serif" style={{ fontSize: 52, lineHeight: 1 }}>{money(cash)}</div>
+                <div className="serif" style={{ fontSize: cash ? 52 : 40, lineHeight: 1 }}>{cash ? money(cash) : `${pts.toLocaleString("en-US")} points`}</div>
                 {logos.length > 0 && (
                   <div style={{ display: "flex", flex: "none", paddingBottom: 4 }}>
                     {logos.map((r, i) => (
@@ -51,8 +54,8 @@ export default function Earn() {
                 )}
               </div>
               <div style={{ fontSize: 14, color: "#7A6A3A", marginTop: 6, lineHeight: 1.4 }}>
-                {logos.length > 0 && <>Ready to use at {rewards.filter(r => r.value).length} {rewards.filter(r => r.value).length === 1 ? "store" : "stores"}.</>}
-                {rewards.some(r => !r.value) && <> Points at {rewards.filter(r => !r.value).length} more.</>}
+                {cash > 0 && <>Ready to use at {rewards.filter(r => r.value).length} {rewards.filter(r => r.value).length === 1 ? "store" : "stores"}.</>}
+                {points.length > 0 && <>{cash > 0 ? " Plus points" : "Points"} at {listNames(points.map(r => programName(r.store)))}.</>}
                 {soon && <> {soon.store} {soon.value != null ? money(soon.value) : "points"} expire {fmtDay(soon.expires_on!)}.</>}
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, marginTop: 12 }}>See all →</div>
@@ -76,14 +79,14 @@ export default function Earn() {
                   <div style={{ display: "flex", flex: "none" }}>
                     {fan.map((i, n) => (
                       <div key={i.id} style={{ marginLeft: n ? -14 : 0, transform: `rotate(${[-6, 3, -2][n]}deg)`, borderRadius: 12, boxShadow: "0 4px 10px rgba(20,18,16,.14)" }}>
-                        <ItemImage src={i.image_url} store={i.store} w={46} h={58} radius={12} size={18} />
+                        <ItemImage src={i.image_url} store={i.store} name={i.name} w={46} h={58} radius={12} size={18} />
                       </div>
                     ))}
                   </div>
                 )}
               </div>
               <div style={{ fontSize: 14, color: "#5B4A8A", marginTop: 6, lineHeight: 1.4 }}>
-                Estimated resale value of {valued.length} pieces.{top && top.resale_high ? ` Your ${top.brand || top.store} ${top.name} could sell for up to ${money(top.resale_high)}.` : ""}
+                Estimated resale value of {valued.length} of your {(items ?? []).length} pieces.{top && top.resale_high ? ` Your ${top.brand || top.store} ${top.name} could sell for up to ${money(top.resale_high)}.` : ""}
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, marginTop: 12 }}>See what sells →</div>
             </Link>
@@ -95,7 +98,7 @@ export default function Earn() {
           )}
           {items !== null && unpriced > 0 && (
             <div style={{ marginTop: 14 }}>
-              <Job run={valueItems} label={priced.length ? `Price ${unpriced} new pieces` : "Price my closet"} working="Pricing" noun={["piece priced", "pieces priced"]} onDone={load} />
+              <Job run={valueItems} label={priced.length ? `Price ${unpriced} new ${unpriced === 1 ? "piece" : "pieces"}` : "Price my closet"} working="Pricing" noun={["piece priced", "pieces priced"]} onDone={load} />
               <div style={{ fontSize: 12, color: "#5B4A8A", marginTop: 8 }}>Takes about a minute. Clothes, shoes, bags and accessories only.</div>
             </div>
           )}

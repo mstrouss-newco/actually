@@ -19,7 +19,7 @@ const SENSITIVE_BRAND = /^(ro|roman|hims|hers|hims ?& ?hers|nurx|keeps|cove|curo
 // ---------- is it a real shopping order? (same rules as screen-emails) ----------
 
 const SCREEN_SYSTEM = `You sort emails for a personal shopping app. For the email, answer with one verdict:
-- "shopping": an order, shipping, delivery, return, refund or receipt for physical goods bought from a store. Clothing, shoes, bags, accessories, jewelry, beauty and cosmetics, home goods, furniture, electronics, toys, gifts, sports gear, books, pet food and pet supplies, garden and household supplies. Repeat deliveries of physical goods (Autoship, Subscribe & Save) count as shopping.
+- "shopping": an order, shipping, delivery, return, refund, cancellation or receipt for physical goods bought from a store. Clothing, shoes, bags, accessories, jewelry, beauty and cosmetics, home goods, furniture, electronics, toys, gifts, sports gear, books, pet food and pet supplies, garden and household supplies. Repeat deliveries of physical goods (Autoship, Subscribe & Save) count as shopping.
 - "sensitive": anything about health or privacy, even if it is an order. Pharmacy, prescriptions, medicine, vitamins sold for a condition, telehealth, doctors, labs and tests, mental health, fertility, pregnancy, birth control, sexual health or adult products, weight-loss programs, hair-loss treatment, medical devices, eyeglasses and contact lenses (Warby Parker, Zenni, 1-800 Contacts), insurance, legal, debt or banking.
 - "other": everything else. Software and online services, app and cloud bills, digital subscriptions and memberships, in-game or account credit, news, utilities, phone bills, school or kids' activity notices, kids' sports and camp registrations (even when called an order), carrier notices from UPS, FedEx, USPS or DHL that do not name the store, events and tickets, school or team forms and photo-day reminders, travel, rides, food delivery and restaurants, groceries, donations, newsletters, work emails, marketing and promotions without a confirmed purchase.
 Telehealth and pharmacy brands are always sensitive, even when a shipping service sends the email: Ro, Roman, Hims, Hers, Nurx, Keeps, Curology, Cerebral, Wisp, GoodRx, Capsule, CVS, Walgreens, Warby Parker and similar.
@@ -44,10 +44,11 @@ async function isShopping(from: string, subject: string, text: string) {
 
 // ---------- sorting an email (same rules as the Gmail import) ----------
 
-type Kind = "order" | "shipping" | "delivered" | "return" | "refund" | "receipt";
+type Kind = "order" | "shipping" | "delivered" | "return" | "refund" | "receipt" | "cancel";
 
 function classify(subject: string, text: string): Kind | null {
   const all = `${subject} ${text.slice(0, 600)}`;
+  if (/\border (has been |was |is )?cancel+ed\b|\b(we('ve| have)|has been|have been|was|were) cancel+ed\b|\bcancel+ation (confirm|of (your )?order)|\bcancel+ed (order|item)s?\b|^cancel+ed\b/i.test(all) && !/\b(shipped|delivered)\b/i.test(subject)) return "cancel";
   if (/refund/i.test(all)) return "refund";
   if (/return (label|request|started|received)|your return/i.test(all)) return "return";
   if (/delivered|has arrived/i.test(subject)) return "delivered";

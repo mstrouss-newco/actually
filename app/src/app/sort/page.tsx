@@ -137,7 +137,7 @@ export default function Sort() {
               <div style={{ ...stamp("#8A6D1E", 0), left: "50%", translate: "-50% 0", opacity: op(-d.y - Math.abs(d.x)) }}>SELL</div>
               <div style={{ position: "absolute", top: 18, left: "50%", transform: "translateX(-50%)", background: "rgba(255,255,255,.85)", borderRadius: 999, padding: "6px 12px", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", maxWidth: "80%", overflow: "hidden", textOverflow: "ellipsis", opacity: idle ? 1 : 0, transition: "opacity .15s" }}>From your {card.store} orders</div>
               <div style={{ position: "absolute", left: "14%", right: "14%", top: 56, bottom: 128, pointerEvents: "none" }}>
-                <ItemImage src={card.image_url} store={card.store} w="100%" h="100%" radius={0} size={96} />
+                <ItemImage src={card.image_url} store={card.store} name={card.name} w="100%" h="100%" radius={0} size={96} />
               </div>
               <div style={{ position: "absolute", left: 12, right: 12, bottom: 12, background: "#fff", borderRadius: 24, padding: "16px 18px", pointerEvents: "none" }}>
                 <div className="kicker">{brandOf(card)}</div>
@@ -163,7 +163,7 @@ export default function Sort() {
           <div style={{ display: "flex", marginBottom: 26 }}>
             {fan.map((x, n) => (
               <div key={x.id} style={{ transform: ["rotate(-10deg) translateX(14px)", "translateY(-8px)", "rotate(10deg) translateX(-14px)"][n], zIndex: n === 1 ? 1 : 0, boxShadow: n === 1 ? "0 10px 20px rgba(0,0,0,.1)" : "none", borderRadius: 18 }}>
-                <ItemImage src={x.image_url} store={x.store} w={70} h={88} radius={18} size={26} />
+                <ItemImage src={x.image_url} store={x.store} name={x.name} w={70} h={88} radius={18} size={26} />
               </div>
             ))}
           </div>

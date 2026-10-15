@@ -5,6 +5,9 @@ import Link from "next/link";
 import { type FeedItem, type SharedItem, ago, findIt, profileUrl, setFollow } from "./social";
 import { ItemImage, tint } from "./tabs";
 
+// "mike" reads as a name: "Mike".
+export const displayName = (h: string) => h.charAt(0).toUpperCase() + h.slice(1);
+
 export function Avatar({ handle, size = 36 }: { handle: string; size?: number }) {
   return (
     <div className="serif" style={{ width: size, height: size, borderRadius: "50%", background: tint(handle), display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: size * 0.45, flex: "none" }}>
@@ -24,7 +27,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
           <div style={{ fontSize: 12, color: "var(--muted)" }}>Added {ago(item.shared_at)}</div>
         </div>
       </Link>
-      <ItemImage src={item.image_url} store={item.store} w="100%" h={300} radius={28} size={80} />
+      <ItemImage src={item.image_url} store={item.store} name={item.name} w="100%" h={300} radius={28} size={80} />
       <div style={{ padding: "12px 4px 0" }}>
         <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)" }}>{item.brand || item.store}</div>
         <div className="serif" style={{ fontSize: 22, marginTop: 2 }}>{item.name}</div>
@@ -39,7 +42,7 @@ export function MyGrid({ items }: { items: SharedItem[] }) {
     <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "14px 12px" }}>
       {items.map(i => (
         <div key={i.id} className="lift" style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
-          <ItemImage src={i.image_url} store={i.store} w="100%" h={200} radius={22} size={56} />
+          <ItemImage src={i.image_url} store={i.store} name={i.name} w="100%" h={200} radius={22} size={56} />
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)" }}>{i.brand || i.store}</div>
           <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.25 }}>{i.name}</div>
         </div>
@@ -54,7 +57,7 @@ export function ItemGrid({ items }: { items: SharedItem[] }) {
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
       {items.map(i => (
         <a key={i.id} href={findIt(i)} target="_blank" rel="noreferrer" className="lift" style={{ textDecoration: "none" }}>
-          <ItemImage src={i.image_url} store={i.store} w="100%" h={190} radius={22} size={56} />
+          <ItemImage src={i.image_url} store={i.store} name={i.name} w="100%" h={190} radius={22} size={56} />
           <div className="kicker" style={{ marginTop: 8 }}>{i.brand || i.store}</div>
           <div style={{ fontWeight: 700, fontSize: 14, marginTop: 2, lineHeight: 1.25 }}>{i.name}</div>
         </a>

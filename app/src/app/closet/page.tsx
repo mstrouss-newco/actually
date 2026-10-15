@@ -3,15 +3,17 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { CATS, type Item, type Who, brandOf, confirmMine, hideItem, hueRank, loadItems, needsAsk, setPick, setWho, sizesByBrand, toSort, whoFor } from "@/lib/items";
-import { type Ret, dayLabel, fmtDate, loadOrders, returnsByEmail } from "@/lib/orders";
+import { type Ret, dayLabel, fmtDate, loadOrders, matches, returnsByEmail } from "@/lib/orders";
 import { ReadItems } from "@/lib/read-items";
-import { ItemImage, TabBar, tint } from "@/lib/tabs";
+import { ItemImage, StoreTile, TabBar, tint } from "@/lib/tabs";
 
 const PICKS: [NonNullable<Item["pick"]>, string][] = [["share", "Show on my feed"], ["sell", "Want to sell"], ["private", "Keep private"]];
 const WHO: [Who, string][] = [["me", "Me"], ["kids", "Kids"], ["partner", "Partner"], ["other", "Someone else"]];
 type SortKey = "new" | "color" | "brand" | "ret";
 const SORTS: [SortKey, string, string][] = [["new", "Newest", "What just came in"], ["color", "By color", "The rail turns into a rainbow"], ["brand", "By brand", "A to Z"], ["ret", "Returnable first", "Decide before the window closes"]];
-const BSORT: [string, string][] = [["most", "Most ordered"], ["recent", "Recent"], ["az", "A to Z"]];
+const BSORT: [string, string][] = [["most", "Most bought"], ["recent", "Recent"], ["az", "A to Z"]];
+// Same product in two colors: show the color so they don't look like duplicates.
+const twin = (i: Item, list: Item[]) => list.some(o => o !== i && o.name === i.name && brandOf(o) === brandOf(i));
 const isNew = (i: Item) => Date.now() - Date.parse(i.ordered_at) < 14 * 86400000;
 const ReturnIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 14L4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-3" /></svg>;
 const chip = (on: boolean): React.CSSProperties => ({ border: "1.5px solid var(--ink)", background: on ? "var(--ink)" : "#fff", color: on ? "#fff" : "var(--ink)", borderRadius: 999, padding: "7px 12px", font: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" });
@@ -47,6 +49,12 @@ export default function Closet() {
   const [undo, setUndo] = useState<Item | null>(null);
   // The pieces shown in "Is all of this yours?", fixed when it opens so answers don't reshuffle it.
   const [review, setReview] = useState<string[] | null>(null);
+  // Esc closes whatever sheet is open.
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") { setSel(null); setSortOpen(false); } };
+    addEventListener("keydown", key);
+    return () => removeEventListener("keydown", key);
+  }, []);
 
   const remove = async (i: Item) => {
     setSel(null);
@@ -109,12 +117,15 @@ export default function Closet() {
   for (const i of mine) byBrand.set(brandOf(i), [...(byBrand.get(brandOf(i)) ?? []), i]);
   const brands = [...byBrand.entries()].map(([name, its]) => {
     const open = its.map(i => rets.get(i.gmail_id ?? "")?.by).filter((t): t is number => !!t).sort((a, b) => a - b)[0];
+    // The shop's return rule, only when one of its emails states it.
+    const ret = its.map(i => rets.get(i.gmail_id ?? "")).find(r => r?.rule);
     return {
-      name, orders: new Set(its.map(i => i.gmail_id ?? i.id)).size, last: its.map(i => i.ordered_at).sort().at(-1)!,
-      sizes: sizes.get(name) ?? [], open: open ? `Return window closes ${dayLabel(open)}` : null,
+      name, orders: new Set(its.map(i => i.gmail_id ?? i.id)).size, pieces: its.length, last: its.map(i => i.ordered_at).sort().at(-1)!,
+      sizes: sizes.get(name) ?? [], open: open ? `Return by ${dayLabel(open)}` : null,
+      rule: ret?.rule ? `${ret.store !== name ? `${ret.store}: ` : ""}${ret.rule}` : null,
     };
-  }).filter(b => b.name.toLowerCase().includes(q.trim().toLowerCase()))
-    .sort(bsort === "az" ? (a, b) => a.name.localeCompare(b.name) : bsort === "recent" ? (a, b) => b.last.localeCompare(a.last) : (a, b) => b.orders - a.orders || b.last.localeCompare(a.last));
+  }).filter(b => !q.trim() || matches(b.name, q))
+    .sort(bsort === "az" ? (a, b) => a.name.localeCompare(b.name) : bsort === "recent" ? (a, b) => b.last.localeCompare(a.last) : (a, b) => b.pieces - a.pieces || b.orders - a.orders || b.last.localeCompare(a.last));
 
   return (
     <main className="tabscreen">
@@ -144,7 +155,7 @@ export default function Closet() {
             )}
             {view === "pieces" && toAsk[0] && (
               <div style={{ margin: "16px 16px 0", background: "#FAF8F6", borderRadius: 22, padding: 14, display: "flex", gap: 12, alignItems: "center" }}>
-                <ItemImage src={toAsk[0].image_url} store={toAsk[0].store} w={56} h={70} radius={14} size={22} />
+                <ItemImage src={toAsk[0].image_url} store={toAsk[0].store} name={toAsk[0].name} w={56} h={70} radius={14} size={22} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 14 }}>Is this yours?</div>
                   <div style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{toAsk[0].brand || toAsk[0].store} {toAsk[0].name} · Size {toAsk[0].size}</div>
@@ -187,9 +198,9 @@ export default function Closet() {
                       {back > 0 && <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 8, fontSize: 12, fontWeight: 700, color: "#C9402F" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#FF6159" }} />{back} can still go back</div>}
                     </div>
                     <div style={{ position: "relative", width: 112, height: 92, flex: "none" }}>
-                      {b && <div className="fan1" style={{ position: "absolute", left: 4, top: 10, transform: "rotate(-9deg)", boxShadow: "0 4px 10px rgba(20,18,16,.08)", borderRadius: 12 }}><ItemImage src={b.image_url} store={b.store} w={56} h={72} radius={12} size={20} /></div>}
-                      {c && <div className="fan3" style={{ position: "absolute", right: 4, top: 10, transform: "rotate(9deg)", boxShadow: "0 4px 10px rgba(20,18,16,.08)", borderRadius: 12 }}><ItemImage src={c.image_url} store={c.store} w={56} h={72} radius={12} size={20} /></div>}
-                      <div style={{ position: "absolute", left: 28, top: 2, boxShadow: "0 8px 16px rgba(20,18,16,.12)", borderRadius: 12 }}><ItemImage src={a.image_url} store={a.store} w={56} h={76} radius={12} size={20} /></div>
+                      {b && <div className="fan1" style={{ position: "absolute", left: 4, top: 10, transform: "rotate(-9deg)", boxShadow: "0 4px 10px rgba(20,18,16,.08)", borderRadius: 12 }}><ItemImage src={b.image_url} store={b.store} name={b.name} w={56} h={72} radius={12} size={20} /></div>}
+                      {c && <div className="fan3" style={{ position: "absolute", right: 4, top: 10, transform: "rotate(9deg)", boxShadow: "0 4px 10px rgba(20,18,16,.08)", borderRadius: 12 }}><ItemImage src={c.image_url} store={c.store} name={c.name} w={56} h={72} radius={12} size={20} /></div>}
+                      <div style={{ position: "absolute", left: 28, top: 2, boxShadow: "0 8px 16px rgba(20,18,16,.12)", borderRadius: 12 }}><ItemImage src={a.image_url} store={a.store} name={a.name} w={56} h={76} radius={12} size={20} /></div>
                     </div>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B9B3AC" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
                   </button>
@@ -214,9 +225,10 @@ export default function Closet() {
               {brands.map(b => (
                 <Link key={b.name} href={`/brand/${encodeURIComponent(b.name)}`} className="lift" style={{ display: "block", textDecoration: "none", background: tint(b.name), borderRadius: 28, padding: 18 }}>
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                    <StoreTile store={b.name} w={48} h={48} radius={14} size={22} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="serif" style={{ fontSize: 32, lineHeight: 1, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name}</div>
-                      <div style={{ fontSize: 13, color: "var(--soft)", marginTop: 4 }}>{b.orders} {b.orders === 1 ? "order" : "orders"} · last one {fmtDate(b.last)}</div>
+                      <div style={{ fontSize: 13, color: "var(--soft)", marginTop: 4 }}>{b.pieces} {b.pieces === 1 ? "piece" : "pieces"} · last one {fmtDate(b.last)}</div>
                     </div>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2" strokeLinecap="round" style={{ marginTop: 6 }}><path d="M9 6l6 6-6 6" /></svg>
                   </div>
@@ -230,10 +242,10 @@ export default function Closet() {
                       ))}
                     </div>
                   )}
-                  <div style={{ marginTop: 12, background: "rgba(255,255,255,.65)", borderRadius: 18, padding: "10px 14px", display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}><ReturnIcon />About 30 days to return (our estimate)</div>
+                  {(b.rule || b.open) && <div style={{ marginTop: 12, background: "rgba(255,255,255,.65)", borderRadius: 18, padding: "10px 14px", display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
+                    {b.rule && <div style={{ display: "flex", gap: 8, alignItems: "center" }}><ReturnIcon />{b.rule}</div>}
                     {b.open && <div style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 700 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6159", margin: "0 4px" }} />{b.open}</div>}
-                  </div>
+                  </div>}
                 </Link>
               ))}
               {brands.length === 0 && <div style={{ color: "var(--muted)", fontSize: 14, padding: "0 4px" }}>{q ? "No brand by that name in your closet." : "No brands yet. They show up as your orders are read."}</div>}
@@ -261,13 +273,13 @@ export default function Closet() {
                     <button key={i.id} onClick={() => setSel(i)} className="hang" style={{ opacity: r?.returned ? 0.4 : 1, flex: "none", width: 140, border: 0, background: "transparent", padding: 0, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", font: "inherit", color: "inherit" }}>
                       <svg width="44" height="26" viewBox="0 0 44 26" fill="none" stroke="#8C857D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4a3 3 0 1 1 3 3c-1.6.5-3 1.2-3 2.8V11" /><path d="M4 24 22 11l18 13z" /></svg>
                       <div style={{ marginTop: -6, position: "relative", borderRadius: 24, boxShadow: "0 10px 20px rgba(20,18,16,.08)" }}>
-                        <ItemImage src={i.image_url} store={i.store} w={140} h={178} radius={24} size={48} />
+                        <ItemImage src={i.image_url} store={i.store} name={i.name} w={140} h={178} radius={24} size={48} />
                         {r?.by && <div style={{ position: "absolute", bottom: -8, right: -6, background: "#FF6159", borderRadius: 999, padding: "5px 9px", fontSize: 11, fontWeight: 700, transform: "rotate(-6deg)" }}>Return by {dayLabel(r.by)}</div>}
                         {r?.returned && <div style={{ position: "absolute", bottom: -8, right: -6, background: "var(--ink)", color: "#fff", borderRadius: 999, padding: "5px 9px", fontSize: 11, fontWeight: 700 }}>Returned</div>}
                         {isNew(i) && <div style={{ position: "absolute", top: 10, left: 10, background: "#fff", borderRadius: 999, padding: "4px 8px", fontSize: 11, fontWeight: 700 }}>New</div>}
                       </div>
-                      <div style={{ marginTop: 12, fontSize: 13, fontWeight: 700, maxWidth: 140, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{brandOf(i)}</div>
-                      <div style={{ fontSize: 12, color: "var(--muted)", maxWidth: 140, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{i.name}</div>
+                      <div style={{ marginTop: 12, fontSize: 13, fontWeight: 700, width: 124, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "center" }}>{brandOf(i)}</div>
+                      <div style={{ fontSize: 12, color: "var(--muted)", width: 124, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "center" }}>{twin(i, sorted) && i.color ? `${i.name}, ${i.color}` : i.name}</div>
                     </button>
                   );
                 })}
@@ -277,8 +289,9 @@ export default function Closet() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, padding: "12px 16px 0" }}>
               {sorted.map(i => (
                 <button key={i.id} onClick={() => setSel(i)} style={{ opacity: rets.get(i.gmail_id ?? "")?.returned ? 0.4 : 1, border: 0, padding: 0, background: "transparent", cursor: "pointer", display: "flex", flexDirection: "column", gap: 5, font: "inherit", color: "inherit", textAlign: "left", minWidth: 0 }}>
-                  <ItemImage src={i.image_url} store={i.store} w="100%" h={140} radius={16} size={36} />
+                  <ItemImage src={i.image_url} store={i.store} name={i.name} w="100%" h={140} radius={16} size={36} />
                   <div style={{ fontSize: 12, fontWeight: 700, width: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{brandOf(i)}</div>
+                  <div style={{ fontSize: 11, color: "var(--muted)", width: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: -3 }}>{twin(i, sorted) && i.color ? i.color : i.name}</div>
                 </button>
               ))}
             </div>
@@ -308,7 +321,7 @@ export default function Closet() {
           <div onClick={e => e.stopPropagation()} className="popIn" style={{ width: "100%", background: "#fff", borderRadius: "30px 30px 0 0", padding: "14px 20px 28px" }}>
             <div style={{ width: 40, height: 5, borderRadius: 3, background: "#E5E0DA", margin: "0 auto 16px" }} />
             <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-              <ItemImage src={sel.image_url} store={sel.store} w={96} h={120} radius={20} size={44} />
+              <ItemImage src={sel.image_url} store={sel.store} name={sel.name} w={96} h={120} radius={20} size={44} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="kicker">{sel.brand || sel.store}</div>
                 <div className="serif" style={{ fontSize: 24, lineHeight: 1.08, marginTop: 4 }}>{sel.name}</div>
@@ -343,7 +356,7 @@ export default function Closet() {
           <div style={{ flex: 1, overflowY: "auto", padding: "8px 16px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
             {everything.filter(i => review.includes(i.id)).map(i => (
               <div key={i.id} style={{ display: "flex", gap: 12, alignItems: "center", background: "#FAF8F6", borderRadius: 18, padding: 10 }}>
-                <ItemImage src={i.image_url} store={i.store} w={48} h={60} radius={12} size={20} />
+                <ItemImage src={i.image_url} store={i.store} name={i.name} w={48} h={60} radius={12} size={20} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{i.brand || i.store} {i.name}</div>
                   <div style={{ fontSize: 12, color: "var(--muted)" }}>{i.size ? `Size ${i.size}` : "No size"}</div>
