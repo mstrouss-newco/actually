@@ -195,7 +195,7 @@ Deno.serve(async req => {
       color: i.color?.slice(0, 60) ?? null, price: i.price, quantity: Math.max(1, i.quantity || 1),
       image_url: i.image_url?.startsWith("https://") ? i.image_url.slice(0, 1000) : null, category: i.category,
     }));
-    if (items.length) await admin.from("items").upsert(items, { onConflict: "user_id,gmail_id,name,size", ignoreDuplicates: true });
+    if (items.length) await admin.from("items").upsert(items, { onConflict: "user_id,gmail_id,name,size,color", ignoreDuplicates: true });
     await admin.from("orders").update({ items_read: true }).eq("user_id", profile.id).eq("gmail_id", id);
   }
   return new Response("saved");
