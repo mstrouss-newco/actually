@@ -24,6 +24,7 @@ const Result = z.object({
   final_sale: z.boolean().describe("True only if the email says the items are final sale or can't be returned."),
   arrive_from: z.string().nullable().describe("Earliest expected delivery date the email states, as YYYY-MM-DD. Null if none."),
   arrive_to: z.string().nullable().describe("Latest expected delivery date the email states, as YYYY-MM-DD (same as arrive_from for a single day). Null if none."),
+  order_total: z.number().nullable().describe("The order total the shopper paid, in dollars, including tax and shipping, exactly as the email states it. Null if the email doesn't state a total."),
 });
 
 // Each store's return rules, as the email states them.
@@ -33,6 +34,7 @@ const Rules = z.object({
   final_sale: z.boolean().describe("True only if the email says these items are final sale or can't be returned."),
   arrive_from: z.string().nullable().describe("Earliest expected delivery date the email states, as YYYY-MM-DD. Null if none."),
   arrive_to: z.string().nullable().describe("Latest expected delivery date the email states, as YYYY-MM-DD (same as arrive_from for a single day). Null if none."),
+  order_total: z.number().nullable().describe("The order total the shopper paid, in dollars, including tax and shipping, exactly as the email states it. Null if none."),
 });
 const RULES_SYSTEM = `You read one online shopping email and report the store's return rules as written in it.
 Only use what the email says. Never use what you know about the store. The shopper is in the US: ignore rules that only apply to other countries (for example "EU customers only"). If returns aren't mentioned, return nulls and final_sale false. Also report the expected delivery dates if the email states them (e.g. "Est. Delivery Oct 15 - Oct 18"); use the email's year.`;
@@ -97,7 +99,8 @@ Deno.serve(async req => {
     try { r = await ask(Rules, RULES_SYSTEM, `Store: ${row.store}\n\n${text.slice(0, 40000)}`); } catch { return json({ error: "ai failed" }, 502); }
     const days = r?.final_sale ? 0 : r?.return_days != null && r.return_days > 0 && r.return_days <= 400 ? r.return_days : null;
     const note = r?.final_sale ? "Final sale" : r?.note?.trim().slice(0, 60) || null;
-    await admin.from("orders").update({ rules_read: true, return_days: days, return_note: note, ...eta(r) }).eq("user_id", auth.user.id).eq("gmail_id", gmail_id);
+    const total = r?.order_total != null && r.order_total > 0 && r.order_total < 100000 ? Math.round(r.order_total * 100) / 100 : null;
+    await admin.from("orders").update({ rules_read: true, return_days: days, return_note: note, ...eta(r), ...(total != null ? { amount: total } : {}) }).eq("user_id", auth.user.id).eq("gmail_id", gmail_id);
     return json({ return_days: days, note, ...eta(r) });
   }
 
@@ -156,6 +159,7 @@ Deno.serve(async req => {
   if (items.length) await admin.from("items").upsert(items, { onConflict: "user_id,gmail_id,name,size,color", ignoreDuplicates: true });
   const days = parsed?.final_sale ? 0 : parsed?.return_days != null && parsed.return_days > 0 && parsed.return_days <= 400 ? parsed.return_days : null;
   const note = parsed?.final_sale ? "Final sale" : parsed?.return_note?.trim().slice(0, 60) || null;
-  await admin.from("orders").update({ items_read: true, rules_read: true, return_days: days, return_note: note, ...eta(parsed) }).eq("user_id", auth.user.id).eq("gmail_id", gmail_id);
+  const total = parsed?.order_total != null && parsed.order_total > 0 && parsed.order_total < 100000 ? Math.round(parsed.order_total * 100) / 100 : null;
+  await admin.from("orders").update({ items_read: true, rules_read: true, return_days: days, return_note: note, ...eta(parsed), ...(total != null ? { amount: total } : {}) }).eq("user_id", auth.user.id).eq("gmail_id", gmail_id);
   return json({ items: items.length });
 });

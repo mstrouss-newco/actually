@@ -64,10 +64,12 @@ export type OrderGroup = {
   pieces: Piece[];
   // Return rules from the store's emails. Null days means the emails don't say.
   returnDays: number | null; returnNote: string | null;
+  // Sum of the piece prices, for orders whose email total we don't have.
+  itemsTotal?: number | null;
   // Expected delivery, from the store's email or a subject like "Arriving tomorrow".
   eta: { from: string; to: string } | null;
 };
-export type Piece = { name: string; img: string | null; wear: boolean; color?: string | null };
+export type Piece = { name: string; img: string | null; wear: boolean; color?: string | null; price?: number | null; qty?: number };
 
 type FullRow = Row & { subject: string | null; store_domain: string | null; return_days?: number | null; return_note?: string | null; arrive_from?: string | null; arrive_to?: string | null };
 const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -211,20 +213,22 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
     for (const p of g.pieces) {
       const k = `${baseName(p.name)}|${(p.color ?? "").toLowerCase()}`;
       const had = best.get(k);
-      if (!had || p.name.length > had.name.length) best.set(k, { ...p, img: p.img || had?.img || null });
-      else if (!had.img && p.img) had.img = p.img;
+      if (!had || p.name.length > had.name.length) best.set(k, { ...p, img: p.img || had?.img || null, price: p.price ?? had?.price ?? null });
+      else { if (!had.img && p.img) had.img = p.img; had.price ??= p.price ?? null; }
     }
     // "Lima" and "Lima shoe" in the same color from two emails: one piece.
     const core = (n: string) => baseName(n).replace(/(shoes?|sneakers?|boots?|sandals?)$/, "");
     const merged: Piece[] = [];
     for (const p of [...best.values()].sort((a, b) => b.name.length - a.name.length)) {
       const t = merged.find(m => (m.color ?? "").toLowerCase() === (p.color ?? "").toLowerCase() && (core(m.name).includes(core(p.name)) || core(p.name).includes(core(m.name))));
-      if (!t) merged.push(p); else if (!t.img && p.img) t.img = p.img;
+      if (!t) merged.push(p); else { if (!t.img && p.img) t.img = p.img; t.price ??= p.price ?? null; }
     }
     g.pieces = merged.sort((a, b) => Number(b.wear) - Number(a.wear) || Number(!!b.img) - Number(!!a.img));
     // The title and the photo describe the same piece.
     g.items = g.pieces.length ? g.pieces.map(p => p.name) : dedupeNames(g.items);
     g.photo = g.pieces[0]?.img ?? null;
+    const priced = g.pieces.filter(p => p.price != null);
+    g.itemsTotal = priced.length ? Math.round(priced.reduce((s, p) => s + p.price! * (p.qty || 1), 0) * 100) / 100 : null;
   }
   // A store's rules apply to its other orders too ("Free and easy returns" on every Huckberry order).
   const rules = new Map<string, OrderGroup>();
@@ -282,16 +286,16 @@ async function fetchOrders(): Promise<OrderGroup[] | null> {
   if (!auth.session) return null;
   const [{ data }, { data: items }] = await Promise.all([
     sb.from("orders").select("store, store_domain, kind, order_no, amount, sent_at, gmail_id, subject, return_days, return_note, arrive_from, arrive_to").neq("kind", "other").order("sent_at", { ascending: false }).limit(5000),
-    sb.from("items").select("gmail_id, name, category, image_url, color").limit(5000),
+    sb.from("items").select("gmail_id, name, category, image_url, color, price, quantity").limit(5000),
   ]);
   const names = new Map<string, string[]>();
   const wear = new Set<string>();
   const pieces = new Map<string, Piece[]>();
-  for (const i of (items ?? []) as { gmail_id: string; name: string; category: string; image_url: string | null; color: string | null }[]) {
+  for (const i of (items ?? []) as { gmail_id: string; name: string; category: string; image_url: string | null; color: string | null; price: number | string | null; quantity: number | null }[]) {
     names.set(i.gmail_id, [...(names.get(i.gmail_id) ?? []), i.name]);
     const isWear = WEAR.includes(i.category) && !NOT_WEAR.test(i.name);
     if (isWear) wear.add(i.gmail_id);
-    pieces.set(i.gmail_id, [...(pieces.get(i.gmail_id) ?? []), { name: i.name, img: i.image_url || null, wear: isWear, color: i.color }]);
+    pieces.set(i.gmail_id, [...(pieces.get(i.gmail_id) ?? []), { name: i.name, img: i.image_url || null, wear: isWear, color: i.color, price: i.price == null ? null : Number(i.price), qty: i.quantity || 1 }]);
   }
   // Orders that are only pet prescriptions don't show anywhere.
   return groupOrders((data ?? []) as FullRow[], names, wear, pieces).filter(g => !(g.items.length && g.items.every(n => PET_RX.test(n))))
@@ -451,3 +455,7 @@ export async function cleanupOnce(): Promise<boolean> {
   const { data } = await sb.functions.invoke("screen-emails", { body: { clean: true } });
   return !!data?.removed;
 }
+
+// What she paid: the email's total when we have it, else the piece prices added up.
+export const paid = (g: OrderGroup) => g.amount ?? g.itemsTotal ?? null;
+export const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;

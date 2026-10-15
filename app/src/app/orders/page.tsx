@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { type OrderGroup, dayLabel, fmtDate, isArriving, isReturn, loadOrders, matches, orderTitle, returnBy, returnDaysLeft, ruleText, SOON } from "@/lib/orders";
+import { type OrderGroup, dayLabel, fmtDate, isArriving, isReturn, loadOrders, matches, orderTitle, paid, returnBy, returnDaysLeft, ruleText, SOON, usd } from "@/lib/orders";
 import { Progress, ItemImage, TabBar } from "@/lib/tabs";
 import { delay } from "@/lib/motion";
 
@@ -170,7 +170,7 @@ export default function Orders() {
                     {c && <div style={{ flex: "none", background: c[1], borderRadius: 999, padding: "4px 9px", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{c[0]}</div>}
                   </div>
                   <div style={{ fontWeight: 700, fontSize: 15, lineHeight: 1.25, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{orderTitle(g)}</div>
-                  <div style={{ fontSize: 13, color: "var(--soft)" }}>{tab === "canreturn" ? `Return by ${dayLabel(returnBy(g))}${rule ? ` · ${rule}` : ""}` : `${status(g)}${g.amount != null ? ` · $${g.amount.toFixed(2)}` : ""}`}</div>
+                  <div style={{ fontSize: 13, color: "var(--soft)" }}>{tab === "canreturn" ? `Return by ${dayLabel(returnBy(g))}${rule ? ` · ${rule}` : ""}` : `${status(g)}${paid(g) != null ? ` · ${usd(paid(g)!)}` : ""}`}</div>
                   {isArriving(g) && <div style={{ marginTop: 2 }}><Progress step={STEP[g.stage]} h={5} /></div>}
                 </div>
               </Link>
