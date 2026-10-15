@@ -19,6 +19,12 @@ export async function searchPeople(q: string) {
   return (data ?? []) as { handle: string; shared: number; i_follow: boolean }[];
 }
 
+// People who follow her or she follows ("Friends already here").
+export async function myPeople() {
+  const { data } = await supabase().rpc("my_people");
+  return (data ?? []) as { handle: string; shared: number; i_follow: boolean; follows_me: boolean }[];
+}
+
 export async function similarPeople() {
   const { data } = await supabase().rpc("similar_people");
   return (data ?? []) as { handle: string; brands: string[]; shared: number }[];

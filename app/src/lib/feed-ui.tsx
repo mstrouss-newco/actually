@@ -13,22 +13,37 @@ export function Avatar({ handle, size = 36 }: { handle: string; size?: number })
   );
 }
 
-// One shared piece in the Following feed.
+// One shared piece in the Friends feed: who, a big photo, brand and name. Nothing else.
 export function FeedCard({ item }: { item: FeedItem }) {
   return (
-    <div style={{ background: "#FAF8F6", borderRadius: 26, padding: 12 }}>
-      <Link href={`/u/${item.handle}`} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", padding: "2px 4px 10px" }}>
-        <Avatar handle={item.handle} size={32} />
-        <div style={{ flex: 1, fontSize: 14 }}><b>{item.handle}</b> <span style={{ color: "var(--muted)" }}>shared · {ago(item.shared_at)}</span></div>
-      </Link>
-      <ItemImage src={item.image_url} store={item.store} w="100%" h={300} radius={20} size={80} />
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 4px 2px" }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="kicker">{item.brand || item.store}</div>
-          <div style={{ fontWeight: 700, fontSize: 15, marginTop: 2 }}>{item.name}</div>
+    <div>
+      <Link href={`/u/${item.handle}`} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", padding: "0 4px 10px" }}>
+        <Avatar handle={item.handle} size={38} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>{item.handle}</div>
+          <div style={{ fontSize: 12, color: "var(--muted)" }}>Added {ago(item.shared_at)}</div>
         </div>
-        <a href={findIt(item)} target="_blank" rel="noreferrer" style={{ height: 40, padding: "0 16px", borderRadius: 999, background: "var(--ink)", color: "#fff", display: "flex", alignItems: "center", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Find it</a>
+      </Link>
+      <ItemImage src={item.image_url} store={item.store} w="100%" h={300} radius={28} size={80} />
+      <div style={{ padding: "12px 4px 0" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)" }}>{item.brand || item.store}</div>
+        <div className="serif" style={{ fontSize: 22, marginTop: 2 }}>{item.name}</div>
       </div>
+    </div>
+  );
+}
+
+// Two-column grid of her own shared pieces (no links out).
+export function MyGrid({ items }: { items: SharedItem[] }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "14px 12px" }}>
+      {items.map(i => (
+        <div key={i.id} className="lift" style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+          <ItemImage src={i.image_url} store={i.store} w="100%" h={200} radius={22} size={56} />
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)" }}>{i.brand || i.store}</div>
+          <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.25 }}>{i.name}</div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -48,7 +63,7 @@ export function ItemGrid({ items }: { items: SharedItem[] }) {
   );
 }
 
-export function FollowButton({ handle, initial, small = false }: { handle: string; initial: boolean; small?: boolean }) {
+export function FollowButton({ handle, initial, small = false, full = false }: { handle: string; initial: boolean; small?: boolean; full?: boolean }) {
   const [on, setOn] = useState(initial);
   const [busy, setBusy] = useState(false);
   const toggle = async () => {
@@ -60,7 +75,7 @@ export function FollowButton({ handle, initial, small = false }: { handle: strin
   return (
     <button onClick={toggle} disabled={busy} style={{
       height: small ? 36 : 46, padding: small ? "0 14px" : "0 22px", borderRadius: 999, cursor: "pointer", font: `700 ${small ? 13 : 15}px var(--font-sans), sans-serif`,
-      background: on ? "#fff" : "var(--ink)", color: on ? "var(--ink)" : "#fff", border: "1.5px solid var(--ink)", whiteSpace: "nowrap",
+      background: on ? "#fff" : "var(--ink)", color: on ? "var(--ink)" : "#fff", border: "1.5px solid var(--ink)", whiteSpace: "nowrap", width: full ? "100%" : undefined,
     }}>
       {on ? "Following" : "Follow"}
     </button>
@@ -68,7 +83,7 @@ export function FollowButton({ handle, initial, small = false }: { handle: strin
 }
 
 // Shares her public feed link with the phone's share sheet, or copies it.
-export function ShareLink({ handle, label = "Share my feed" }: { handle: string; label?: string }) {
+export function ShareLink({ handle, label = "Share my feed", dark = false }: { handle: string; label?: string; dark?: boolean }) {
   const [copied, setCopied] = useState(false);
   const go = async () => {
     const url = profileUrl(handle);
@@ -77,5 +92,5 @@ export function ShareLink({ handle, label = "Share my feed" }: { handle: string;
       else { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1800); }
     } catch {}
   };
-  return <button onClick={go} className="btn btn-line" style={{ height: 48, fontSize: 15 }}>{copied ? "Link copied" : label}</button>;
+  return <button onClick={go} className={dark ? "btn" : "btn btn-line"} style={{ height: dark ? 46 : 48, fontSize: dark ? 14 : 15, marginTop: 0 }}>{copied ? "Link copied" : label}</button>;
 }
