@@ -108,7 +108,7 @@ from this repo. Keep repo and deployed code identical.
 Orders kinds: order, shipping, delivered, return, refund, receipt, cancel. A cancel email, or a refund within 3 days of ordering with nothing shipped, makes the order "cancelled": it shows under Orders > Cancelled and its pieces stay out of Closet and Worth.
 Order pieces are one per product and color (`groupOrders`), so three colors of a tee are three pieces.
 Motion lives in `app/globals.css` (classes `up`, `press`, `drop`, `bell`, `float`, `heroIn`, `barfill`, `glow`, `fanin`) and `lib/motion.tsx` (`delay()` for staggered lists, `useCountUp`, `TrackBar`, `Confetti`). Reduced-motion settings shorten all of it.
-Product images never fall back to a store logo or a letter: `ItemImage` shows a small drawing of what the item is (`lib/drawings.tsx`, matched from the item name, then the store; a box if nothing matches). Logos (`StoreTile`) are for brands and stores only.
+Product images never fall back to a store logo or a letter: `ItemImage` shows a small drawing of what the item is (`lib/drawings.tsx`, matched from the item name, then the store; a box if nothing matches). Logos (`StoreTile`, `BrandLogo`) are for brands and stores only, and never fall back to a letter: `StoreTile` shows a drawing, `BrandLogo` shows nothing.
 
 Tables: `profiles`, `orders`, `items`, `rewards`, `follows`, `blocked_stores`, `gmail_tokens` (no policies; server only).
 `items.for_whom` (me / kids / partner / other, guessed by `whoFor()` in `lib/items.ts` when empty)
