@@ -21,7 +21,7 @@ const FREE_MAIL = /^(gmail|yahoo|outlook|hotmail|icloud|aol|me)\./i;
 // Carriers (they hide the real store), phone and cable bills, restaurants, kids' sports and school sign-ups.
 const NOT_STORE = /(^|\.)(ups|fedex|usps|dhl|ontrac|lasership|verizon|verizonwireless|vzw|att|t-mobile|tmobile|xfinity|comcast|spectrum|cox|chipotle|sweetgreen|cava|panera|tacobell|sportsengine|leagueapps|teamsnap|playmetrics|gotsport|ottosportmail|active|signupgenius|jotform|campminder|schoolpay|myschoolbucks|educationalproducts|schoolkidz|owner|popmenu|bentobox|slicelife)\.(com|ai|net|org)$/i;
 // Kids' teams, camps and school sign-ups: never saved, even when the email says "order".
-const KIDS_FROM = /\byouth\b|\bsoccer\b|little league|\bacademy\b|\bschool\b|\bpta\b|preschool|daycare|\bcamps?\b/i;
+const KIDS_FROM = /\byearbooks?\b|treering|\byouth\b|\bsoccer\b|little league|\bacademy\b|\bschool\b|\bpta\b|preschool|daycare|\bcamps?\b/i;
 const KIDS_SUBJECT = /\bregistration\b|\benroll(ment|ed)?\b|\btryouts?\b|\bsummer camp\b/i;
 
 async function get<T>(url: string, token: string): Promise<T> {
@@ -68,7 +68,7 @@ export async function readOne(id: string, token: string): Promise<Order | null> 
 // Marketing and follow-ups that mention an order but aren't one.
 // Order contents that point to health. Never saved, even from regular stores.
 const SENSITIVE_SUBJECT = /health ?care|medical|pharmacy|prescription|vitamin|\bhealth|hair (loss|fiber|regrowth)|minoxidil|rogaine|toppik|wellness|eye ?glasses|contact lens|supplement|sexual|incontinence|pregnan|ovulation|fertility|covid|test kit|first aid/i;
-const NOT_ORDER = /order (today|now|by)\b|last chance|don't miss|ends (soon|tonight|today)|reminder|time to review|review it|meet your expectations|rate (your|us)|how did we do|survey|feedback|tell us what you think|write a review|recommended for you/i;
+const NOT_ORDER = /order (today|now|by)\b|last chance|don't miss|ends (soon|tonight|today)|reminder|time to review|review it|meet your expectations|rate (your|us)|how did we do|survey|feedback|(tell us )?what (do )?you think|write a review|recommended for you|\bfree\b.{0,40}\bwith (your|any) (next )?order|valid payment method|update your payment|unable to cancel|cancel+ation of items?|subscription cancel+ed|delivery cancel+ed|replacement item|whole foods|amazon fresh/i;
 // "Your order has been cancelled", "We have cancelled order #1103923".
 const CANCELLED = /\border (has been |was |is )?cancel+ed\b|\b(we('ve| have)|has been|have been|was|were) cancel+ed\b|\bcancel+ation (confirm|of (your )?order)|\bcancel+ed (order|item)s?\b|^cancel+ed\b/i;
 // Invisible direction marks some stores put around order numbers.
