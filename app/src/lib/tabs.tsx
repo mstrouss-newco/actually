@@ -95,9 +95,27 @@ export function StoreTile({ store, domain, w, h, radius = 18, size = 28 }: { sto
       </div>
     );
   }
+  // No logo: a small drawing (a bag unless the name says more), never a letter.
+  const kind = drawingFor(store);
+  const side = typeof w === "number" && typeof h === "number" ? Math.min(w, h) : size * 2.4;
   return (
-    <div className="serif" style={{ width: w, height: h, borderRadius: radius, background: tint(store), flex: "none", display: "flex", alignItems: "center", justifyContent: "center", fontSize: size, fontStyle: "italic" }}>
-      {store.charAt(0).toUpperCase()}
+    <div style={{ width: w, height: h, borderRadius: radius, background: tint(store), flex: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Drawing kind={kind === "box" ? "bag" : kind} size={Math.round(side * 0.62)} />
+    </div>
+  );
+}
+
+// Just the brand's logo on a small white chip, or nothing when there's no logo.
+export function BrandLogo({ store, domain, size = 34 }: { store: string; domain?: string | null; size?: number }) {
+  const [src, setSrc] = useState(0);
+  const d = storeDomain(store, domain);
+  if (!d || src >= LOGOS.length) return null;
+  const logo = Math.round(size * 0.64);
+  return (
+    <div style={{ width: size, height: size, borderRadius: Math.round(size * 0.28), background: "#fff", flex: "none", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(20,18,16,.08)" }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img key={src} src={LOGOS[src](d)} alt="" width={logo} height={logo} referrerPolicy="no-referrer" onError={() => setSrc(n => n + 1)}
+        onLoad={e => { if ((e.target as HTMLImageElement).naturalWidth <= 16) setSrc(n => n + 1); }} style={{ borderRadius: 5 }} />
     </div>
   );
 }

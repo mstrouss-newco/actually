@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Brands cards (design A, "Photo shelf"): smaller name, a fanned strip of your pieces with a +N tile, size pills and the return window on one line with a pulsing dot. The brand logo shows only when a real one loads; store tiles never fall back to a letter (a small drawing instead).
+
 - Worth list: every piece has a clear "Sell →" button (or "Selling" once it's on the list), the "Marked to sell" tab is now "Selling" with a one-line explanation.
 
 - Resale posts: each piece's Worth page now picks a site (Poshmark, Depop, eBay, Mercari, ThredUp), suggests a price per site, and builds an editable post (title within the site's limit, condition, description, hashtags for Depop). "Copy and open" copies it, adds the piece to the sell list and opens the site's sell page. Closet piece sheet has "Make a resale post" once a piece is marked to sell.

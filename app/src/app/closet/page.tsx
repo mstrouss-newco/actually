@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CATS, type Item, type Who, brandOf, confirmMine, hideItem, hueRank, loadItems, needsAsk, setPick, setWho, shortSize, sizesByBrand, toSort, whoFor } from "@/lib/items";
 import { type Ret, dayLabel, fmtDate, loadOrders, matches, returnsByEmail } from "@/lib/orders";
 import { ReadItems } from "@/lib/read-items";
-import { ItemImage, StoreTile, TabBar, tint } from "@/lib/tabs";
+import { ItemImage, BrandLogo, TabBar, tint } from "@/lib/tabs";
 import { delay } from "@/lib/motion";
 
 const PICKS: [NonNullable<Item["pick"]>, string][] = [["share", "Show on my feed"], ["sell", "Want to sell"], ["private", "Keep private"]];
@@ -16,7 +16,6 @@ const BSORT: [string, string][] = [["most", "Most bought"], ["recent", "Recent"]
 // Same product in two colors: show the color so they don't look like duplicates.
 const twin = (i: Item, list: Item[]) => list.some(o => o !== i && o.name === i.name && brandOf(o) === brandOf(i));
 const isNew = (i: Item) => Date.now() - Date.parse(i.ordered_at) < 14 * 86400000;
-const ReturnIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 14L4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-3" /></svg>;
 const chip = (on: boolean): React.CSSProperties => ({ border: "1.5px solid var(--ink)", background: on ? "var(--ink)" : "#fff", color: on ? "#fff" : "var(--ink)", borderRadius: 999, padding: "7px 12px", font: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" });
 
 export default function Closet() {
@@ -135,6 +134,8 @@ export default function Closet() {
     return {
       name, orders: new Set(its.map(i => i.gmail_id ?? i.id)).size, pieces: its.length, last: its.map(i => i.ordered_at).sort().at(-1)!,
       sizes: sizes.get(name) ?? [], open: open ? `Return by ${dayLabel(open)}` : null,
+      // Newest first, photos first: the strip of her pieces on the card.
+      strip: [...its].sort((a, b) => Number(!!b.image_url) - Number(!!a.image_url) || b.ordered_at.localeCompare(a.ordered_at)),
       rule: ret?.rule ? `${ret.store !== name ? `${ret.store}: ` : ""}${ret.rule}` : null,
     };
   }).filter(b => !q.trim() || matches(b.name, q))
@@ -236,29 +237,37 @@ export default function Closet() {
             </div>}
             <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: "16px 16px 0" }}>
               {brands.map((b, bi) => (
-                <Link key={b.name} href={`/brand/${encodeURIComponent(b.name)}`} className="lift up" style={{ ...delay(bi, 70), display: "block", textDecoration: "none", background: tint(b.name), borderRadius: 28, padding: 18 }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                    <StoreTile store={b.name} w={48} h={48} radius={14} size={22} />
+                <Link key={b.name} href={`/brand/${encodeURIComponent(b.name)}`} className="lift up press" style={{ ...delay(bi, 70), display: "block", textDecoration: "none", background: tint(b.name), borderRadius: 26, padding: "14px 16px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <BrandLogo store={b.name} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="serif" style={{ fontSize: 24, lineHeight: 1.2, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", paddingBottom: 2 }}>{b.name}</div>
-                      <div style={{ fontSize: 13, color: "var(--soft)", marginTop: 4 }}>{b.pieces} {b.pieces === 1 ? "piece" : "pieces"} · last one {fmtDate(b.last)}</div>
+                      <div className="serif" style={{ fontSize: 20, lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", paddingBottom: 2 }}>{b.name}</div>
+                      <div style={{ fontSize: 12, color: "var(--soft)" }}>{b.pieces} {b.pieces === 1 ? "piece" : "pieces"} · last one {fmtDate(b.last)}</div>
                     </div>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2" strokeLinecap="round" style={{ marginTop: 6 }}><path d="M9 6l6 6-6 6" /></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.4" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
                   </div>
-                  {b.sizes.length > 0 && (
-                    <div style={{ display: "flex", gap: 6, marginTop: 12, overflowX: "auto" }}>
-                      {b.sizes.map(s => (
-                        <div key={s.cat} style={{ flex: "none", background: "#fff", borderRadius: 999, padding: "5px 11px", display: "flex", alignItems: "baseline", gap: 6, fontSize: 13, whiteSpace: "nowrap" }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)" }}>{CATS.find(c => c[0] === s.cat)?.[1]}</span>
-                          <span style={{ fontWeight: 700 }}>{shortSize(s.size, s.cat)}</span>
-                        </div>
+                  <div style={{ display: "flex", marginTop: 12, paddingLeft: 2 }}>
+                    {b.strip.slice(0, 4).map((it, k) => (
+                      <div key={it.id} className="fanin" style={{ marginLeft: k ? -10 : 0, transform: `rotate(${[-4, 2, -1, 3][k]}deg)`, position: "relative", zIndex: 4 - k, borderRadius: 14, boxShadow: "0 4px 12px rgba(20,18,16,.08)", animationDelay: `${bi * 70 + k * 60}ms` }}>
+                        <ItemImage src={it.image_url} store={it.store} name={it.name} w={60} h={74} radius={14} />
+                      </div>
+                    ))}
+                    {b.pieces > 4 && <div style={{ width: 60, height: 74, marginLeft: -10, borderRadius: 14, background: "var(--ink)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, position: "relative" }}>+{b.pieces - 4}</div>}
+                  </div>
+                  {(b.sizes.length > 0 || b.open || b.rule) && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+                      {b.sizes.slice(0, 3).map(s => (
+                        <span key={s.cat} style={{ background: "#fff", borderRadius: 999, padding: "4px 10px", display: "inline-flex", alignItems: "baseline", gap: 5, fontSize: 12, whiteSpace: "nowrap" }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)" }}>{CATS.find(c => c[0] === s.cat)?.[1]}</span>
+                          <b>{shortSize(s.size, s.cat)}</b>
+                        </span>
                       ))}
+                      <span style={{ flex: 1 }} />
+                      {b.open
+                        ? <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "#C9402F" }}><span className="ping" style={{ width: 7, height: 7, borderRadius: "50%", background: "#FF6159" }} />{b.open}</span>
+                        : b.rule && <span style={{ fontSize: 12, color: "var(--soft)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{b.rule}</span>}
                     </div>
                   )}
-                  {(b.rule || b.open) && <div style={{ marginTop: 12, background: "rgba(255,255,255,.65)", borderRadius: 18, padding: "10px 14px", display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
-                    {b.rule && <div style={{ display: "flex", gap: 8, alignItems: "center" }}><ReturnIcon />{b.rule}</div>}
-                    {b.open && <div style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 700 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6159", margin: "0 4px" }} />{b.open}</div>}
-                  </div>}
                 </Link>
               ))}
               {brands.length === 0 && <div style={{ color: "var(--muted)", fontSize: 14, padding: "0 4px" }}>{q ? "No brand by that name in your closet." : "No brands yet. They show up as your orders are read."}</div>}
