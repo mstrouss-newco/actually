@@ -66,7 +66,7 @@ const KNOWN: Record<string, string> = {
   dickssportinggoods: "dickssportinggoods.com", underarmour: "underarmour.com", nike: "nike.com", adidas: "adidas.com",
   lululemon: "lululemon.com", patagonia: "patagonia.com", sunglassresort: "sunglassresort.com",
   doen: "shopdoen.com", tck: "tck.com", tckkrazisox: "tck.com", champion: "champion.com", championsports: "championsports.com",
-  rainbowsandals: "rainbowsandals.com", flintandtinder: "flintandtinder.com", relwen: "relwen.com", kizik: "kizik.com",
+  rainbowsandals: "rainbowsandals.com", flintandtinder: "huckberry.com", relwen: "relwen.com", kizik: "kizik.com",
 };
 // The store's web address: the one from the email, else a good guess from its name.
 export function storeDomain(store: string, domain?: string | null) {
