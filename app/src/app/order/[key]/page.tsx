@@ -3,7 +3,7 @@
 import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type OrderGroup, blockStore, dayLabel, deliveredAt, fmtDate, gmailLink, isArriving, justArrived, loadOrders, orderTitle, removeOrder, returnBy, returnDaysLeft, ruleText, trackStep } from "@/lib/orders";
+import { type OrderGroup, blockStore, dayLabel, deliveredAt, etaText, fmtDate, gmailLink, isArriving, justArrived, loadOrders, orderTitle, removeOrder, returnBy, returnDaysLeft, ruleText, trackStep } from "@/lib/orders";
 import { Confetti, TrackBar, delay } from "@/lib/motion";
 import { ItemImage, TabBar, tint } from "@/lib/tabs";
 
@@ -89,10 +89,10 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
           <div className="up" style={{ ...delay(1), position: "relative", margin: "18px 16px 0", background: "#FAF8F6", borderRadius: 26, padding: "18px 18px 16px" }}>
             {party && <Confetti />}
             <div className={justArrived(order) ? "pop" : undefined} style={{ fontFamily: "var(--font-serif), serif", fontSize: 26, lineHeight: 1.05 }}>
-              {justArrived(order) ? <>It&apos;s <em>here.</em></> : trackStep(order) === 2 ? <>Out for <em>delivery</em></> : order.stage === "shipped" ? <>On its <em>way</em></> : <>Order <em>placed</em></>}
+              {justArrived(order) ? <>It&apos;s <em>here.</em></> : trackStep(order) === 2 ? <>Out for <em>delivery</em></> : etaText(order) ? etaText(order) : order.stage === "shipped" ? <>On its <em>way</em></> : <>Order <em>placed</em></>}
             </div>
             <div style={{ fontSize: 13, color: "var(--soft)", marginTop: 4, marginBottom: 16 }}>
-              {justArrived(order) ? `Delivered ${fmtDate(deliveredAt(order))}${order.pieces.length > 1 ? `, ${order.pieces.length} pieces` : ""}` : order.stage === "shipped" ? `Shipped ${fmtDate(order.last_at)}. We'll update this as emails come in.` : `Ordered ${fmtDate(order.ordered_at)}. Waiting for it to ship.`}
+              {justArrived(order) ? `Delivered ${fmtDate(deliveredAt(order))}${order.pieces.length > 1 ? `, ${order.pieces.length} pieces` : ""}` : order.stage === "shipped" ? `Shipped ${fmtDate(order.last_at)}${etaText(order) ? `, the date from ${order.store}'s email` : ""}. We'll update this as emails come in.` : `Ordered ${fmtDate(order.ordered_at)}. Waiting for it to ship.`}
             </div>
             <TrackBar step={trackStep(order)} />
           </div>

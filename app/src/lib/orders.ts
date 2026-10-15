@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { WEAR } from "./wear";
+import { NOT_WEAR, WEAR } from "./wear";
 
 export type Summary = {
   orders: number; stores: number; since: number | null;
@@ -64,10 +64,24 @@ export type OrderGroup = {
   pieces: Piece[];
   // Return rules from the store's emails. Null days means the emails don't say.
   returnDays: number | null; returnNote: string | null;
+  // Expected delivery, from the store's email or a subject like "Arriving tomorrow".
+  eta: { from: string; to: string } | null;
 };
 export type Piece = { name: string; img: string | null; wear: boolean; color?: string | null };
 
-type FullRow = Row & { subject: string | null; store_domain: string | null; return_days?: number | null; return_note?: string | null };
+type FullRow = Row & { subject: string | null; store_domain: string | null; return_days?: number | null; return_note?: string | null; arrive_from?: string | null; arrive_to?: string | null };
+const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+// "Arriving tomorrow", "Arrives Thursday": a date, counted from when the email came.
+function subjectEta(subject: string | null, sentAt: string): string | null {
+  const m = (subject ?? "").match(/arriv(?:es|ing)\s+(today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday)/i);
+  if (!m) return null;
+  const d = new Date(sentAt);
+  const w = m[1].toLowerCase();
+  const add = w === "today" ? 0 : w === "tomorrow" ? 1 : (DAYS.indexOf(w) - d.getDay() + 7) % 7 || 7;
+  d.setDate(d.getDate() + add);
+  return ymd(d);
+}
 const STAGE: Record<string, number> = { order: 0, receipt: 0, shipping: 1, delivered: 2, return: 3, refund: 4 };
 const STAGES = ["placed", "shipped", "delivered", "returning", "refunded"] as const;
 
@@ -140,7 +154,7 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
     }
     if (!g) {
       g = { key: r.order_no ? `${sk}|${r.order_no}` : r.gmail_id, store: r.store, store_domain: sk.includes(".") ? sk : null,
-        order_no: r.order_no, amount: null, ordered_at: r.sent_at, last_at: r.sent_at, events: [], stage: "placed", what, items: [], inStore: false, assumed: false, wear: false, photo: null, pieces: [], returnDays: null, returnNote: null };
+        order_no: r.order_no, amount: null, ordered_at: r.sent_at, last_at: r.sent_at, events: [], stage: "placed", what, items: [], inStore: false, assumed: false, wear: false, photo: null, pieces: [], returnDays: null, returnNote: null, eta: null };
       all.push(g);
       keyOf.set(g, sk);
       if (r.order_no) byKey.set(g.key, g);
@@ -150,6 +164,9 @@ export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = 
     if (r.amount != null && (g.amount == null || r.amount > g.amount)) g.amount = r.amount;
     if (r.return_days != null) g.returnDays = r.return_days;
     if (r.return_note) g.returnNote = r.return_note;
+    // The newest word on delivery wins.
+    const from = r.arrive_from ?? subjectEta(r.subject, r.sent_at), to = r.arrive_to ?? from;
+    if (from && to) g.eta = { from, to };
     if (!g.what && what) g.what = what;
     if (r.sent_at > g.last_at) g.last_at = r.sent_at;
     g.items.push(...(itemNames.get(r.gmail_id) ?? []));
@@ -264,7 +281,7 @@ async function fetchOrders(): Promise<OrderGroup[] | null> {
   const { data: auth } = await sb.auth.getSession();
   if (!auth.session) return null;
   const [{ data }, { data: items }] = await Promise.all([
-    sb.from("orders").select("store, store_domain, kind, order_no, amount, sent_at, gmail_id, subject, return_days, return_note").neq("kind", "other").order("sent_at", { ascending: false }).limit(5000),
+    sb.from("orders").select("store, store_domain, kind, order_no, amount, sent_at, gmail_id, subject, return_days, return_note, arrive_from, arrive_to").neq("kind", "other").order("sent_at", { ascending: false }).limit(5000),
     sb.from("items").select("gmail_id, name, category, image_url, color").limit(5000),
   ]);
   const names = new Map<string, string[]>();
@@ -272,8 +289,9 @@ async function fetchOrders(): Promise<OrderGroup[] | null> {
   const pieces = new Map<string, Piece[]>();
   for (const i of (items ?? []) as { gmail_id: string; name: string; category: string; image_url: string | null; color: string | null }[]) {
     names.set(i.gmail_id, [...(names.get(i.gmail_id) ?? []), i.name]);
-    if (WEAR.includes(i.category)) wear.add(i.gmail_id);
-    pieces.set(i.gmail_id, [...(pieces.get(i.gmail_id) ?? []), { name: i.name, img: i.image_url || null, wear: WEAR.includes(i.category), color: i.color }]);
+    const isWear = WEAR.includes(i.category) && !NOT_WEAR.test(i.name);
+    if (isWear) wear.add(i.gmail_id);
+    pieces.set(i.gmail_id, [...(pieces.get(i.gmail_id) ?? []), { name: i.name, img: i.image_url || null, wear: isWear, color: i.color }]);
   }
   // Orders that are only pet prescriptions don't show anywhere.
   return groupOrders((data ?? []) as FullRow[], names, wear, pieces).filter(g => !(g.items.length && g.items.every(n => PET_RX.test(n))));
@@ -298,6 +316,48 @@ export function ruleText(g: OrderGroup): string | null {
   const note = g.returnNote && !/^final sale$/i.test(g.returnNote) ? g.returnNote : null;
   if (days && note) return /\d/.test(note) ? note : `${note} · ${g.returnDays} days`;
   return note ?? days;
+}
+
+// "Arrives today", "Arrives Thu, Oct 15", "Arrives Oct 15 to 18", or "Expected by Oct 18" once it's late.
+export function etaText(g: OrderGroup): string | null {
+  if (!g.eta || !isArriving(g)) return null;
+  const day = (s: string) => new Date(`${s}T12:00:00`);
+  const today = ymd(new Date()), tmrw = ymd(new Date(Date.now() + DAY));
+  const short = (s: string) => day(s).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const { from, to } = g.eta;
+  if (to < today) return `Expected by ${short(to)}`;
+  if (from === to || from <= today) {
+    if (to === today) return "Arrives today";
+    if (to === tmrw) return "Arrives tomorrow";
+    if (from === to) return `Arrives ${day(to).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`;
+  }
+  const a = day(from), b = day(to);
+  return `Arrives ${short(from)} to ${a.getMonth() === b.getMonth() ? b.getDate() : short(to)}`;
+}
+// A short headline: "8 pieces from Huckberry" instead of a long first name plus "+7 more".
+export const shortTitle = (g: OrderGroup) => (g.pieces.length > 1 ? `${g.pieces.length} pieces from ${g.store}` : orderTitle(g));
+
+// Orders on the way with no delivery date yet: read their email once for one.
+export async function refreshArriving(groups: OrderGroup[], token: string) {
+  const { readFullText } = await import("./gmail");
+  const sb = supabase();
+  let tried: string[] = [];
+  try { tried = JSON.parse(sessionStorage.getItem("eta-tried") ?? "[]"); } catch {}
+  const todo = groups.filter(g => isArriving(g) && !g.eta && !tried.includes(g.key)).slice(0, 4);
+  let found = false;
+  for (const g of todo) {
+    tried.push(g.key);
+    const e = g.events.find(x => x.kind === "order" || x.kind === "receipt") ?? g.events[0];
+    if (!e || e.gmail_id.startsWith("rs_")) continue;
+    try {
+      const text = await readFullText(e.gmail_id, token);
+      const { data } = await sb.functions.invoke("read-order", { body: { gmail_id: e.gmail_id, text, mode: "rules" } });
+      if (data?.arrive_to) found = true;
+    } catch { /* try again next visit */ }
+  }
+  try { sessionStorage.setItem("eta-tried", JSON.stringify(tried)); } catch {}
+  if (found) cache = null;
+  return found;
 }
 
 // Three days or less to send it back: the in-app reminder.

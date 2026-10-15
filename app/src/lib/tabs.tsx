@@ -112,27 +112,28 @@ export function Progress({ step, h = 4 }: { step: number; h?: number }) {
 
 // When a product has no photo: a plain tile with its name (big tiles) or first letter (small ones).
 // Never a store logo, since logos are for brands.
-export function NameTile({ name, store, w, h, radius = 18, size = 28 }: { name: string; store: string; w: number | string; h: number | string; radius?: number; size?: number }) {
-  const big = typeof w === "string" || w >= 90;
+export function NameTile({ name, store, w, h, radius = 18, size = 28, letterOnly = false }: { name: string; store: string; w: number | string; h: number | string; radius?: number; size?: number; letterOnly?: boolean }) {
+  const big = !letterOnly && (typeof w === "string" || w >= 90);
   const label = name.trim() || store;
   // Shrink long words so they fit whole ("Sunglasses" never splits).
   const longest = Math.max(...label.split(/\s+/).map(x => x.length));
-  const room = typeof w === "number" ? w - 24 : 140;
-  const fit = Math.min(20, Math.max(14, size * 0.45), Math.floor(room / (longest * 0.56)));
+  const room = typeof w === "number" ? w - 24 : 120;
+  const fit = Math.min(20, Math.max(14, size * 0.45), Math.floor(room / (longest * 0.66)));
   const letter = (label.match(/[A-Za-z]/)?.[0] ?? label.charAt(0)).toUpperCase();
   return (
     <div className="serif" aria-label={label} style={{ width: w, height: h, borderRadius: radius, background: tint(store), flex: "none", display: "flex", alignItems: "center", justifyContent: "center", padding: big ? 12 : 0, overflow: "hidden", textAlign: "center" }}>
       {big
-        ? <span style={{ fontSize: Math.max(11, fit), lineHeight: 1.15, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "break-word" }}>{label}</span>
+        ? <span style={{ fontSize: Math.max(11, fit), lineHeight: 1.15, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "normal", wordBreak: "normal", hyphens: "none" }}>{label}</span>
         : <span style={{ fontSize: size, fontStyle: "italic" }}>{letter}</span>}
     </div>
   );
 }
 
 // Product photo from the order email. Without one, a tile with the product's name.
-export function ItemImage({ src, store, name, w, h, radius = 18, size = 28 }: { src: string | null; store: string; name?: string; domain?: string | null; w: number | string; h: number | string; radius?: number; size?: number }) {
+// `label=""` keeps the no-photo tile to a single letter, for places that print the name right below.
+export function ItemImage({ src, store, name, label, w, h, radius = 18, size = 28 }: { src: string | null; store: string; name?: string; label?: string; domain?: string | null; w: number | string; h: number | string; radius?: number; size?: number }) {
   const [bad, setBad] = useState(false);
-  if (!src || bad) return <NameTile name={name ?? store} store={store} w={w} h={h} radius={radius} size={size} />;
+  if (!src || bad) return <NameTile name={name ?? store} store={store} w={w} h={h} radius={radius} size={size} letterOnly={label === ""} />;
   return (
     <div style={{ width: w, height: h, borderRadius: radius, background: "var(--tile)", flex: "none", overflow: "hidden" }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -14,7 +14,8 @@ export default function Points() {
 
   const list = rewards ?? [];
   const cash = list.reduce((s, r) => s + (r.value ?? 0), 0);
-  const pts = list.filter(r => !r.value).reduce((s, r) => s + (r.points ?? 0), 0);
+  // Points from different programs can't be added up.
+  const programs = list.filter(r => !r.value && r.points).length;
   const expiring = list.filter(r => r.expires_on && daysUntil(r.expires_on) <= 30).reduce((s, r) => s + (r.value ?? 0), 0);
 
   return (
@@ -28,9 +29,9 @@ export default function Points() {
 
         {list.length > 0 && (
           <div style={{ margin: "18px 16px 0", background: "var(--ink)", color: "#fff", borderRadius: 26, padding: "20px 18px" }}>
-            <div className="kicker" style={{ color: "#C9C3BC" }}>{cash ? "Ready to use" : "Points you have"}</div>
-            <div className="serif" style={{ fontSize: cash ? 52 : 44, lineHeight: 1, marginTop: 6 }}>{cash ? money(cash) : `${pts.toLocaleString("en-US")} points`}</div>
-            {cash > 0 && pts > 0 && <div style={{ fontSize: 14, color: "#C9C3BC", marginTop: 6 }}>Plus {pts.toLocaleString("en-US")} points.</div>}
+            <div className="kicker" style={{ color: "#C9C3BC" }}>{cash ? "Ready to use" : "Points in"}</div>
+            <div className="serif" style={{ fontSize: cash ? 52 : 40, lineHeight: 1.05, marginTop: 6 }}>{cash ? money(cash) : `${programs} points ${programs === 1 ? "program" : "programs"}`}</div>
+            {cash > 0 && programs > 0 && <div style={{ fontSize: 14, color: "#C9C3BC", marginTop: 6 }}>Plus points in {programs} {programs === 1 ? "program" : "programs"}.</div>}
             {expiring > 0 && <div style={{ fontSize: 14, color: "#FFB4AB", marginTop: 6 }}>{money(expiring)} of it expires in the next 30 days.</div>}
           </div>
         )}

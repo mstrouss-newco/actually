@@ -84,7 +84,13 @@ export default function Closet() {
     setSel(cur => (cur ? patch(cur) : cur));
   };
 
-  const load = useCallback(() => { loadItems().then(setItems); }, []);
+  // A link like /closet?piece=… opens that piece's sheet.
+  const load = useCallback(() => { loadItems().then(list => {
+    setItems(list);
+    const id = new URLSearchParams(location.search).get("piece");
+    const hit = id ? list.find(i => i.id === id) : null;
+    if (hit) setSel(hit);
+  }); }, []);
   useEffect(load, [load]);
 
   const choose = async (pick: Item["pick"]) => {
@@ -280,24 +286,26 @@ export default function Closet() {
                     <button key={i.id} onClick={() => setSel(i)} className="hang" style={{ opacity: r?.returned ? 0.4 : 1, flex: "none", width: 140, border: 0, background: "transparent", padding: 0, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", font: "inherit", color: "inherit" }}>
                       <svg width="44" height="26" viewBox="0 0 44 26" fill="none" stroke="#8C857D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4a3 3 0 1 1 3 3c-1.6.5-3 1.2-3 2.8V11" /><path d="M4 24 22 11l18 13z" /></svg>
                       <div style={{ marginTop: -6, position: "relative", borderRadius: 24, boxShadow: "0 10px 20px rgba(20,18,16,.08)" }}>
-                        <ItemImage src={i.image_url} store={i.store} name={i.name} w={140} h={178} radius={24} size={48} />
+                        <ItemImage src={i.image_url} store={i.store} name={i.name} label="" w={140} h={178} radius={24} size={48} />
                         {r?.by && <div style={{ position: "absolute", bottom: -8, right: -6, background: "#FF6159", borderRadius: 999, padding: "5px 9px", fontSize: 11, fontWeight: 700, transform: "rotate(-6deg)" }}>Return by {dayLabel(r.by)}</div>}
                         {r?.returned && <div style={{ position: "absolute", bottom: -8, right: -6, background: "var(--ink)", color: "#fff", borderRadius: 999, padding: "5px 9px", fontSize: 11, fontWeight: 700 }}>Returned</div>}
                         {(i.arriving || isNew(i)) && <div style={{ position: "absolute", top: 10, left: 10, background: i.arriving ? "#FFF0BF" : "#fff", borderRadius: 999, padding: "4px 8px", fontSize: 11, fontWeight: 700 }}>{i.arriving ? "On the way" : "New"}</div>}
                       </div>
                       <div style={{ marginTop: 12, fontSize: 13, fontWeight: 700, width: 124, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "center" }}>{brandOf(i)}</div>
-                      <div style={{ fontSize: 12, color: "var(--muted)", width: 124, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "center" }}>{twin(i, sorted) ? `${i.name}, ${i.color ?? fmtDate(i.ordered_at)}` : i.name}</div>
+                      <div style={{ fontSize: 12, color: "var(--muted)", width: 124, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "center" }}>{i.name}</div>
+                      {twin(i, sorted) && <div style={{ fontSize: 12, fontWeight: 700, color: "var(--soft)", width: 124, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "center" }}>{i.color ?? `Bought ${fmtDate(i.ordered_at)}`}</div>}
                     </button>
                   );
                 })}
               </div>
             </div>
-            <div className="serif" style={{ padding: "22px 20px 0", fontSize: 22 }}>All {cur.label.toLowerCase()}</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, padding: "12px 16px 0" }}>
+            {/* The rail already shows every piece on short shelves. */}
+            {sorted.length > 8 && <div className="serif" style={{ padding: "22px 20px 0", fontSize: 22 }}>All {cur.label.toLowerCase()}</div>}
+            <div style={{ display: sorted.length > 8 ? "grid" : "none", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, padding: "12px 16px 0" }}>
               {sorted.map((i, gi) => (
                 <button key={i.id} onClick={() => setSel(i)} className="press up" style={{ ...delay(gi, 40), opacity: rets.get(i.gmail_id ?? "")?.returned ? 0.4 : 1, border: 0, padding: 0, background: "transparent", cursor: "pointer", display: "flex", flexDirection: "column", gap: 5, font: "inherit", color: "inherit", textAlign: "left", minWidth: 0 }}>
                   <div style={{ position: "relative", width: "100%" }}>
-                    <ItemImage src={i.image_url} store={i.store} name={i.name} w="100%" h={140} radius={16} size={36} />
+                    <ItemImage src={i.image_url} store={i.store} name={i.name} label="" w="100%" h={140} radius={16} size={36} />
                     {i.arriving && <div style={{ position: "absolute", top: 8, left: 8, background: "#FFF0BF", borderRadius: 999, padding: "3px 7px", fontSize: 10, fontWeight: 700 }}>On the way</div>}
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 700, width: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{brandOf(i)}</div>
