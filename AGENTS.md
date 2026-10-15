@@ -61,8 +61,8 @@ design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPAB
 
 ## How data flows
 
-1. **Sign-up:** Welcome → Claim (pick a name, saved on device) → Goal → Live →
-   Permission. Google is asked once: "Continue with Gmail" (with `gmail.readonly`) or
+1. **Sign-up:** Welcome → Claim (pick a name, saved on device) → Goal → Live (email ready
+   plus the Gmail button; `/permission` is the same button for later entry points). Google is asked once: "Continue with Gmail" (with `gmail.readonly`) or
    "Not now" (sign-in only). `/auth` finishes sign-in and saves the profile.
    Returning users use `/login`.
 2. **Gmail import** (`lib/importer.ts`, runs in the browser as a shared background job):
