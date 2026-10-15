@@ -91,7 +91,7 @@ export default function Feed() {
                     <Link href={`/u/${m.handle}`} style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0, textDecoration: "none" }}>
                       <Avatar handle={m.handle} size={48} />
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 16 }}>{m.handle}</div>
+                        <div style={{ fontWeight: 700, fontSize: 16, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.handle}</div>
                         <div style={{ fontSize: 13, color: "var(--soft)" }}>You both shop {both(m.brands)}</div>
                       </div>
                     </Link>

@@ -12,7 +12,7 @@ function OrderRow({ g }: { g: OrderGroup }) {
   const left = returnDaysLeft(g);
   const [sub, pill, bg] = isArriving(g) ? ["On its way", "Arriving", "#FFF0BF"]
     : left ? [`Delivered ${fmtDate(g.last_at)}`, `${left} ${left === 1 ? "day" : "days"} to return`, "#FFE1DC"]
-    : isReturn(g) ? [g.stage === "refunded" ? "Refunded" : "Return started", "Returned", "#F4F1EE"]
+    : isReturn(g) ? [`Ordered ${fmtDate(g.ordered_at)}`, g.stage === "refunded" ? "Refunded" : "Return started", "#F4F1EE"]
     : [`Ordered ${fmtDate(g.ordered_at)}`, null, ""];
   return (
     <Link href={`/order/${encodeURIComponent(g.key)}`} className="orow" style={{ display: "flex", alignItems: "center", gap: 14, background: "#FAF8F6", borderRadius: 22, padding: "12px 16px 12px 12px", textDecoration: "none" }}>
@@ -29,16 +29,23 @@ function OrderRow({ g }: { g: OrderGroup }) {
 export default function Brand({ params }: { params: Promise<{ name: string }> }) {
   const name = decodeURIComponent(use(params).name);
   const [items, setItems] = useState<Item[] | null>(null);
+  // Emails for this brand's pieces bought for kids or someone else, so their orders stay off her page.
+  const [others, setOthers] = useState<Set<string | undefined>>(new Set());
   const [orders, setOrders] = useState<OrderGroup[]>([]);
   useEffect(() => {
-    loadItems().then(all => setItems(all.filter(i => brandOf(i) === name && whoFor(i, all) === "me")));
+    loadItems().then(all => {
+      const here = all.filter(i => brandOf(i) === name);
+      setItems(here.filter(i => whoFor(i, all) === "me"));
+      setOthers(new Set(here.filter(i => whoFor(i, all) !== "me").map(i => i.gmail_id)));
+    });
     loadOrders().then(g => setOrders(g ?? []));
   }, [name]);
 
   const mine = items ?? [];
   const emails = new Set(mine.map(i => i.gmail_id));
   const key = name.toLowerCase();
-  const theirs = orders.filter(g => g.store.toLowerCase() === key || g.events.some(e => emails.has(e.gmail_id)));
+  const theirs = orders.filter(g => g.events.some(e => emails.has(e.gmail_id))
+    || (g.store.toLowerCase() === key && !g.events.some(e => others.has(e.gmail_id))));
   const open = theirs.filter(g => isArriving(g) || returnDaysLeft(g) || isReturn(g)).slice(0, 6);
   const past = theirs.filter(g => !open.includes(g)).slice(0, 8);
   const sizes = sizesByBrand(mine)[0]?.sizes.slice(0, 4) ?? [];
@@ -52,7 +59,7 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
           <Link href="/closet?view=brands" className="back" style={{ height: 40, padding: "0 14px 0 8px", background: "#fff", fontSize: 14 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>Brands
           </Link>
-          <h1 className="serif" style={{ fontWeight: 400, fontSize: name.length > 12 ? 44 : 64, lineHeight: 1, letterSpacing: "-0.03em", margin: "28px 0 0", overflowWrap: "anywhere" }}>{name}</h1>
+          <h1 className="serif" style={{ fontWeight: 400, fontSize: name.length > 20 ? 34 : name.length > 12 ? 44 : 64, lineHeight: 1.05, letterSpacing: "-0.03em", margin: "28px 0 0", overflowWrap: "break-word", hyphens: "auto" }}>{name}</h1>
           {items && <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 6 }}>{count} {count === 1 ? "order" : "orders"}{first ? ` since ${new Date(first).getFullYear()}` : ""}{mine[0] ? ` · last one ${fmtDate(mine[0].ordered_at)}` : ""}</div>}
         </div>
 
@@ -77,12 +84,12 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
           </>
         )}
 
-        <div style={{ margin: "22px 16px 0", background: "var(--ink)", color: "#fff", borderRadius: 26, padding: "20px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
+        {(mine.length > 0 || theirs.length > 0) && <div style={{ margin: "22px 16px 0", background: "var(--ink)", color: "#fff", borderRadius: 26, padding: "20px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
           <div className="serif" style={{ fontSize: 24 }}>Returning to {name}</div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}><span style={{ color: "#B9B3AC" }}>Window</span><span style={{ fontWeight: 700 }}>About 30 days</span></div>
           <div style={{ height: 1, background: "#2E2B28" }} />
           <div style={{ fontSize: 13, color: "#B9B3AC", lineHeight: 1.4 }}>Our estimate for now. We&apos;ll add each store&apos;s own rules soon.</div>
-        </div>
+        </div>}
 
         {mine.length > 0 && (
           <>

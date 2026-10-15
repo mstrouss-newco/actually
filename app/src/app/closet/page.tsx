@@ -26,6 +26,8 @@ export default function Closet() {
   const [bsort, setBsort] = useState("most");
   // Coming back from a brand page opens the Brands tab.
   useEffect(() => { if (new URLSearchParams(location.search).get("view") === "brands") setView("brands"); }, []);
+  // Remember the tab in the address, so Back from a brand page lands on Brands.
+  const pickView = (v: "pieces" | "brands") => { setView(v); history.replaceState(history.state, "", v === "brands" ? "?view=brands" : location.pathname); };
   useEffect(() => { loadOrders().then(g => g && setRets(returnsByEmail(g))); }, []);
   const [cat, setCatState] = useState<string | null>(null);
   // Opening a shelf adds a step to the browser history, so Back returns to the closet.
@@ -121,7 +123,7 @@ export default function Closet() {
           <>
             <div style={{ display: "flex", alignItems: "baseline", gap: 18, padding: "0 20px" }}>
               {(["pieces", "brands"] as const).map(v => (
-                <button key={v} onClick={() => setView(v)} className="serif" style={{ border: 0, borderBottom: `2px solid ${v === view ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 38, color: v === view ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+                <button key={v} onClick={() => pickView(v)} className="serif" style={{ border: 0, borderBottom: `2px solid ${v === view ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 38, color: v === view ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
                   {v === "pieces" ? "Pieces" : "Brands"}
                 </button>
               ))}
@@ -203,11 +205,11 @@ export default function Closet() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A746D" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
               <input value={q} onChange={e => setQ(e.target.value)} placeholder="Find a brand" aria-label="Find a brand" style={{ border: 0, outline: 0, background: "transparent", font: "500 15px var(--font-sans), sans-serif", flex: 1, color: "var(--ink)", minWidth: 0 }} />
             </label>
-            <div style={{ display: "flex", gap: 20, margin: "16px 20px 0", borderBottom: "1px solid var(--line)" }}>
+            {(brands.length > 1 || q) && <div style={{ display: "flex", gap: 20, margin: "16px 20px 0", borderBottom: "1px solid var(--line)" }}>
               {BSORT.map(([k, label]) => (
                 <button key={k} onClick={() => setBsort(k)} style={{ border: 0, background: "none", padding: "12px 0", marginBottom: -1, borderBottom: `2px solid ${bsort === k ? "var(--ink)" : "transparent"}`, color: bsort === k ? "var(--ink)" : "var(--muted)", font: "700 15px var(--font-sans), sans-serif", cursor: "pointer" }}>{label}</button>
               ))}
-            </div>
+            </div>}
             <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: "16px 16px 0" }}>
               {brands.map(b => (
                 <Link key={b.name} href={`/brand/${encodeURIComponent(b.name)}`} className="lift" style={{ display: "block", textDecoration: "none", background: tint(b.name), borderRadius: 28, padding: 18 }}>
@@ -321,7 +323,8 @@ export default function Closet() {
               {WHO.map(([k, label]) => <button key={k} onClick={() => answer(sel, k)} style={chip(sel.for_whom === k)}>{label}{!sel.for_whom && whoFor(sel, everything) === k ? " (our guess)" : ""}</button>)}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 18 }}>
-              {PICKS.map(([k, label]) => (
+              {rets.get(sel.gmail_id ?? "")?.returned && <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center" }}>You sent this back, so it can&apos;t go on your feed.</div>}
+              {!rets.get(sel.gmail_id ?? "")?.returned && PICKS.map(([k, label]) => (
                 <button key={k} onClick={() => choose(k)} className="btn" style={{ height: 48, fontSize: 15, background: sel.pick === k ? "var(--ink)" : "#fff", color: sel.pick === k ? "#fff" : "var(--ink)", border: "1.5px solid var(--ink)" }}>
                   {sel.pick === k ? "✓ " : ""}{label}
                 </button>
