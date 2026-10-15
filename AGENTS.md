@@ -115,7 +115,7 @@ Tables: `profiles`, `orders`, `items`, `rewards`, `follows`, `blocked_stores`, `
 and `items.hidden` (removed from closet; kept so imports don't bring it back).
 Every table has row level security: people only see their own rows. Shared pieces
 leave the database only through the `profile_page`, `following_feed`, `search_people`,
-`similar_people` and `my_people` functions, which return photo, brand and name only.
+`similar_people` and `my_people` functions, which return photo, brand and name only (plus the note she wrote, `items.note`, on `profile_page`).
 
 To change the schema: apply a migration with the Supabase connector, then add the same
 SQL to `supabase/migrations/<version>_<name>.sql`. Run the security advisor afterwards.

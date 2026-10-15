@@ -8,13 +8,13 @@ import { loadItems, toSort } from "@/lib/items";
 import { ItemImage, TabBar } from "@/lib/tabs";
 
 type Tab = "friends" | "match" | "mine";
-const TABS: [Tab, string][] = [["friends", "Friends"], ["match", "Taste match"], ["mine", "My feed"]];
+const LABEL: Record<Tab, string> = { friends: "Friends", match: "Taste match", mine: "My feed" };
 type Match = { handle: string; brands: string[]; picks: Profile["items"] };
 
 const both = (b: string[]) => (b.length > 1 ? `${b.slice(0, -1).join(", ")} and ${b.at(-1)}` : b[0]);
 
 export default function Feed() {
-  const [tab, setTab] = useState<Tab>("friends");
+  const [tab, setTab] = useState<Tab | null>(null);
   const [feed, setFeed] = useState<FeedItem[] | null>(null);
   const [handle, setHandle] = useState<string | null | undefined>(undefined);
   const [mine, setMine] = useState<Profile | null>(null);
@@ -23,11 +23,12 @@ export default function Feed() {
 
   useEffect(() => {
     const t = new URLSearchParams(location.search).get("tab");
-    if (t === "mine" || t === "match") setTab(t);
+    if (t === "mine" || t === "match" || t === "friends") setTab(t);
     myHandle().then(h => {
       setHandle(h);
-      if (!h) return;
-      loadFeed().then(setFeed);
+      if (!h) { setTab(x => x ?? "friends"); return; }
+      // My feed comes first until friends have posted something.
+      loadFeed().then(f => { setFeed(f); setTab(x => x ?? (f.length ? "friends" : "mine")); });
       loadProfilePage(h).then(setMine);
       loadItems().then(all => setToGo(toSort(all).length));
       // Each match shows three pieces from their feed.
@@ -42,8 +43,8 @@ export default function Feed() {
     <main className="tabscreen">
       <div className="scroll">
         <div style={{ display: "flex", alignItems: "baseline", gap: 14, padding: "0 20px", whiteSpace: "nowrap" }}>
-          {TABS.map(([k, label]) => (
-            <button key={k} onClick={() => { setTab(k); history.replaceState(history.state, "", k === "friends" ? location.pathname : `?tab=${k}`); }} className="serif" style={{ border: 0, borderBottom: `2px solid ${tab === k ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 22, whiteSpace: "nowrap", color: tab === k ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
+          {(feed?.length ? ["friends", "match", "mine"] as Tab[] : ["mine", "friends", "match"] as Tab[]).map(k => [k, LABEL[k]] as const).map(([k, label]) => (
+            <button key={k} onClick={() => { setTab(k); history.replaceState(history.state, "", `?tab=${k}`); }} className="serif" style={{ border: 0, borderBottom: `2px solid ${tab === k ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 22, whiteSpace: "nowrap", color: tab === k ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
               {label}
             </button>
           ))}
