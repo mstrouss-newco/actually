@@ -254,7 +254,8 @@ async function fetchOrders(): Promise<OrderGroup[] | null> {
     if (WEAR.includes(i.category)) wear.add(i.gmail_id);
     pieces.set(i.gmail_id, [...(pieces.get(i.gmail_id) ?? []), { name: i.name, img: i.image_url || null, wear: WEAR.includes(i.category), color: i.color }]);
   }
-  return groupOrders((data ?? []) as FullRow[], names, wear, pieces);
+  // Orders that are only pet prescriptions don't show anywhere.
+  return groupOrders((data ?? []) as FullRow[], names, wear, pieces).filter(g => !(g.items.length && g.items.every(n => PET_RX.test(n))));
 }
 
 const DAY = 86400000;
@@ -264,8 +265,9 @@ export const daysAgo = (iso: string) => Math.floor((Date.now() - Date.parse(iso)
 export const isArriving = (g: OrderGroup) => g.stage === "shipped" || g.stage === "placed";
 export const isReturn = (g: OrderGroup) => g.stage === "returning" || g.stage === "refunded";
 
-// Prescription pet medicine and food can't go back.
-const NO_RETURN = /prescription|\brx\b|bravecto|simparica|nexgard|heartgard|apoquel|credelio|revolution plus/i;
+// Pet prescriptions (medicine and vet diets). Kept out of the app entirely; toys and regular food stay.
+export const PET_RX = /prescription|\brx\b|bravecto|simparica|nexgard|heartgard|apoquel|credelio|revolution plus|gastrointestinal biome|veterinary diet|vet diet|hydrolyzed protein|urinary (so|care)|hill'?s [a-z]\/d/i;
+const NO_RETURN = PET_RX;
 export const returnable = (g: OrderGroup) => g.returnDays !== 0 && !g.items.some(n => NO_RETURN.test(n)) && !NO_RETURN.test(g.what ?? "");
 // How many days this store allows: its own rule when an email says, else the usual 30.
 export const windowDays = (g: OrderGroup) => g.returnDays ?? 30;
