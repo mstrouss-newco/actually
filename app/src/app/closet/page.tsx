@@ -365,7 +365,7 @@ export default function Closet() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 18 }}>
               {rets.get(sel.gmail_id ?? "")?.returned && <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center" }}>You sent this back, so it can&apos;t go on your feed.</div>}
-              {!rets.get(sel.gmail_id ?? "")?.returned && !sel.pick && <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center" }}>Not on your feed yet.</div>}
+              {!rets.get(sel.gmail_id ?? "")?.returned && sel.pick !== "share" && <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center" }}>{sel.pick ? "" : "Not on your feed yet. "}Share it and you could earn if a friend buys it.</div>}
               {!rets.get(sel.gmail_id ?? "")?.returned && PICKS.map(([k, label]) => (
                 <button key={k} onClick={() => choose(k)} className="btn" style={{ height: 48, fontSize: 15, background: sel.pick === k ? "var(--ink)" : "#fff", color: sel.pick === k ? "#fff" : "var(--ink)", border: "1.5px solid var(--ink)" }}>
                   {sel.pick === k ? "✓ " : ""}{label}

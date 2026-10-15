@@ -42,6 +42,7 @@ export default function PublicFeed({ params }: { params: Promise<{ handle: strin
             </div>
             <div style={{ padding: "20px 16px 0" }}>
               {p.items.length === 0 ? <p className="lead" style={{ padding: "0 4px" }}>Nothing shared yet.</p> : <ItemGrid items={p.items} />}
+              {p.items.length > 0 && !p.is_me && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 16, padding: "0 4px", lineHeight: 1.45 }}>{displayName(p.handle)} may earn a small reward if you buy something you find here.</div>}
             </div>
           </>
         )}

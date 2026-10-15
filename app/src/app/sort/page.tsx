@@ -108,6 +108,7 @@ export default function Sort() {
       {card && (
         <>
           <div className="serif" style={{ fontSize: 32, lineHeight: 1.05, letterSpacing: "-0.02em", marginTop: 14 }}>Pick what to <em>share</em></div>
+          <div style={{ fontSize: 13, color: "#2F5C3E", fontWeight: 700, marginTop: 6 }}>You could earn when a friend buys something you shared.</div>
           <div style={{ marginTop: 14, height: 6, borderRadius: 3, background: "#F1EDE8", overflow: "hidden" }}>
             <div style={{ height: "100%", width: `${Math.round((i / total) * 100)}%`, background: "var(--ink)", borderRadius: 3, transition: "width .3s" }} />
           </div>
