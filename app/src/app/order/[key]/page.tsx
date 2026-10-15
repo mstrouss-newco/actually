@@ -3,7 +3,7 @@
 import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type OrderGroup, blockStore, boughtInStore, dayLabel, deliveredAt, etaText, fmtDate, gmailLink, isArriving, justArrived, loadOrders, orderTitle, removeOrder, returnBy, returnDaysLeft, ruleText, trackStep } from "@/lib/orders";
+import { type OrderGroup, blockStore, boughtInStore, dayLabel, deliveredAt, etaText, fmtDate, gmailLink, isArriving, justArrived, loadOrders, orderTitle, removeOrder, returnBy, returnDaysLeft, ruleText, trackStep, usd } from "@/lib/orders";
 import { Confetti, TrackBar, delay } from "@/lib/motion";
 import { ItemImage, TabBar, tint } from "@/lib/tabs";
 
@@ -130,6 +130,7 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
                     <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{p.name}</div>
                     {p.color && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{p.color}</div>}
                   </div>
+                  {p.price != null && <div style={{ fontSize: 14, fontWeight: 700, whiteSpace: "nowrap" }}>{usd(p.price)}{(p.qty ?? 1) > 1 ? ` × ${p.qty}` : ""}</div>}
                 </div>
               ))}
             </div>
@@ -156,7 +157,9 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
         <div style={{ margin: "12px 16px 0", border: "1.5px solid var(--line)", borderRadius: 24, padding: 18, display: "flex", flexDirection: "column", gap: 10, fontSize: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--muted)" }}>Ordered</span><span style={{ fontWeight: 700 }}>{new Date(order.ordered_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span></div>
           {order.order_no && <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--muted)" }}>Order number</span><span style={{ fontWeight: 700 }}>{order.order_no}</span></div>}
-          {order.amount != null && <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--muted)" }}>Total</span><span style={{ fontWeight: 700 }}>${order.amount.toFixed(2)}</span></div>}
+          {order.amount != null
+            ? <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--muted)" }}>Total</span><span style={{ fontWeight: 700 }}>{usd(order.amount)}</span></div>
+            : order.itemsTotal != null && <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--muted)" }}>Items <span style={{ fontSize: 12 }}>(before tax and shipping)</span></span><span style={{ fontWeight: 700 }}>{usd(order.itemsTotal)}</span></div>}
           {first.gmail_id.startsWith("rs_")
             ? <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center", marginTop: 6 }}>Came in through your shopping email. A copy is in your inbox.</div>
             : <a href={gmailLink(first.gmail_id)} target="_blank" rel="noreferrer" style={{ marginTop: 6, display: "flex", alignItems: "center", justifyContent: "center", height: 46, borderRadius: 999, border: "1.5px solid var(--ink)", fontWeight: 700, textDecoration: "none" }}>Open the original email</a>}

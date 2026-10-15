@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { type OrderGroup, SOON, cleanupOnce, dayLabel, etaText, isArriving, loadOrders, orderTitle, refreshArriving, returnBy, returnDaysLeft, ruleText, shortTitle, fmtDate, trackStep, justArrived } from "@/lib/orders";
+import { type OrderGroup, SOON, cleanupOnce, dayLabel, etaText, isArriving, loadOrders, orderTitle, refreshArriving, returnBy, returnDaysLeft, ruleText, shortTitle, fmtDate, trackStep, justArrived, paid, usd, isReturn } from "@/lib/orders";
 import { gmailToken } from "@/lib/supabase";
 import { loadProfile } from "@/lib/profile";
 import { type Reward, daysUntil, fmtDay, loadRewards, money, programName } from "@/lib/earn";
@@ -105,7 +105,11 @@ export default function Today() {
   const slide = slides[at % Math.max(1, n)];
   const go = (d: number) => setAt(a => (a + d + n) % n);
 
+  // Spent this month: orders placed this month that weren't cancelled or sent back.
+  const month0 = new Date(); month0.setDate(1); month0.setHours(0, 0, 0, 0);
+  const spent = all.filter(g => Date.parse(g.ordered_at) >= month0.getTime() && g.stage !== "cancelled" && !isReturn(g)).reduce((s, g) => s + (paid(g) ?? 0), 0);
   const line = [
+    spent > 0 && `${usd(Math.round(spent))} spent in ${month0.toLocaleDateString("en-US", { month: "long" })}`,
     canReturn.length && `${canReturn.length} ${canReturn.length === 1 ? "order" : "orders"} still returnable`,
     arriving.length && `${arriving.length} ${arriving.length === 1 ? "order" : "orders"} on the way`,
   ].filter(Boolean).join(". ");

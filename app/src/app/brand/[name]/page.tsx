@@ -60,6 +60,8 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
   const shops = [...new Set(mine.map(i => i.store))];
   const returnTo = shops.length === 1 ? shops[0] : name;
   const count = theirs.length || new Set(mine.map(i => i.gmail_id)).size;
+  // What she's spent on this brand, from the piece prices.
+  const spentHere = Math.round(mine.reduce((s, i) => s + (i.price != null ? Number(i.price) : 0), 0));
   // The shop's own rule, from any of its emails.
   const ruled = theirs.find(g => ruleText(g));
   const rule = ruled ? ruleText(ruled) : null;
@@ -73,7 +75,7 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
           </Link>
           <div style={{ marginTop: 24 }}><StoreTile store={name} w={64} h={64} radius={18} size={28} /></div>
           <h1 className="serif" style={{ fontWeight: 400, fontSize: name.length > 20 ? 30 : name.length > 12 ? 36 : 48, lineHeight: 1.15, letterSpacing: "-0.03em", margin: "14px 0 0", overflowWrap: "break-word", hyphens: "auto" }}>{name}</h1>
-          {items && <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 6 }}>{count} {count === 1 ? "order" : "orders"}{first && new Date(first).getFullYear() < new Date().getFullYear() ? ` since ${new Date(first).getFullYear()}` : ""}{mine[0] ? ` · last one ${fmtDate(mine[0].ordered_at)}` : ""}</div>}
+          {items && <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 6 }}>{count} {count === 1 ? "order" : "orders"}{first && new Date(first).getFullYear() < new Date().getFullYear() ? ` since ${new Date(first).getFullYear()}` : ""}{spentHere > 0 ? ` · $${spentHere.toLocaleString("en-US")} spent` : ""}{mine[0] ? ` · last one ${fmtDate(mine[0].ordered_at)}` : ""}</div>}
         </div>
 
         {sizes.length > 0 && (
