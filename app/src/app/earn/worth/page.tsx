@@ -8,7 +8,7 @@ import { type Item, loadItems, whoFor } from "@/lib/items";
 import { ItemImage, TabBar } from "@/lib/tabs";
 
 type Tab = "most" | "sell" | "recent";
-const TABS: [Tab, string][] = [["most", "Worth the most"], ["sell", "Marked to sell"], ["recent", "Recent"]];
+const TABS: [Tab, string][] = [["most", "Worth the most"], ["sell", "Selling"], ["recent", "Recent"]];
 
 export default function Worth() {
   const [items, setItems] = useState<Item[] | null>(null);
@@ -51,7 +51,9 @@ export default function Worth() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "16px 16px 0" }}>
-          {items !== null && rows.length === 0 && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}>{tab === "sell" ? "Nothing marked to sell yet." : "No prices yet. Go to Earn to price your closet."}</div>}
+          {tab === "sell" && <div style={{ fontSize: 13, color: "var(--muted)", padding: "0 4px", lineHeight: 1.45 }}>Pieces you want to sell. Tap Sell on any piece to write a post for Poshmark, Depop, eBay or Mercari.</div>}
+          {tab !== "sell" && rows.length > 0 && <div style={{ fontSize: 13, color: "var(--muted)", padding: "0 4px" }}>Tap Sell to write a resale post for any piece.</div>}
+          {items !== null && rows.length === 0 && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}>{tab === "sell" ? "Nothing here yet." : "No prices yet. Go to Earn to price your closet."}</div>}
           {rows.map(i => (
             <Link key={i.id} href={`/earn/worth/${i.id}`} className="orow" style={{ display: "flex", gap: 12, alignItems: "center", background: "#FAF8F6", borderRadius: 22, padding: "10px 14px 10px 10px", textDecoration: "none" }}>
               <ItemImage src={i.image_url} store={i.store} name={i.name} w={64} h={78} radius={16} size={26} />
@@ -60,7 +62,10 @@ export default function Worth() {
                 <div style={{ fontWeight: 700, fontSize: 15, marginTop: 2 }}>{i.name}</div>
                 <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{i.price != null ? `Paid ${money(i.price)}` : "Price paid unknown"}</div>
               </div>
-              <div className="serif" style={{ fontSize: 18, whiteSpace: "nowrap" }}>{money(i.resale_low ?? 0)}–{money(i.resale_high ?? 0)}</div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flex: "none" }}>
+                <div className="serif" style={{ fontSize: 17, whiteSpace: "nowrap" }}>{money(i.resale_low ?? 0)}–{money(i.resale_high ?? 0)}</div>
+                <span className="press" style={{ display: "inline-flex", alignItems: "center", gap: 4, height: 30, padding: "0 12px", borderRadius: 999, background: i.pick === "sell" ? "#FF6159" : "var(--ink)", color: i.pick === "sell" ? "var(--ink)" : "#fff", fontSize: 12, fontWeight: 700 }}>{i.pick === "sell" ? "Selling" : "Sell"} →</span>
+              </div>
             </Link>
           ))}
         </div>

@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Worth list: every piece has a clear "Sell →" button (or "Selling" once it's on the list), the "Marked to sell" tab is now "Selling" with a one-line explanation.
+
 - Resale posts: each piece's Worth page now picks a site (Poshmark, Depop, eBay, Mercari, ThredUp), suggests a price per site, and builds an editable post (title within the site's limit, condition, description, hashtags for Depop). "Copy and open" copies it, adds the piece to the sell list and opens the site's sell page. Closet piece sheet has "Make a resale post" once a piece is marked to sell.
 
 - Prices: `read-order` now saves the order total (with tax and shipping) into `orders.amount`, in the main read and the rules pass. Orders without one show the piece prices added up as "Items (before tax and shipping)". Each piece shows its price on the order page, Today says how much was spent this month, and brand pages show spent per brand. Never on anything shared.
