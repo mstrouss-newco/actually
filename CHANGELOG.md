@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- iPhone: the bottom menu tucks away while scrolling down and comes back on the way up; screens leave room for the phone's edges (safe areas). Added to the Home Screen, Actually opens full screen with its own icon (`manifest.ts`, `apple-icon.png`, `public/icon-*.png`), and Today shows a one-time "Keep Actually on your Home Screen" tip in iPhone Safari (`lib/home-tip.tsx`).
+
 - Feed: My feed is the first tab and opens by default until people you follow have shared something. My feed tiles match the design (tall photo, brand, name) and each piece can carry a short note ("Size down one"), shown on your public page too (migration items_note, `profile_page` returns `note`).
 
 - Brands cards (design A, "Photo shelf"): smaller name, a fanned strip of your pieces with a +N tile, size pills and the return window on one line with a pulsing dot. The brand logo shows only when a real one loads; store tiles never fall back to a letter (a small drawing instead).

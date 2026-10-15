@@ -30,12 +30,34 @@ function ImportStrip() {
   );
 }
 
+// True while she scrolls down a page; false again as soon as she scrolls up or reaches the top or bottom.
+function useScrollAway() {
+  const [away, setAway] = useState(false);
+  useEffect(() => {
+    let last = new WeakMap<EventTarget, number>();
+    const onScroll = (e: Event) => {
+      const el = e.target as HTMLElement;
+      if (!el || !(el instanceof HTMLElement) || el.scrollHeight <= el.clientHeight) return;
+      const y = el.scrollTop, prev = last.get(el) ?? y;
+      last.set(el, y);
+      const atEdge = y < 40 || y + el.clientHeight > el.scrollHeight - 40;
+      if (atEdge) setAway(false);
+      else if (y - prev > 6) setAway(true);
+      else if (prev - y > 6) setAway(false);
+    };
+    document.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    return () => { document.removeEventListener("scroll", onScroll, { capture: true }); last = new WeakMap(); };
+  }, []);
+  return away;
+}
+
 export function TabBar() {
   const path = usePathname();
+  const away = useScrollAway();
   return (
     <>
     <ImportStrip />
-    <nav className="tabbar">
+    <nav className={away ? "tabbar away" : "tabbar"}>
       {TABS.map(t => (
         <Link key={t.href} href={t.href} className={path.startsWith(t.href) || (t.href === "/orders" && path.startsWith("/order/")) || (t.href === "/closet" && path.startsWith("/brand/")) || (t.href === "/feed" && /^\/(people|u\/)/.test(path)) ? "on" : ""}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{t.icon}</svg>
