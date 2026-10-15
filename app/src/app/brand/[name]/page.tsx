@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CATS, type Item, brandOf, loadItems, sizesByBrand, whoFor } from "@/lib/items";
 import { type OrderGroup, dayLabel, fmtDate, isArriving, isReturn, loadOrders, orderTitle, returnBy, returnDaysLeft, ruleText, windowDays } from "@/lib/orders";
 import { ItemImage, StoreTile, TabBar, tint } from "@/lib/tabs";
+import { delay } from "@/lib/motion";
 
 const month = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", year: "numeric" });
 
@@ -47,7 +48,9 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
   const theirs = orders.filter(g => g.events.some(e => emails.has(e.gmail_id))
     || (g.store.toLowerCase() === key && !g.events.some(e => others.has(e.gmail_id))));
   const open = theirs.filter(g => isArriving(g) || returnDaysLeft(g) || isReturn(g)).slice(0, 6);
-  const past = theirs.filter(g => !open.includes(g)).slice(0, 8);
+  // Past orders only when they add something beyond the pieces already shown.
+  const shown = new Set(mine.map(i => i.gmail_id));
+  const past = theirs.filter(g => !open.includes(g) && !g.events.some(e => shown.has(e.gmail_id))).slice(0, 8);
   const sizes = sizesByBrand(mine)[0]?.sizes.slice(0, 4) ?? [];
   const first = [...theirs.map(g => g.ordered_at), ...mine.map(i => i.ordered_at)].sort()[0];
   // Bought through another shop (Relwen at Huckberry): returns go to that shop.
@@ -75,7 +78,7 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
             <div style={{ display: "flex", justifyContent: "center", gap: 10, padding: "0 20px", marginTop: -40, position: "relative" }}>
               {sizes.map(s => (
                 <div key={s.cat} className="tilt" style={{ flex: "1 1 0", maxWidth: 84, minWidth: 0, background: "#fff", borderRadius: 20, padding: "10px 4px 12px", boxShadow: "0 10px 24px rgba(20,18,16,.12)", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <span style={{ fontWeight: 700, fontSize: 26, lineHeight: 1.1 }}>{s.size}</span>
+                  <span style={{ fontWeight: 700, fontSize: s.size.split(/\s*\/\s*/)[0].length > 4 ? 18 : 26, lineHeight: 1.1, whiteSpace: "nowrap" }}>{s.size.split(/\s*\/\s*/)[0]}</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", marginTop: 2 }}>{CATS.find(c => c[0] === s.cat)?.[1]}</span>
                 </div>
               ))}
@@ -102,8 +105,8 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
           <>
             <div className="section"><div>Your {name} pieces</div><Link href="/closet">In closet</Link></div>
             <div style={{ display: "flex", gap: 12, overflowX: "auto", padding: "12px 20px 4px" }}>
-              {mine.slice(0, 20).map(i => (
-                <div key={i.id} style={{ flex: "none", width: 132, display: "flex", flexDirection: "column", gap: 6 }}>
+              {mine.slice(0, 20).map((i, n) => (
+                <div key={i.id} className="up" style={{ ...delay(n, 60), flex: "none", width: 132, display: "flex", flexDirection: "column", gap: 6 }}>
                   <ItemImage src={i.image_url} store={i.store} name={i.name} w={132} h={164} radius={22} size={44} />
                   <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{i.name}</div>
                   <div style={{ fontSize: 12, color: "var(--muted)" }}>{[mine.some(o => o !== i && o.name === i.name) && i.color, i.size && `Size ${i.size}`, month(i.ordered_at)].filter(Boolean).join(" · ")}</div>

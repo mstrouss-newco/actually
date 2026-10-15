@@ -81,9 +81,14 @@ export function describe(subject: string | null): string | null {
     s.match(/^(?:ordered|shipped|delivered|out for delivery):\s*\d+\s+(.+?)\s+items?$/i)?.[1] ??
     s.match(/["\u201c]([^"\u201d]{3,80})["\u201d]/)?.[1] ??
     s.match(/(?:return request confirmed|refund issued|dropoff confirmed|advance refund issued) for (.+?)\.*$/i)?.[1] ??
+    s.match(/^your refund for (.+)$/i)?.[1] ??
     s.match(/^(?:delivery estimate update|out for delivery|arriving[^:]*):\s*(?!\d)([^"\u201c#]{3,80})$/i)?.[1] ??
     null;
-  return m ? m.replace(/,? and (more|other)( items)?$/i, "").replace(/\.{2,}$/, "").replace(/[\s,;:–-]+$/, "").trim() || null : null;
+  // Stores cut long names short ("Glad ForceFlex Tall Kitchen..."): keep an ellipsis so it reads as cut, not wrong.
+  if (!m) return null;
+  const cut = /(\.{2,}|…)\s*$/.test(m);
+  const out = m.replace(/,? and (more|other)( items)?$/i, "").replace(/(\.{2,}|…)\s*$/, "").replace(/[\s,;:–-]+$/, "").trim();
+  return out ? (cut ? `${out}…` : out) : null;
 }
 
 const WINDOW = 21 * 86400000;
@@ -232,11 +237,27 @@ export function loadOrders(): Promise<OrderGroup[] | null> {
   cache = { at: Date.now(), p: fetchOrders() };
   return cache.p;
 }
-// Emails that belong to cancelled orders.
-export async function cancelledEmails(): Promise<Set<string>> {
+// For each email: whether its order was cancelled, is still on the way, and when it was ordered.
+export async function orderInfo() {
   const groups = await loadOrders();
-  return new Set((groups ?? []).filter(g => g.stage === "cancelled").flatMap(g => g.events.map(e => e.gmail_id)));
+  const cancelled = new Set<string>(), arriving = new Set<string>();
+  const ordered = new Map<string, string>();
+  for (const g of groups ?? []) for (const e of g.events) {
+    if (g.stage === "cancelled") cancelled.add(e.gmail_id);
+    if (isArriving(g)) arriving.add(e.gmail_id);
+    ordered.set(e.gmail_id, g.ordered_at);
+  }
+  return { cancelled, arriving, ordered };
 }
+
+// Tracking step for the 4-step bar: ordered, shipped, out for delivery, here.
+export function trackStep(g: OrderGroup) {
+  if (g.stage === "delivered" || g.stage === "returning" || g.stage === "refunded") return 3;
+  if (g.events.some(e => /out for delivery|arriv(es|ing) today/i.test(e.subject ?? ""))) return 2;
+  return g.stage === "shipped" ? 1 : 0;
+}
+// Delivered in the last 3 days: worth a little celebration.
+export const justArrived = (g: OrderGroup) => g.stage === "delivered" && !g.assumed && !g.inStore && Date.now() - Date.parse(deliveredAt(g)) < 3 * DAY;
 
 async function fetchOrders(): Promise<OrderGroup[] | null> {
   const sb = supabase();
@@ -299,12 +320,12 @@ function calendarDaysSince(iso: string) {
 }
 
 // Return status for each email, so a piece can say "Return by Fri" or "Returned".
-export type Ret = { left: number | null; returned: boolean; by: number | null; rule: string | null; store: string };
+export type Ret = { left: number | null; returned: boolean; by: number | null; rule: string | null; store: string; arriving: boolean; ordered: string };
 export function returnsByEmail(groups: OrderGroup[]) {
   const out = new Map<string, Ret>();
   for (const g of groups) {
     const left = returnDaysLeft(g);
-    const r = { left, returned: isReturn(g), by: left ? returnBy(g) : null, rule: ruleText(g), store: g.store };
+    const r = { left, returned: isReturn(g), by: left ? returnBy(g) : null, rule: ruleText(g), store: g.store, arriving: isArriving(g), ordered: g.ordered_at };
     for (const e of g.events) out.set(e.gmail_id, r);
   }
   return out;

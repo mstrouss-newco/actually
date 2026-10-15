@@ -6,6 +6,7 @@ import { CATS, type Item, type Who, brandOf, confirmMine, hideItem, hueRank, loa
 import { type Ret, dayLabel, fmtDate, loadOrders, matches, returnsByEmail } from "@/lib/orders";
 import { ReadItems } from "@/lib/read-items";
 import { ItemImage, StoreTile, TabBar, tint } from "@/lib/tabs";
+import { delay } from "@/lib/motion";
 
 const PICKS: [NonNullable<Item["pick"]>, string][] = [["share", "Show on my feed"], ["sell", "Want to sell"], ["private", "Keep private"]];
 const WHO: [Who, string][] = [["me", "Me"], ["kids", "Kids"], ["partner", "Partner"], ["other", "Someone else"]];
@@ -22,7 +23,10 @@ export default function Closet() {
   const [items, setItems] = useState<Item[] | null>(null);
   const [view, setView] = useState<"pieces" | "brands">("pieces");
   const [rets, setRets] = useState<Map<string, Ret>>(new Map());
-  const [sort, setSort] = useState<SortKey>("new");
+  const [sort, setSortState] = useState<SortKey>("new");
+  // The sort she picks stays put, on every shelf and after a reload.
+  const setSort = (k: SortKey) => { setSortState(k); try { localStorage.setItem("closet-sort", k); } catch {} };
+  useEffect(() => { try { const k = localStorage.getItem("closet-sort") as SortKey | null; if (k && SORTS.some(o => o[0] === k)) setSortState(k); } catch {} }, []);
   const [sortOpen, setSortOpen] = useState(false);
   const [q, setQ] = useState("");
   const [bsort, setBsortState] = useState("most");
@@ -191,11 +195,11 @@ export default function Closet() {
               </Link>
             )}
             <div style={{ marginTop: 14, borderTop: "1px solid var(--line)" }}>
-              {shelves.map(s => {
+              {shelves.map((s, si) => {
                 const back = s.items.filter(i => rets.get(i.gmail_id ?? "")?.left).length;
                 const [a, b, c] = s.items;
                 return (
-                  <button key={s.k} onClick={() => setCat(s.k)} className="shelf" style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "18px 20px", border: 0, borderBottom: "1px solid var(--line)", background: "#fff", cursor: "pointer", font: "inherit", color: "var(--ink)", textAlign: "left" }}>
+                  <button key={s.k} onClick={() => setCat(s.k)} className="shelf up" style={{ ...delay(si, 70), width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "18px 20px", border: 0, borderBottom: "1px solid var(--line)", background: "#fff", cursor: "pointer", font: "inherit", color: "var(--ink)", textAlign: "left" }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="serif" style={{ fontSize: 28, lineHeight: 1.05, letterSpacing: "-0.01em" }}>{s.label}</div>
                       {back > 0 && <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 8, fontSize: 12, fontWeight: 700, color: "#C9402F" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#FF6159" }} />{back} can still go back</div>}
@@ -225,8 +229,8 @@ export default function Closet() {
               ))}
             </div>}
             <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: "16px 16px 0" }}>
-              {brands.map(b => (
-                <Link key={b.name} href={`/brand/${encodeURIComponent(b.name)}`} className="lift" style={{ display: "block", textDecoration: "none", background: tint(b.name), borderRadius: 28, padding: 18 }}>
+              {brands.map((b, bi) => (
+                <Link key={b.name} href={`/brand/${encodeURIComponent(b.name)}`} className="lift up" style={{ ...delay(bi, 70), display: "block", textDecoration: "none", background: tint(b.name), borderRadius: 28, padding: 18 }}>
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
                     <StoreTile store={b.name} w={48} h={48} radius={14} size={22} />
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -279,7 +283,7 @@ export default function Closet() {
                         <ItemImage src={i.image_url} store={i.store} name={i.name} w={140} h={178} radius={24} size={48} />
                         {r?.by && <div style={{ position: "absolute", bottom: -8, right: -6, background: "#FF6159", borderRadius: 999, padding: "5px 9px", fontSize: 11, fontWeight: 700, transform: "rotate(-6deg)" }}>Return by {dayLabel(r.by)}</div>}
                         {r?.returned && <div style={{ position: "absolute", bottom: -8, right: -6, background: "var(--ink)", color: "#fff", borderRadius: 999, padding: "5px 9px", fontSize: 11, fontWeight: 700 }}>Returned</div>}
-                        {isNew(i) && <div style={{ position: "absolute", top: 10, left: 10, background: "#fff", borderRadius: 999, padding: "4px 8px", fontSize: 11, fontWeight: 700 }}>New</div>}
+                        {(i.arriving || isNew(i)) && <div style={{ position: "absolute", top: 10, left: 10, background: i.arriving ? "#FFF0BF" : "#fff", borderRadius: 999, padding: "4px 8px", fontSize: 11, fontWeight: 700 }}>{i.arriving ? "On the way" : "New"}</div>}
                       </div>
                       <div style={{ marginTop: 12, fontSize: 13, fontWeight: 700, width: 124, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "center" }}>{brandOf(i)}</div>
                       <div style={{ fontSize: 12, color: "var(--muted)", width: 124, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "center" }}>{twin(i, sorted) ? `${i.name}, ${i.color ?? fmtDate(i.ordered_at)}` : i.name}</div>
@@ -290,9 +294,12 @@ export default function Closet() {
             </div>
             <div className="serif" style={{ padding: "22px 20px 0", fontSize: 22 }}>All {cur.label.toLowerCase()}</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, padding: "12px 16px 0" }}>
-              {sorted.map(i => (
-                <button key={i.id} onClick={() => setSel(i)} style={{ opacity: rets.get(i.gmail_id ?? "")?.returned ? 0.4 : 1, border: 0, padding: 0, background: "transparent", cursor: "pointer", display: "flex", flexDirection: "column", gap: 5, font: "inherit", color: "inherit", textAlign: "left", minWidth: 0 }}>
-                  <ItemImage src={i.image_url} store={i.store} name={i.name} w="100%" h={140} radius={16} size={36} />
+              {sorted.map((i, gi) => (
+                <button key={i.id} onClick={() => setSel(i)} className="press up" style={{ ...delay(gi, 40), opacity: rets.get(i.gmail_id ?? "")?.returned ? 0.4 : 1, border: 0, padding: 0, background: "transparent", cursor: "pointer", display: "flex", flexDirection: "column", gap: 5, font: "inherit", color: "inherit", textAlign: "left", minWidth: 0 }}>
+                  <div style={{ position: "relative", width: "100%" }}>
+                    <ItemImage src={i.image_url} store={i.store} name={i.name} w="100%" h={140} radius={16} size={36} />
+                    {i.arriving && <div style={{ position: "absolute", top: 8, left: 8, background: "#FFF0BF", borderRadius: 999, padding: "3px 7px", fontSize: 10, fontWeight: 700 }}>On the way</div>}
+                  </div>
                   <div style={{ fontSize: 12, fontWeight: 700, width: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{brandOf(i)}</div>
                   <div style={{ fontSize: 11, color: "var(--muted)", width: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: -3 }}>{i.name}</div>
                   {twin(i, sorted) && <div style={{ fontSize: 11, color: "var(--muted)", width: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: -3 }}>{i.color ?? `Bought ${fmtDate(i.ordered_at)}`}</div>}
@@ -332,7 +339,7 @@ export default function Closet() {
                 <div style={{ fontSize: 13, color: "var(--soft)", marginTop: 6 }}>
                   {[sel.size && `Size ${sel.size}`, sel.color, sel.price != null && `$${sel.price.toFixed(2)}`].filter(Boolean).join(" · ")}
                 </div>
-                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>Bought {fmtDate(sel.ordered_at)} from {sel.store}</div>
+                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>{sel.arriving ? `Ordered ${fmtDate(sel.ordered_at)} from ${sel.store}. On its way.` : `Bought ${fmtDate(sel.ordered_at)} from ${sel.store}`}</div>
               </div>
             </div>
             <div style={{ marginTop: 16, fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>Who is this for?</div>
