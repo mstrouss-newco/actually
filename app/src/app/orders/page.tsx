@@ -54,7 +54,7 @@ export default function Orders() {
   const all = orders ?? [];
   const query = q.trim().toLowerCase();
   const rows = query
-    ? all.filter(g => `${g.store} ${g.order_no ?? ""} ${g.events.map(e => e.subject).join(" ")}`.toLowerCase().includes(query))
+    ? all.filter(g => `${g.store} ${g.order_no ?? ""} ${g.what ?? ""} ${g.items.join(" ")} ${g.pieces.map(p => p.name).join(" ")} ${g.events.map(e => e.subject).join(" ")}`.toLowerCase().includes(query))
     : all.filter(FILTER[tab]);
 
   return (

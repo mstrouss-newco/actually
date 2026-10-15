@@ -3,14 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { type Reward, daysUntil, fmtDay, loadRewards, money, scanRewards, valueItems, worth } from "@/lib/earn";
-import { type Item, loadItems } from "@/lib/items";
+import { type Item, loadItems, whoFor } from "@/lib/items";
 import { Job } from "@/lib/read-items";
 import { ItemImage, StoreTile, TabBar } from "@/lib/tabs";
 
 export default function Earn() {
   const [rewards, setRewards] = useState<Reward[] | null>(null);
   const [items, setItems] = useState<Item[] | null>(null);
-  const load = useCallback(() => { loadRewards().then(setRewards); loadItems().then(setItems); }, []);
+  const load = useCallback(() => { loadRewards().then(setRewards); loadItems().then(all => setItems(all.filter(i => whoFor(i, all) === "me"))); }, []);
   useEffect(load, [load]);
 
   const cash = (rewards ?? []).reduce((s, r) => s + (r.value ?? 0), 0);
@@ -51,7 +51,8 @@ export default function Earn() {
                 )}
               </div>
               <div style={{ fontSize: 14, color: "#7A6A3A", marginTop: 6, lineHeight: 1.4 }}>
-                Ready to use across {rewards.length} {rewards.length === 1 ? "store" : "stores"}.
+                {logos.length > 0 && <>Ready to use at {rewards.filter(r => r.value).length} {rewards.filter(r => r.value).length === 1 ? "store" : "stores"}.</>}
+                {rewards.some(r => !r.value) && <> Points at {rewards.filter(r => !r.value).length} more.</>}
                 {soon && <> {soon.store} {soon.value != null ? money(soon.value) : "points"} expire {fmtDay(soon.expires_on!)}.</>}
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, marginTop: 12 }}>See all →</div>

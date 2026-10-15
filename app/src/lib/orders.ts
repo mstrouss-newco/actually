@@ -96,6 +96,7 @@ export const RELAY = /(^|\.)(narvar|lightspeedhq|shopify|shopifyemail|squareup|c
 // Delay notices are news about an order, not a sign it shipped.
 const isDelay = (e: { subject: string | null }) => /delivery estimate|delayed/i.test(e.subject ?? "");
 const kindOf = (e: { kind: string; subject: string | null }) =>
+  e.kind === "refund" && /dropoff confirmed/i.test(e.subject ?? "") ? "return" :
   e.kind === "shipping" && isDelay(e) ? "order" : e.kind === "order" && /picked up|ready to ship|has shipped/i.test(e.subject ?? "") ? "shipping" : e.kind;
 
 export function groupOrders(rows: FullRow[], itemNames: Map<string, string[]> = new Map(), wearIds: Set<string> = new Set(), itemPieces: Map<string, Piece[]> = new Map()): OrderGroup[] {
@@ -219,8 +220,15 @@ export const isReturn = (g: OrderGroup) => g.stage === "returning" || g.stage ==
 // Most stores give 30 days from delivery. This is a guess until we read each store's policy.
 export function returnDaysLeft(g: OrderGroup) {
   if (g.stage !== "delivered" || g.assumed) return null;
-  const left = 30 - daysAgo(g.last_at);
+  const left = 30 - calendarDaysSince(deliveredAt(g));
   return left > 0 ? left : null;
+}
+// When it was delivered: the delivery email, else the last email.
+export const deliveredAt = (g: OrderGroup) => g.events.filter(e => e.kind === "delivered").map(e => e.at).sort().at(-1) ?? g.last_at;
+// Whole days on her calendar, so "Sep 21" is the same day all day long.
+function calendarDaysSince(iso: string) {
+  const d = new Date(iso), now = new Date();
+  return Math.round((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())) / DAY);
 }
 
 // Return status for each email, so a piece can say "Return by Fri" or "Returned".
@@ -229,7 +237,7 @@ export function returnsByEmail(groups: OrderGroup[]) {
   const out = new Map<string, Ret>();
   for (const g of groups) {
     const left = returnDaysLeft(g);
-    const r = { left, returned: isReturn(g), by: left ? Date.parse(g.last_at) + 30 * DAY : null };
+    const r = { left, returned: isReturn(g), by: left ? Date.parse(deliveredAt(g)) + 30 * DAY : null };
     for (const e of g.events) out.set(e.gmail_id, r);
   }
   return out;

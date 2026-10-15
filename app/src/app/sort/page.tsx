@@ -133,13 +133,13 @@ export default function Sort() {
               <div style={{ ...stamp("#2F7A4F", -12), left: 20, opacity: op(d.x) }}>SHARE</div>
               <div style={{ ...stamp("#141210", 12), right: 20, opacity: op(-d.x) }}>PRIVATE</div>
               <div style={{ ...stamp("#8A6D1E", 0), left: "50%", translate: "-50% 0", opacity: op(-d.y - Math.abs(d.x)) }}>SELL</div>
-              <div style={{ position: "absolute", top: 18, left: "50%", transform: "translateX(-50%)", background: "rgba(255,255,255,.85)", borderRadius: 999, padding: "6px 12px", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", maxWidth: "80%", overflow: "hidden", textOverflow: "ellipsis", opacity: idle ? 1 : 0, transition: "opacity .15s" }}>From your {brandOf(card)} orders</div>
+              <div style={{ position: "absolute", top: 18, left: "50%", transform: "translateX(-50%)", background: "rgba(255,255,255,.85)", borderRadius: 999, padding: "6px 12px", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", maxWidth: "80%", overflow: "hidden", textOverflow: "ellipsis", opacity: idle ? 1 : 0, transition: "opacity .15s" }}>From your {card.store} orders</div>
               <div style={{ position: "absolute", left: "14%", right: "14%", top: 56, bottom: 128, pointerEvents: "none" }}>
                 <ItemImage src={card.image_url} store={card.store} w="100%" h="100%" radius={0} size={96} />
               </div>
               <div style={{ position: "absolute", left: 12, right: 12, bottom: 12, background: "#fff", borderRadius: 24, padding: "16px 18px", pointerEvents: "none" }}>
                 <div className="kicker">{brandOf(card)}</div>
-                <div className="serif" style={{ fontSize: 26, lineHeight: 1.1, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{card.name}</div>
+                <div className="serif" style={{ fontSize: card.name.length > 22 ? 22 : 26, lineHeight: 1.1, marginTop: 2, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{card.name}</div>
                 <div style={{ fontSize: 13, color: "var(--soft)", marginTop: 4 }}>
                   {[card.size && `Size ${card.size}`, `bought ${new Date(card.ordered_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })}`].filter(Boolean).join(" · ")}
                 </div>
@@ -149,7 +149,7 @@ export default function Sort() {
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, padding: "0 6px" }}>
             <button onClick={() => decide("private")} className="nl" style={hint}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>Keep private</button>
-            <button onClick={() => decide("sell")} style={{ ...hint, fontSize: 12, fontWeight: 500 }}>Up to sell</button>
+            <button onClick={() => decide("sell")} style={{ ...hint, fontSize: 12, fontWeight: 500 }}>Swipe up to sell</button>
             <button onClick={() => decide("share")} className="nr" style={{ ...hint, color: "#2F7A4F" }}>Share<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button>
           </div>
           {total - i > 1 && <button onClick={restPrivate} style={{ marginTop: 10, height: 36, border: 0, background: "transparent", font: "500 13px var(--font-sans), sans-serif", color: "var(--muted)", cursor: "pointer", textDecoration: "underline" }}>Keep all {total - i} left private</button>}

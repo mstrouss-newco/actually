@@ -43,7 +43,7 @@ export default function Feed() {
       <div className="scroll">
         <div style={{ display: "flex", alignItems: "baseline", gap: 14, padding: "0 20px", whiteSpace: "nowrap" }}>
           {TABS.map(([k, label]) => (
-            <button key={k} onClick={() => setTab(k)} className="serif" style={{ border: 0, borderBottom: `2px solid ${tab === k ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 26, color: tab === k ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
+            <button key={k} onClick={() => { setTab(k); history.replaceState(history.state, "", k === "friends" ? location.pathname : `?tab=${k}`); }} className="serif" style={{ border: 0, borderBottom: `2px solid ${tab === k ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 26, color: tab === k ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
               {label}
             </button>
           ))}
@@ -129,7 +129,7 @@ export default function Feed() {
             <div style={{ display: "flex", gap: 8, padding: "16px 20px 0" }}>
               <div style={{ flex: 1, minWidth: 0 }}><ShareLink handle={handle} dark /></div>
               <Link href="/sort" style={{ flex: 1, minWidth: 0, height: 46, borderRadius: 999, border: "1.5px solid var(--ink)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, textDecoration: "none", whiteSpace: "nowrap" }}>
-                {toGo ? `Sort ${toGo} new ${toGo === 1 ? "purchase" : "purchases"}` : "Add pieces"}
+                {toGo ? `Sort ${toGo} ${toGo === 1 ? "piece" : "pieces"}` : "Add pieces"}
               </Link>
             </div>
             <Link href="/people" style={{ margin: "16px 16px 0", display: "flex", alignItems: "center", gap: 12, background: "#EBE3FF", borderRadius: 20, padding: "14px 16px", textDecoration: "none" }}>

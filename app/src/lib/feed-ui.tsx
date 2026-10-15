@@ -87,10 +87,8 @@ export function ShareLink({ handle, label = "Share my feed", dark = false }: { h
   const [copied, setCopied] = useState(false);
   const go = async () => {
     const url = profileUrl(handle);
-    try {
-      if (navigator.share) await navigator.share({ title: `${handle} on Actually`, url });
-      else { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1800); }
-    } catch {}
+    try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2200); } catch {}
+    try { if (navigator.share && matchMedia("(pointer: coarse)").matches) await navigator.share({ title: `${handle} on Actually`, url }); } catch {}
   };
   return <button onClick={go} className={dark ? "btn" : "btn btn-line"} style={{ height: dark ? 46 : 48, fontSize: dark ? 14 : 15, marginTop: 0 }}>{copied ? "Link copied" : label}</button>;
 }
