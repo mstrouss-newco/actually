@@ -64,7 +64,7 @@ export default function Welcome() {
 
       <div className="spacer" />
       <Link href="/claim" className="btn">Get my free shopping email</Link>
-      <div className="note">Free. Takes ten seconds. <Link href="/login" style={{ fontWeight: 700 }}>Already joined? Sign in</Link></div>
+      <Link href="/login" className="btn btn-ghost">Sign in</Link>
     </main>
   );
 }

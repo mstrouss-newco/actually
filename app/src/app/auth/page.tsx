@@ -24,6 +24,14 @@ export default function Auth() {
         return;
       }
       await saveGmailRefresh();
+      // Already has an account: use its shopping email and go straight in.
+      // Never let a name left on this device from an earlier sign-up replace it.
+      const { data: had } = await sb.from("profiles").select("handle").eq("id", data.session.user.id).maybeSingle();
+      if (had?.handle) {
+        saveProfile({ handle: had.handle });
+        router.replace(next);
+        return;
+      }
       const res = await syncProfile();
       if (res === "taken") {
         saveProfile({ handle: "" });
