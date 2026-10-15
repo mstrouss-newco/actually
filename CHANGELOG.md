@@ -4,6 +4,7 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- QA fixes: kids' and partner orders stay off brand pages, returned pieces can't be shared and skip Sort, returns say "Return started" or "Refunded" (not both), Back from a brand lands on Brands, long brand names fit in Sort and brand pages, Sort finish says "All sorted" when nothing is shared and Undo puts back "keep all private", Worth says "Not priced yet" instead of $0, sort tabs hidden on an empty Brands list.
 - Feed and Find people match the design board. Feed has three tabs: Friends (big photo posts with brand and name), Taste match (people who shop your brands, with three pieces from their feed) and My feed (followers, Share my feed, Sort N new purchases, On your feed grid). Find people: search, "Friends already here" (people who follow you or you follow) with Follow buttons, a sideways "Shop like you" row, invite card. "Find it" shop links removed from the feed. New `my_people` database function.
 
 ## 2026-10-14

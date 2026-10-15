@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { type Item, brandOf, loadItems, setPick, setPicks, toSort } from "@/lib/items";
+import { loadOrders, returnsByEmail } from "@/lib/orders";
 import { ItemImage } from "@/lib/tabs";
 
 type Pick = NonNullable<Item["pick"]>;
@@ -16,7 +17,13 @@ export default function Sort() {
   const [d, setD] = useState({ x: 0, y: 0, drag: false, fly: false });
   const start = useRef<{ x: number; y: number } | null>(null);
 
-  useEffect(() => { loadItems().then(all => setDeck(toSort(all))); }, []);
+  // Pieces she sent back don't go in the deck.
+  useEffect(() => {
+    Promise.all([loadItems(), loadOrders()]).then(([all, groups]) => {
+      const rets = returnsByEmail(groups ?? []);
+      setDeck(toSort(all).filter(x => !rets.get(x.gmail_id ?? "")?.returned));
+    });
+  }, []);
 
   const card = deck?.[i];
   const total = deck?.length ?? 0;
@@ -29,8 +36,18 @@ export default function Sort() {
     setPick(card.id, p);
     setTimeout(() => { setHist(h => [...h, p]); setI(n => n + 1); setD({ x: 0, y: 0, drag: false, fly: false }); }, 260);
   };
+  // Where "Keep all left private" started, so Undo puts the whole batch back.
+  const batch = useRef<number | null>(null);
   const undo = () => {
     if (!i || d.fly || !deck) return;
+    if (batch.current !== null && i >= total) {
+      const from = batch.current;
+      batch.current = null;
+      setPicks(deck.slice(from).map(x => x.id), null);
+      setHist(h => h.slice(0, from));
+      setI(from);
+      return;
+    }
     setPick(deck[i - 1].id, null);
     setHist(h => h.slice(0, -1));
     setI(n => n - 1);
@@ -52,6 +69,7 @@ export default function Sort() {
   const restPrivate = () => {
     if (!deck || d.fly) return;
     const rest = deck.slice(i);
+    batch.current = i;
     setPicks(rest.map(x => x.id), "private");
     setHist(h => [...h, ...rest.map(() => "private" as Pick)]);
     setI(total);
@@ -66,7 +84,7 @@ export default function Sort() {
   return (
     <main className="screen" style={{ padding: "20px 20px 26px", overflow: "hidden" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link href="/closet" className="back" style={{ padding: "0 14px" }}>Finish later</Link>
+        <Link href="/closet" className="back" style={{ padding: "0 14px" }}>{finished ? "Done" : "Finish later"}</Link>
         {!finished && (
           <button onClick={undo} disabled={!i} style={{ height: 36, padding: "0 14px", borderRadius: 999, border: 0, background: "transparent", font: "700 13px var(--font-sans), sans-serif", color: i ? "var(--ink)" : "#C9C3BC", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14L4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-3" /></svg>Undo
@@ -115,7 +133,7 @@ export default function Sort() {
               <div style={{ ...stamp("#2F7A4F", -12), left: 20, opacity: op(d.x) }}>SHARE</div>
               <div style={{ ...stamp("#141210", 12), right: 20, opacity: op(-d.x) }}>PRIVATE</div>
               <div style={{ ...stamp("#8A6D1E", 0), left: "50%", translate: "-50% 0", opacity: op(-d.y - Math.abs(d.x)) }}>SELL</div>
-              <div style={{ position: "absolute", top: 18, left: "50%", transform: "translateX(-50%)", background: "rgba(255,255,255,.85)", borderRadius: 999, padding: "6px 12px", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", opacity: idle ? 1 : 0, transition: "opacity .15s" }}>From your {brandOf(card)} orders</div>
+              <div style={{ position: "absolute", top: 18, left: "50%", transform: "translateX(-50%)", background: "rgba(255,255,255,.85)", borderRadius: 999, padding: "6px 12px", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", maxWidth: "80%", overflow: "hidden", textOverflow: "ellipsis", opacity: idle ? 1 : 0, transition: "opacity .15s" }}>From your {brandOf(card)} orders</div>
               <div style={{ position: "absolute", left: "14%", right: "14%", top: 56, bottom: 128, pointerEvents: "none" }}>
                 <ItemImage src={card.image_url} store={card.store} w="100%" h="100%" radius={0} size={96} />
               </div>
@@ -134,7 +152,7 @@ export default function Sort() {
             <button onClick={() => decide("sell")} style={{ ...hint, fontSize: 12, fontWeight: 500 }}>Up to sell</button>
             <button onClick={() => decide("share")} className="nr" style={{ ...hint, color: "#2F7A4F" }}>Share<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button>
           </div>
-          {total - i > 1 && <button onClick={restPrivate} style={{ marginTop: 10, height: 36, border: 0, background: "transparent", font: "500 13px var(--font-sans), sans-serif", color: "var(--muted)", cursor: "pointer", textDecoration: "underline" }}>Keep the other {total - i} private</button>}
+          {total - i > 1 && <button onClick={restPrivate} style={{ marginTop: 10, height: 36, border: 0, background: "transparent", font: "500 13px var(--font-sans), sans-serif", color: "var(--muted)", cursor: "pointer", textDecoration: "underline" }}>Keep all {total - i} left private</button>}
         </>
       )}
 
@@ -147,9 +165,13 @@ export default function Sort() {
               </div>
             ))}
           </div>
-          <div className="serif" style={{ fontSize: 40, lineHeight: 1 }}>Your feed is <em>ready.</em></div>
+          {count("share") > 0
+            ? <div className="serif" style={{ fontSize: 40, lineHeight: 1 }}>Your feed is <em>ready.</em></div>
+            : <div className="serif" style={{ fontSize: 40, lineHeight: 1 }}>All <em>sorted.</em></div>}
           <div style={{ fontSize: 15, color: "var(--muted)", marginTop: 12 }}>{[`${count("share")} shared`, count("sell") && `${count("sell")} to sell`, `${count("private")} kept private`].filter(Boolean).join(" · ")}</div>
-          <Link href="/feed?tab=mine" className="btn" style={{ marginTop: 26, width: "auto", padding: "0 32px" }}>See my feed</Link>
+          {count("share") === 0 && <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 8, maxWidth: 280, lineHeight: 1.4 }}>Nothing is shared. You can share any piece later from your closet.</div>}
+          <button onClick={undo} style={{ marginTop: 14, border: 0, background: "none", font: "700 14px var(--font-sans), sans-serif", color: "var(--muted)", cursor: "pointer", textDecoration: "underline" }}>Undo</button>
+          <Link href={count("share") ? "/feed?tab=mine" : "/closet"} className="btn" style={{ marginTop: 18, width: "auto", padding: "0 32px" }}>{count("share") ? "See my feed" : "Back to closet"}</Link>
           <Link href="/people" style={{ marginTop: 8, height: 44, display: "flex", alignItems: "center", fontSize: 15, fontWeight: 700, color: "#5B44B0", textDecoration: "none" }}>Find friends to follow</Link>
         </div>
       )}
