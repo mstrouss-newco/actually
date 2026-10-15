@@ -18,6 +18,18 @@ const NOT_WEAR = /\b(i?pad|iphone|phone|tablet|laptop|kindle)\b.*\b(case|cover|s
 // The same piece read from two emails about one order ("Lima" and "Men's Lima"). Other colors stay separate.
 const pieceKey = (i: Item) => `${(i.brand || i.store).toLowerCase()}|${i.size ?? ""}|${i.name.toLowerCase().replace(/\b(men|women|boy|girl|kid)s?['’]?s?\b/g, "").replace(/[^a-z0-9]/g, "")}|${i.ordered_at.slice(0, 7)}`;
 
+const core = (n: string) => n.toLowerCase().replace(/\b(men|women|boy|girl|kid)s?['’]?s?\b/g, "").replace(/\b(shoes?|sneakers?|boots?|sandals?|shirt|tee|t-shirt|pants?|jacket|coat)\b/g, "").replace(/[^a-z0-9]/g, "");
+// Two reads of one piece from different emails about the same order.
+function sameRead(a: Item, b: Item) {
+  if ((a.brand || a.store).toLowerCase() !== (b.brand || b.store).toLowerCase()) return false;
+  // "8" and "8 / Standard" are the same size.
+  const size = (x: string | null) => (x ?? "").split(/\s*\/\s*/)[0].trim().toLowerCase();
+  if (size(a.size) !== size(b.size) || a.ordered_at.slice(0, 7) !== b.ordered_at.slice(0, 7)) return false;
+  if (a.color && b.color && a.color.toLowerCase() !== b.color.toLowerCase()) return false;
+  const x = core(a.name), y = core(b.name);
+  return !!x && !!y && (x.includes(y) || y.includes(x));
+}
+
 export async function loadItems(): Promise<Item[]> {
   // Pieces from cancelled orders never arrived, so they stay out of the closet.
   const cancelled = await cancelledEmails();
@@ -34,7 +46,14 @@ export async function loadItems(): Promise<Item[]> {
     else if (i.name.length > list[n].name.length || (i.for_whom && !list[n].for_whom)) list[n] = i;
     best.set(pieceKey(i), list);
   }
-  const out = [...best.values()].flat();
+  // Same brand, size, color and month, and one name holds the other ("Lima" and "Lima shoe"): one piece.
+  const out: Item[] = [];
+  for (const i of [...best.values()].flat().sort((a, b) => b.name.length - a.name.length)) {
+    const twin = out.find(o => sameRead(o, i));
+    if (!twin) out.push(i);
+    else if ((i.for_whom && !twin.for_whom) || (!twin.image_url && i.image_url)) out[out.indexOf(twin)] = { ...i, name: twin.name.length >= i.name.length ? twin.name : i.name, image_url: twin.image_url || i.image_url };
+  }
+  out.sort((a, b) => b.ordered_at.localeCompare(a.ordered_at));
   // Sub-lines file under the main brand ("TCK Krazisox" is TCK).
   const names = [...new Set(out.map(i => i.brand).filter((b): b is string => !!b))].sort((a, b) => a.length - b.length);
   const main = (b: string) => names.find(n => n.length < b.length && b.toLowerCase().startsWith(`${n.toLowerCase()} `)) ?? b;

@@ -25,7 +25,10 @@ export default function Closet() {
   const [sort, setSort] = useState<SortKey>("new");
   const [sortOpen, setSortOpen] = useState(false);
   const [q, setQ] = useState("");
-  const [bsort, setBsort] = useState("most");
+  const [bsort, setBsortState] = useState("most");
+  // The brand sort she picked stays when she comes back from a brand page.
+  const setBsort = (k: string) => { setBsortState(k); try { sessionStorage.setItem("brand-sort", k); } catch {} };
+  useEffect(() => { try { const k = sessionStorage.getItem("brand-sort"); if (k) setBsortState(k); } catch {} }, []);
   // Coming back from a brand page opens the Brands tab.
   useEffect(() => { if (new URLSearchParams(location.search).get("view") === "brands") setView("brands"); }, []);
   // Remember the tab in the address, so Back from a brand page lands on Brands.
@@ -140,7 +143,7 @@ export default function Closet() {
               ))}
             </div>
             <div style={{ fontSize: 14, color: "var(--muted)", padding: "8px 20px 0" }}>
-              {items === null ? "Loading…" : view === "brands" ? "Your size and their return rules, ready while you shop." : list.length ? `${list.length} ${who === "me" ? "pieces you've bought" : "pieces"}` : "Everything you've bought, in one place."}
+              {items === null ? "Loading…" : view === "brands" ? "Your size and their return rules, ready while you shop." : list.length ? `${list.length} ${list.length === 1 ? "piece" : "pieces"}${who === "me" ? " you've bought" : ""}` : "Everything you've bought, in one place."}
             </div>
             {view === "pieces" && people.length > 1 && (
               <div style={{ display: "flex", gap: 6, padding: "12px 20px 0" }}>
@@ -279,7 +282,7 @@ export default function Closet() {
                         {isNew(i) && <div style={{ position: "absolute", top: 10, left: 10, background: "#fff", borderRadius: 999, padding: "4px 8px", fontSize: 11, fontWeight: 700 }}>New</div>}
                       </div>
                       <div style={{ marginTop: 12, fontSize: 13, fontWeight: 700, width: 124, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "center" }}>{brandOf(i)}</div>
-                      <div style={{ fontSize: 12, color: "var(--muted)", width: 124, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "center" }}>{twin(i, sorted) && i.color ? `${i.name}, ${i.color}` : i.name}</div>
+                      <div style={{ fontSize: 12, color: "var(--muted)", width: 124, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "center" }}>{twin(i, sorted) ? `${i.name}, ${i.color ?? fmtDate(i.ordered_at)}` : i.name}</div>
                     </button>
                   );
                 })}
@@ -291,7 +294,8 @@ export default function Closet() {
                 <button key={i.id} onClick={() => setSel(i)} style={{ opacity: rets.get(i.gmail_id ?? "")?.returned ? 0.4 : 1, border: 0, padding: 0, background: "transparent", cursor: "pointer", display: "flex", flexDirection: "column", gap: 5, font: "inherit", color: "inherit", textAlign: "left", minWidth: 0 }}>
                   <ItemImage src={i.image_url} store={i.store} name={i.name} w="100%" h={140} radius={16} size={36} />
                   <div style={{ fontSize: 12, fontWeight: 700, width: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{brandOf(i)}</div>
-                  <div style={{ fontSize: 11, color: "var(--muted)", width: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: -3 }}>{twin(i, sorted) && i.color ? i.color : i.name}</div>
+                  <div style={{ fontSize: 11, color: "var(--muted)", width: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: -3 }}>{i.name}</div>
+                  {twin(i, sorted) && <div style={{ fontSize: 11, color: "var(--muted)", width: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: -3 }}>{i.color ?? `Bought ${fmtDate(i.ordered_at)}`}</div>}
                 </button>
               ))}
             </div>
