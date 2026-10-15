@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Feed: My feed is the first tab and opens by default until people you follow have shared something. My feed tiles match the design (tall photo, brand, name) and each piece can carry a short note ("Size down one"), shown on your public page too (migration items_note, `profile_page` returns `note`).
+
 - Brands cards (design A, "Photo shelf"): smaller name, a fanned strip of your pieces with a +N tile, size pills and the return window on one line with a pulsing dot. The brand logo shows only when a real one loads; store tiles never fall back to a letter (a small drawing instead).
 
 - Worth list: every piece has a clear "Sell →" button (or "Selling" once it's on the list), the "Marked to sell" tab is now "Selling" with a one-line explanation.

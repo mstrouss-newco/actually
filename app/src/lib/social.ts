@@ -1,6 +1,13 @@
 import { supabase } from "./supabase";
 
-export type SharedItem = { id: string; brand: string | null; store: string; name: string; image_url: string | null; category: string; shared_at: string | null };
+export type SharedItem = { id: string; brand: string | null; store: string; name: string; image_url: string | null; category: string; shared_at: string | null; note?: string | null };
+
+// Her short note on a piece she shares ("Size down one"). Empty clears it.
+export async function saveNote(id: string, note: string) {
+  const clean = note.trim().slice(0, 140) || null;
+  await supabase().from("items").update({ note: clean }).eq("id", id);
+  return clean;
+}
 export type FeedItem = SharedItem & { handle: string };
 export type Profile = { handle: string; is_me: boolean; i_follow: boolean; followers: number; following: number; items: SharedItem[] };
 

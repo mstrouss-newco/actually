@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { type FeedItem, type SharedItem, ago, findIt, profileUrl, setFollow } from "./social";
+import { type FeedItem, type SharedItem, ago, findIt, profileUrl, saveNote, setFollow } from "./social";
 import { ItemImage, tint } from "./tabs";
 
 // "mike" reads as a name: "Mike".
@@ -36,17 +36,34 @@ export function FeedCard({ item }: { item: FeedItem }) {
   );
 }
 
-// Two-column grid of her own shared pieces (no links out).
+// Two-column grid of her own shared pieces (no links out), each with an optional note.
 export function MyGrid({ items }: { items: SharedItem[] }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "14px 12px" }}>
-      {items.map(i => (
-        <div key={i.id} className="lift" style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
-          <ItemImage src={i.image_url} store={i.store} name={i.name} w="100%" h={200} radius={22} size={56} />
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)" }}>{i.brand || i.store}</div>
-          <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.25 }}>{i.name}</div>
-        </div>
-      ))}
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "16px 12px" }}>
+      {items.map((i, n) => <MyTile key={i.id} item={i} n={n} />)}
+    </div>
+  );
+}
+
+function MyTile({ item, n }: { item: SharedItem; n: number }) {
+  const [note, setNote] = useState(item.note ?? "");
+  const [editing, setEditing] = useState(false);
+  const save = async () => { setEditing(false); setNote((await saveNote(item.id, note)) ?? ""); };
+  return (
+    <div className="lift up" style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0, animationDelay: `${n * 50}ms` }}>
+      <div style={{ aspectRatio: "4 / 5", borderRadius: 22, overflow: "hidden" }}>
+        <ItemImage src={item.image_url} store={item.store} name={item.name} w="100%" h="100%" radius={22} />
+      </div>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)" }}>{item.brand || item.store}</div>
+      <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.25 }}>{item.name}</div>
+      {editing ? (
+        <input autoFocus value={note} maxLength={140} placeholder="Size down one, wore it all summer…" onChange={e => setNote(e.target.value)} onBlur={save} onKeyDown={e => { if (e.key === "Enter") save(); }}
+          style={{ border: "1.5px solid var(--line)", borderRadius: 12, padding: "8px 10px", font: "13px var(--font-sans), sans-serif", width: "100%", boxSizing: "border-box" }} />
+      ) : note ? (
+        <button type="button" onClick={() => setEditing(true)} style={{ border: 0, background: "none", padding: 0, textAlign: "left", fontSize: 13, color: "var(--soft)", fontStyle: "italic", lineHeight: 1.3, cursor: "pointer", font: "italic 13px var(--font-sans), sans-serif" }}>&ldquo;{note}&rdquo;</button>
+      ) : (
+        <button type="button" onClick={() => setEditing(true)} style={{ alignSelf: "flex-start", border: 0, background: "none", padding: 0, font: "700 13px var(--font-sans), sans-serif", color: "var(--muted)", cursor: "pointer" }}>+ Add a note</button>
+      )}
     </div>
   );
 }
@@ -60,6 +77,7 @@ export function ItemGrid({ items }: { items: SharedItem[] }) {
           <ItemImage src={i.image_url} store={i.store} name={i.name} w="100%" h={190} radius={22} size={56} />
           <div className="kicker" style={{ marginTop: 8 }}>{i.brand || i.store}</div>
           <div style={{ fontWeight: 700, fontSize: 14, marginTop: 2, lineHeight: 1.25 }}>{i.name}</div>
+          {i.note && <div style={{ fontSize: 13, color: "var(--soft)", fontStyle: "italic", marginTop: 4, lineHeight: 1.3 }}>&ldquo;{i.note}&rdquo;</div>}
         </a>
       ))}
     </div>
