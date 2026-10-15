@@ -14,19 +14,24 @@ export const WEAR = ["tops", "bottoms", "dresses", "outerwear", "shoes", "bags",
 
 // Things the reader sometimes files under accessories or bags that you don't wear.
 const NOT_WEAR = /\b(i?pad|iphone|phone|tablet|laptop|kindle)\b.*\b(case|cover|stand|sleeve)\b|\b(case|cover) for\b|adapter|charger|cable|key ?card|compression bags?|packing cubes?|vacuum bags?|luggage tags?/i;
-// The same piece read from two emails about one order ("Lima" and "Men's Lima").
+// The same piece read from two emails about one order ("Lima" and "Men's Lima"). Other colors stay separate.
 const pieceKey = (i: Item) => `${(i.brand || i.store).toLowerCase()}|${i.size ?? ""}|${i.name.toLowerCase().replace(/\b(men|women|boy|girl|kid)s?['’]?s?\b/g, "").replace(/[^a-z0-9]/g, "")}|${i.ordered_at.slice(0, 7)}`;
 
 export async function loadItems(): Promise<Item[]> {
   const { data } = await supabase().from("items").select("id, store, name, brand, size, color, price, image_url, category, ordered_at, pick, resale_low, resale_high, resale_note, for_whom, gmail_id").in("category", WEAR).eq("hidden", false).order("ordered_at", { ascending: false }).limit(3000);
   // Keep the more specific name ("Women's Lima" over "Lima"): it tells us who it's for.
-  const best = new Map<string, Item>();
+  // Two colors of one piece (a tee in Black and White) stay separate; a missing color matches any.
+  const best = new Map<string, Item[]>();
+  const sameColor = (a: Item, b: Item) => !a.color || !b.color || a.color.toLowerCase() === b.color.toLowerCase();
   for (const i of (data ?? []) as Item[]) {
     if (NOT_WEAR.test(i.name)) continue;
-    const k = pieceKey(i), cur = best.get(k);
-    if (!cur || i.name.length > cur.name.length || (i.for_whom && !cur.for_whom)) best.set(k, i);
+    const list = best.get(pieceKey(i)) ?? [];
+    const n = list.findIndex(c => sameColor(c, i));
+    if (n < 0) list.push(i);
+    else if (i.name.length > list[n].name.length || (i.for_whom && !list[n].for_whom)) list[n] = i;
+    best.set(pieceKey(i), list);
   }
-  return [...best.values()];
+  return [...best.values()].flat();
 }
 
 export async function setPick(id: string, pick: Item["pick"]) {
