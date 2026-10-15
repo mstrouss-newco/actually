@@ -69,7 +69,7 @@ export default function Orders() {
         {!query && (
           <div style={{ display: "flex", gap: 20, padding: "18px 20px 0", borderBottom: "1px solid var(--line)", overflowX: "auto" }}>
             {TABS.map(([k, label]) => (
-              <button key={k} type="button" onClick={() => setTab(k)} style={{ border: 0, background: "transparent", padding: "10px 0 12px", font: "700 15px var(--font-sans), sans-serif", color: k === tab ? "var(--ink)" : "var(--muted)", borderBottom: `3px solid ${k === tab ? "var(--ink)" : "transparent"}`, cursor: "pointer", whiteSpace: "nowrap" }}>
+              <button key={k} type="button" onClick={() => { setTab(k); history.replaceState(history.state, "", `?tab=${k}`); }} style={{ border: 0, background: "transparent", padding: "10px 0 12px", font: "700 15px var(--font-sans), sans-serif", color: k === tab ? "var(--ink)" : "var(--muted)", borderBottom: `3px solid ${k === tab ? "var(--ink)" : "transparent"}`, cursor: "pointer", whiteSpace: "nowrap" }}>
                 {label} <span style={{ fontSize: 11, marginLeft: 2, verticalAlign: "super" }}>{all.filter(FILTER[k]).length}</span>
               </button>
             ))}

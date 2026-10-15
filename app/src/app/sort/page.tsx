@@ -53,14 +53,16 @@ export default function Sort() {
     setI(n => n - 1);
   };
 
-  const down = (e: React.PointerEvent) => { start.current = { x: e.clientX, y: e.clientY }; (e.target as Element).setPointerCapture(e.pointerId); };
+  // Uses the pointer's own position on release, so a quick flick counts even before the screen redraws.
+  const down = (e: React.PointerEvent) => { start.current = { x: e.clientX, y: e.clientY }; e.currentTarget.setPointerCapture(e.pointerId); };
   const move = (e: React.PointerEvent) => { if (start.current) setD({ x: e.clientX - start.current.x, y: e.clientY - start.current.y, drag: true, fly: false }); };
-  const up = () => {
+  const up = (e: React.PointerEvent) => {
     if (!start.current) return;
+    const x = e.clientX - start.current.x, y = e.clientY - start.current.y;
     start.current = null;
-    if (d.x > THRESHOLD) decide("share");
-    else if (d.x < -THRESHOLD) decide("private");
-    else if (d.y < -THRESHOLD) decide("sell");
+    if (x > THRESHOLD) decide("share");
+    else if (x < -THRESHOLD) decide("private");
+    else if (y < -THRESHOLD) decide("sell");
     else setD({ x: 0, y: 0, drag: false, fly: false });
   };
 
@@ -123,7 +125,7 @@ export default function Sort() {
             {deck[i + 2] && <div style={{ position: "absolute", inset: "26px 26px 0", borderRadius: 32, background: "#E4DED6", transform: "scale(.9) translateY(24px)" }} />}
             {deck[i + 1] && <div style={{ position: "absolute", inset: "14px 14px 0", borderRadius: 32, background: "#ECE7E0", transform: "scale(.95) translateY(12px)", boxShadow: "0 8px 20px rgba(20,18,16,.06)" }} />}
             <div
-              onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
+              onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={() => { start.current = null; setD({ x: 0, y: 0, drag: false, fly: false }); }}
               style={{
                 position: "absolute", inset: 0, borderRadius: 32, background: "var(--tile)", boxShadow: "0 20px 44px rgba(20,18,16,.18)",
                 touchAction: "none", cursor: "grab", userSelect: "none", overflow: "hidden",

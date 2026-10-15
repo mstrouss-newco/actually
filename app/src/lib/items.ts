@@ -31,7 +31,11 @@ export async function loadItems(): Promise<Item[]> {
     else if (i.name.length > list[n].name.length || (i.for_whom && !list[n].for_whom)) list[n] = i;
     best.set(pieceKey(i), list);
   }
-  return [...best.values()].flat();
+  const out = [...best.values()].flat();
+  // Sub-lines file under the main brand ("TCK Krazisox" is TCK).
+  const names = [...new Set(out.map(i => i.brand).filter((b): b is string => !!b))].sort((a, b) => a.length - b.length);
+  const main = (b: string) => names.find(n => n.length < b.length && b.toLowerCase().startsWith(`${n.toLowerCase()} `)) ?? b;
+  return out.map(i => (i.brand ? { ...i, brand: main(i.brand) } : i));
 }
 
 export async function setPick(id: string, pick: Item["pick"]) {
