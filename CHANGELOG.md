@@ -4,6 +4,7 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Pet prescriptions (vet diets, flea and tick medicine) are hidden from the app and removed from saved data. Pet toys and regular food stay.
 - Flint and Tinder (Huckberry's own brand) shows the Huckberry logo.
 - Blind QA round 8: one piece when two emails name it differently ("Lima" and "Lima shoe", sizes "8" and "8 / Standard"), so Kizik shows 2 pairs, not 4. Look-alike pieces show their color or purchase date. Name tiles never split a word and show a letter, not a number. Taste match buttons fit. Brands keeps the sort you picked. Grid shows item names. "1 piece" wording.
 - Catch-up scan follow-up: review requests, "free gift with your order" promos, payment-method warnings, partial item cancellations, Subscribe & Save notices, Whole Foods grocery orders and school yearbooks are skipped. Return rules ignore other countries' rules and are kept to a few words.
