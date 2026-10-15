@@ -223,6 +223,21 @@ export function returnDaysLeft(g: OrderGroup) {
   return left > 0 ? left : null;
 }
 
+// Return status for each email, so a piece can say "Return by Fri" or "Returned".
+export type Ret = { left: number | null; returned: boolean; by: number | null };
+export function returnsByEmail(groups: OrderGroup[]) {
+  const out = new Map<string, Ret>();
+  for (const g of groups) {
+    const left = returnDaysLeft(g);
+    const r = { left, returned: isReturn(g), by: left ? Date.parse(g.last_at) + 30 * DAY : null };
+    for (const e of g.events) out.set(e.gmail_id, r);
+  }
+  return out;
+}
+// "Fri" when it's this week, else "Oct 30".
+export const dayLabel = (t: number) =>
+  t - Date.now() < 6 * DAY ? new Date(t).toLocaleDateString("en-US", { weekday: "short" }) : fmtDate(new Date(t).toISOString());
+
 // What to call an order: the items in it, else what the email says it is, else the order number.
 export function orderTitle(g: OrderGroup) {
   if (g.items.length) return g.items.length > 1 ? `${g.items[0]}, +${g.items.length - 1} more` : g.items[0];

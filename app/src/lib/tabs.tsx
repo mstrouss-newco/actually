@@ -36,7 +36,7 @@ export function TabBar() {
     <ImportStrip />
     <nav className="tabbar">
       {TABS.map(t => (
-        <Link key={t.href} href={t.href} className={path.startsWith(t.href) || (t.href === "/orders" && path.startsWith("/order/")) || (t.href === "/feed" && /^\/(people|u\/)/.test(path)) ? "on" : ""}>
+        <Link key={t.href} href={t.href} className={path.startsWith(t.href) || (t.href === "/orders" && path.startsWith("/order/")) || (t.href === "/closet" && path.startsWith("/brand/")) || (t.href === "/feed" && /^\/(people|u\/)/.test(path)) ? "on" : ""}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{t.icon}</svg>
           {t.label}
         </Link>
