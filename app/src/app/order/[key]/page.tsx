@@ -3,7 +3,7 @@
 import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type OrderGroup, blockStore, dayLabel, deliveredAt, etaText, fmtDate, gmailLink, isArriving, justArrived, loadOrders, orderTitle, removeOrder, returnBy, returnDaysLeft, ruleText, trackStep } from "@/lib/orders";
+import { type OrderGroup, blockStore, boughtInStore, dayLabel, deliveredAt, etaText, fmtDate, gmailLink, isArriving, justArrived, loadOrders, orderTitle, removeOrder, returnBy, returnDaysLeft, ruleText, trackStep } from "@/lib/orders";
 import { Confetti, TrackBar, delay } from "@/lib/motion";
 import { ItemImage, TabBar, tint } from "@/lib/tabs";
 
@@ -113,8 +113,8 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
             </div>
             <div style={{ fontSize: 14, color: "#C9C3BC", marginTop: 8, lineHeight: 1.45 }}>
               {ruleText(order)
-                ? <>{order.store}&apos;s email says: {ruleText(order)}. Counted from delivery on {fmtDate(order.last_at)}.</>
-                : <>Delivered {fmtDate(order.last_at)}. {order.store}&apos;s emails don&apos;t say how long you have, so this uses the usual 30 days. Check their site to be sure.</>}
+                ? <>{order.store}&apos;s email says: {ruleText(order)}. Counted from {boughtInStore(order) ? "purchase" : "delivery"} on {fmtDate(deliveredAt(order))}.</>
+                : <>{boughtInStore(order) ? "Bought" : "Delivered"} {fmtDate(deliveredAt(order))}. {order.store}&apos;s emails don&apos;t say how long you have, so this uses the usual 30 days. Check their site to be sure.</>}
             </div>
           </div>
         )}

@@ -134,10 +134,15 @@ export async function setWho(i: Item, who: Who, all: Item[]) {
 export async function unreadOrderEmails(): Promise<string[]> {
   // Order emails first. Shipping emails too, for orders that never sent one (Chewy Autoship,
   // Huckberry, Amazon), so they get real names and photos.
-  const { data } = await supabase().from("orders").select("gmail_id, store, store_domain, order_no, kind").eq("items_read", false)
+  const { data } = await supabase().from("orders").select("gmail_id, store, store_domain, order_no, kind, sent_at").eq("items_read", false)
     .in("kind", ["order", "receipt", "shipping"]).order("sent_at", { ascending: false }).limit(1500);
-  const rows = ((data ?? []) as { gmail_id: string; store: string; store_domain: string | null; order_no: string | null; kind: string }[])
-    .filter(r => r.kind !== "shipping" || r.order_no)
+  // Stores like J.Crew Factory sometimes only send "on its way" emails with no order number.
+  // Read those too when the store sent no order email in the 21 days before.
+  const { data: placed } = await supabase().from("orders").select("store, store_domain, sent_at").in("kind", ["order", "receipt"]).limit(5000);
+  const hadOrder = (r: { store: string; store_domain: string | null; sent_at: string }) => ((placed ?? []) as { store: string; store_domain: string | null; sent_at: string }[])
+    .some(o => (o.store_domain ?? o.store) === (r.store_domain ?? r.store) && Date.parse(o.sent_at) <= Date.parse(r.sent_at) && Date.parse(r.sent_at) - Date.parse(o.sent_at) < 21 * 86400000);
+  const rows = ((data ?? []) as { gmail_id: string; store: string; store_domain: string | null; order_no: string | null; kind: string; sent_at: string }[])
+    .filter(r => r.kind !== "shipping" || r.order_no || (!/amazon/i.test(r.store_domain ?? r.store) && !hadOrder(r)))
     .sort((a, b) => (a.kind === "shipping" ? 1 : 0) - (b.kind === "shipping" ? 1 : 0));
   // Orders already read through another email don't need their shipping email read too.
   const { data: read } = await supabase().from("orders").select("store, store_domain, order_no").eq("items_read", true).in("kind", ["order", "receipt", "shipping"]).not("order_no", "is", null).limit(5000);
@@ -252,7 +257,7 @@ export const CATS: [string, string][] = [
 // Her usual size at each brand: the size she bought most often there, per category.
 // What Sort shows: her own pieces with a photo and no choice yet. Closet counts the same way.
 // Pieces still in the mail wait until they arrive.
-export const toSort = (all: Item[]) => all.filter(x => !x.pick && x.image_url && !x.arriving && whoFor(x, all) === "me");
+export const toSort = (all: Item[]) => all.filter(x => !x.pick && x.image_url && whoFor(x, all) === "me");
 
 export function sizesByBrand(items: Item[]) {
   const map = new Map<string, Map<string, Map<string, number>>>();

@@ -140,7 +140,7 @@ export default function Orders() {
         )}
 
         {!query && !photos && (
-          <div style={{ display: "flex", gap: 20, padding: "18px 20px 0", borderBottom: "1px solid var(--line)", overflowX: "auto" }}>
+          <div style={{ display: "flex", gap: 18, padding: "18px 36px 0 20px", borderBottom: "1px solid var(--line)", overflowX: "auto", WebkitMaskImage: "linear-gradient(to right, #000 82%, transparent)", maskImage: "linear-gradient(to right, #000 82%, transparent)" }}>
             {TABS.filter(([k]) => !OPTIONAL.includes(k) || all.some(FILTER[k])).map(([k, label]) => (
               <button key={k} type="button" aria-pressed={k === tab} onClick={() => { setTab(k); history.replaceState(history.state, "", `?view=list&tab=${k}`); }} style={{ border: 0, background: "transparent", padding: "10px 0 12px", font: "700 15px var(--font-sans), sans-serif", color: k === tab ? "var(--ink)" : "var(--muted)", borderBottom: `3px solid ${k === tab ? "var(--ink)" : "transparent"}`, cursor: "pointer", whiteSpace: "nowrap" }}>
                 {label} <span style={{ fontSize: 11, marginLeft: 2, verticalAlign: "super" }}>{all.filter(FILTER[k]).length}</span>

@@ -37,7 +37,7 @@ export function Job({ run, label, working, noun, auto = false, onDone }: {
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>
           {state === "running" && <svg className="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF6159" strokeWidth="3" strokeLinecap="round"><path d="M12 3a9 9 0 1 1-9 9" /></svg>}
-          {state === "running" ? (p.total ? `${working} ${p.done} of ${p.total}` : "Getting started") : "Done"} · {p.found} {p.found === 1 ? noun[0] : noun[1]}
+          {state === "running" ? (p.total ? `${working} ${p.done} of ${p.total}` : "Getting started") : <>Done · {p.found ? `${p.found} ${p.found === 1 ? noun[0] : noun[1]}` : `nothing new`}</>}
         </div>
         <div style={{ marginTop: 10, height: 6, borderRadius: 3, background: "#F1EDE8", overflow: "hidden" }}>
           <div style={{ height: "100%", width: `${state === "done" ? 100 : pct}%`, background: "var(--ink)", borderRadius: 3, transition: "width .2s" }} />
