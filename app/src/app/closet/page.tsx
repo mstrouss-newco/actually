@@ -362,6 +362,7 @@ export default function Closet() {
                   {sel.pick === k ? "✓ " : ""}{label}
                 </button>
               ))}
+              {sel.pick === "sell" && <Link href={`/earn/worth/${sel.id}`} className="btn press" style={{ height: 48, fontSize: 15, background: "#FF6159", color: "var(--ink)" }}>Make a resale post →</Link>}
               <button onClick={() => remove(sel)} className="btn btn-ghost" style={{ marginTop: 0, fontSize: 14, color: "#C9402F" }}>Remove from closet</button>
             </div>
           </div>

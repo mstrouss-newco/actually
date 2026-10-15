@@ -140,9 +140,42 @@ export function listingText(i: Item) {
   return `${title}\n\n${body}`;
 }
 
-export const SITES = [
-  { name: "Poshmark", url: "https://poshmark.com/create-listing", note: "Best for mall and designer brands" },
-  { name: "Depop", url: "https://www.depop.com/products/create/", note: "Best for trendy and vintage pieces" },
-  { name: "eBay", url: "https://www.ebay.com/sl/sell", note: "Best for sneakers and rare finds" },
-  { name: "ThredUp", url: "https://www.thredup.com/cleanout", note: "Send a bag, they sell it for you" },
+export type Site = { name: string; url: string; note: string; titleMax: number; at: "high" | "mid"; tags?: boolean; bag?: boolean };
+export const SITES: Site[] = [
+  { name: "Poshmark", url: "https://poshmark.com/create-listing", note: "Best for mall and designer brands. Buyers make offers, so list a little high.", titleMax: 80, at: "high" },
+  { name: "Depop", url: "https://www.depop.com/products/create/", note: "Best for trendy and vintage pieces.", titleMax: 0, at: "mid", tags: true },
+  { name: "eBay", url: "https://www.ebay.com/sl/sell", note: "Best for sneakers and rare finds.", titleMax: 80, at: "mid" },
+  { name: "Mercari", url: "https://www.mercari.com/sell/", note: "Quick sales on everyday brands.", titleMax: 80, at: "high" },
+  { name: "ThredUp", url: "https://www.thredup.com/cleanout", note: "Send a free bag and they sell it for you. Easiest, but you get less.", titleMax: 0, at: "mid", bag: true },
 ];
+export const CONDITIONS = ["New with tags", "Like new", "Good", "Fair"] as const;
+export type Condition = typeof CONDITIONS[number];
+const COND_LINE: Record<Condition, string> = {
+  "New with tags": "New with tags, never worn.",
+  "Like new": "Like new, worn once or twice. No flaws.",
+  "Good": "Good used condition. Light wear, no holes or stains.",
+  "Fair": "Worn, with some signs of wear (see photos).",
+};
+// A suggested asking price for one site, rounded to a friendly number.
+export function askPrice(i: Item, site: Site) {
+  if (i.resale_high == null) return null;
+  const lo = i.resale_low ?? i.resale_high;
+  const raw = site.at === "high" ? i.resale_high : (lo + i.resale_high) / 2;
+  return Math.max(5, Math.round(raw / 5) * 5);
+}
+// The post for one site: a title that fits, a description, and hashtags where the site uses them.
+export function buildListing(i: Item, site: Site, cond: Condition) {
+  const brand = i.brand || i.store;
+  const full = [brand, i.name, i.color, i.size && `Size ${i.size}`].filter(Boolean).join(" ");
+  const title = site.titleMax && full.length > site.titleMax ? full.slice(0, site.titleMax - 1).replace(/\s+\S*$/, "") : full;
+  const tag = (x: string) => `#${x.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+  const body = [
+    `${brand} ${i.name}${i.color ? ` in ${i.color}` : ""}.`,
+    i.size ? `Size ${i.size}.` : null,
+    COND_LINE[cond],
+    i.price != null ? `Retail $${Math.round(i.price)}.` : null,
+    "Smoke-free home. Ships fast.",
+    site.tags ? [brand, i.category, i.color].filter(Boolean).map(x => tag(x!)).join(" ") : null,
+  ].filter(Boolean).join("\n");
+  return { title: site.titleMax ? title : "", body };
+}
