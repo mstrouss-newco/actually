@@ -56,7 +56,7 @@ export default function Worth() {
           {items !== null && rows.length === 0 && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}>{tab === "sell" ? "Nothing here yet." : "No prices yet. Go to Earn to price your closet."}</div>}
           {rows.map(i => (
             <Link key={i.id} href={`/earn/worth/${i.id}`} className="orow" style={{ display: "flex", gap: 12, alignItems: "center", background: "#FAF8F6", borderRadius: 22, padding: "10px 14px 10px 10px", textDecoration: "none" }}>
-              <ItemImage src={i.image_url} store={i.store} name={i.name} w={64} h={78} radius={16} size={26} />
+              <ItemImage cutId={i.id} src={i.image_url} store={i.store} name={i.name} w={64} h={78} radius={16} size={26} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="kicker">{i.brand || i.store}</div>
                 <div style={{ fontWeight: 700, fontSize: 15, marginTop: 2 }}>{i.name}</div>
@@ -76,7 +76,7 @@ export default function Worth() {
             <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "12px 16px 0" }}>
               {skipped.map(({ item: i, why }) => (
                 <div key={i.id} style={{ display: "flex", gap: 12, alignItems: "center", border: "1.5px solid var(--line)", borderRadius: 20, padding: "8px 14px 8px 8px" }}>
-                  <ItemImage src={i.image_url} store={i.store} name={i.name} w={48} h={60} radius={12} size={20} />
+                  <ItemImage cutId={i.id} src={i.image_url} store={i.store} name={i.name} w={48} h={60} radius={12} size={20} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{i.brand || i.store} {i.name}</div>
                     <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{why}</div>

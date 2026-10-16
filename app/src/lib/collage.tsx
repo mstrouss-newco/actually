@@ -4,38 +4,31 @@ import { useRef, useState } from "react";
 import { BOARD_H, type PieceLite, type Placed } from "./outfits";
 import { findIt } from "./social";
 import { ItemImage } from "./tabs";
-import { SUPABASE_URL, supabase } from "./supabase";
+import { cutoutUrl, useCutout } from "./cutouts";
 
-// A piece with its background removed (made once by the cut-out function).
-export const cutoutUrl = (id: string) => `${SUPABASE_URL}/storage/v1/object/public/cutouts/${id}.png`;
-export async function cutOut(id: string): Promise<"ok" | "busy" | "failed"> {
-  const { data, error } = await supabase().functions.invoke("cut-out", { body: { item_id: id } });
-  if (!error && (data as { url?: string })?.url) return "ok";
-  try { const body = await (error as { context?: Response })?.context?.json(); if (body?.error === "busy background") return "busy"; } catch {}
-  return "failed";
-}
+export { cutoutUrl, cutOut } from "./cutouts";
 
 const BG = "#F7F3EE";
 const PIECE_H = 1.15; // each piece's box is a little taller than wide
 
+// Uses the see-through copy whenever there is one, unless she chose "Show photo" (cut: false).
 function PieceArt({ p, cut }: { p: PieceLite; cut?: boolean }) {
   const [bad, setBad] = useState(false);
-  const [cutBad, setCutBad] = useState(false);
+  const [state, mark] = useCutout(cut === false ? null : p.id);
   // eslint-disable-next-line @next/next/no-img-element
-  if (cut && !cutBad) return <img src={cutoutUrl(p.id)} alt={p.name} draggable={false} onError={() => setCutBad(true)} style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none", userSelect: "none" }} />;
+  if (state !== "no") return <img src={cutoutUrl(p.id)} alt={p.name} draggable={false} onLoad={() => state === "try" && mark(true)} onError={() => mark(false)} style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none", userSelect: "none" }} />;
   if (!p.image_url || bad) return <ItemImage src={null} store={p.store} name={p.name} w="100%" h="100%" radius={16} size={36} />;
   let src = p.image_url;
   if (/media-amazon\.com/.test(src)) src = src.replace(/\._[^/]*_\.(jpg|jpeg|png)$/i, "._SL600_.$1");
+  // A photo with its background: on its own patch of board color, so white backgrounds vanish
+  // but photos never show through each other where they overlap.
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={p.name} referrerPolicy="no-referrer" draggable={false} onError={() => setBad(true)} style={{ width: "100%", height: "100%", objectFit: "contain", mixBlendMode: "multiply", pointerEvents: "none", userSelect: "none" }} />;
+  return <div style={{ width: "100%", height: "100%", background: BG }}><img src={src} alt={p.name} referrerPolicy="no-referrer" draggable={false} onError={() => setBad(true)} style={{ width: "100%", height: "100%", objectFit: "contain", mixBlendMode: "multiply", pointerEvents: "none", userSelect: "none" }} /></div>;
 }
 
 const box = (l: Placed) => ({
   position: "absolute" as const, left: `${l.x * 100}%`, top: `${(l.y / BOARD_H) * 100}%`,
   width: `${l.w * 100}%`, height: `${((l.w * PIECE_H) / BOARD_H) * 100}%`, transform: `rotate(${l.r ?? 0}deg)`,
-  // Each photo sits on its own patch of board color, so white backgrounds vanish into the board
-  // but photos never show through each other where they overlap.
-  background: l.cut ? "transparent" : BG,
 });
 
 // A finished look. Tap any piece to see what it is and shop it.

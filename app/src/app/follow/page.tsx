@@ -58,7 +58,7 @@ export default function FollowBrands() {
           const on = !off.has(r.brand);
           return (
             <button key={r.brand} type="button" onClick={() => flip(r.brand)} aria-pressed={on} className="up press" style={{ ...delay(n, 50), display: "flex", alignItems: "center", gap: 12, width: "100%", border: 0, background: "#FAF8F6", borderRadius: 18, padding: "8px 14px 8px 8px", font: "inherit", color: "var(--ink)", textAlign: "left", cursor: "pointer" }}>
-              <ItemImage src={r.photo.image_url} store={r.photo.store} name={r.photo.name} w={46} h={54} radius={12} />
+              <ItemImage cutId={r.photo.id} src={r.photo.image_url} store={r.photo.store} name={r.photo.name} w={46} h={54} radius={12} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.brand}</div>
                 <div style={{ fontSize: 12, color: "var(--muted)" }}>{r.pieces} {r.pieces === 1 ? "piece" : "pieces"} in your closet</div>

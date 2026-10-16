@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type Item, loadItems, whoFor } from "@/lib/items";
 import { OCCASIONS, type Outfit, type Placed, loadOutfit, saveOutfit } from "@/lib/outfits";
-import { CollageEditor, cutOut } from "@/lib/collage";
+import { CollageEditor } from "@/lib/collage";
+import { cutOut, ensureCutouts, markCut, useCutout } from "@/lib/cutouts";
 import { TypeTabs } from "@/lib/feed-ui";
 import { ItemImage } from "@/lib/tabs";
 
@@ -34,7 +35,7 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
       const mine = all.filter(i => whoFor(i, all) === "me");
       const ok = new Set(mine.map(i => i.id));
       setItems(mine);
-      if (o) { setOrig(o); setLayout(o.layout.filter(l => ok.has(l.id))); setName(o.name); setOccasion(o.occasion); setShared(o.shared); }
+      if (o) { setOrig(o); setLayout(o.layout.filter(l => ok.has(l.id))); ensureCutouts(o.layout.map(l => l.id), true); setName(o.name); setOccasion(o.occasion); setShared(o.shared); }
       // "Make an outfit with this" from a closet piece starts the board with it.
       const start = new URLSearchParams(location.search).get("with");
       if (isNew && start && ok.has(start)) setLayout([{ id: start, x: 0.3, y: 0.25, w: 0.42, r: 0 }]);
@@ -51,23 +52,27 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
     const n = layout.length;
     setLayout(l => [...l, { id: i.id, x: 0.08 + ((n * 0.17) % 0.5), y: 0.06 + ((n * 0.21) % 0.6), w: i.category === "shoes" || i.category === "accessories" ? 0.3 : 0.42, r: [-4, 3, 0, -2, 5][n % 5] }]);
     setSel(i.id);
+    ensureCutouts([i.id], true);
   };
   const nudge = (f: (p: Placed) => Placed) => sel && setLayout(l => l.map(p => (p.id === sel ? f(p) : p)));
   const toFront = () => sel && setLayout(l => [...l.filter(p => p.id !== sel), l.find(p => p.id === sel)!]);
   const toBack = () => sel && setLayout(l => [l.find(p => p.id === sel)!, ...l.filter(p => p.id !== sel)]);
   const size = (k: number) => nudge(p => { const w = Math.min(0.9, Math.max(0.12, p.w * k)); return { ...p, w, x: p.x - (w - p.w) / 2, y: p.y - ((w - p.w) * 1.15) / 2 }; });
 
-  // Cut out: remove the photo's background for the selected piece, or put the photo back.
+  // Pieces show without their photo background whenever we could cut it out. She can switch one back.
   const cur = layout.find(p => p.id === sel);
+  const [cutState] = useCutout(cur?.id);
+  const showingCut = !!cur && cur.cut !== false && cutState === "yes";
   const toggleCut = async () => {
     if (!cur) return;
     setCutNote("");
-    if (cur.cut) { nudge(p => ({ ...p, cut: false })); return; }
+    if (showingCut) { nudge(p => ({ ...p, cut: false })); return; }
+    if (cutState === "yes") { nudge(p => ({ ...p, cut: true })); return; }
     setCutting(true);
     const r = await cutOut(cur.id);
     setCutting(false);
-    if (r === "ok") setLayout(l => l.map(p => (p.id === cur.id ? { ...p, cut: true } : p)));
-    else { setCutNote(r === "busy" ? "This photo has too much going on behind it, so we kept it as is." : "Couldn't cut this one out. Try again in a bit."); setTimeout(() => setCutNote(""), 4000); }
+    if (r === "ok") { markCut(cur.id, true); setLayout(l => l.map(p => (p.id === cur.id ? { ...p, cut: true } : p))); }
+    else { if (r === "busy") markCut(cur.id, false); setCutNote(r === "busy" ? "This photo has too much going on behind it, so we kept it as is." : "Couldn't cut this one out. Try again in a bit."); setTimeout(() => setCutNote(""), 4000); }
   };
 
   const save = async () => {
@@ -96,7 +101,7 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
             <div style={{ position: "absolute", left: 0, right: 0, bottom: 10, display: "flex", justifyContent: "center", gap: 6, zIndex: 50, flexWrap: "wrap" }}>
               <button type="button" style={tool} onClick={() => size(1.15)} aria-label="Bigger">＋</button>
               <button type="button" style={tool} onClick={() => size(1 / 1.15)} aria-label="Smaller">－</button>
-              <button type="button" style={tool} disabled={cutting} onClick={toggleCut}>{cutting ? "Cutting out…" : cur?.cut ? "Show photo" : "Cut out"}</button>
+              <button type="button" style={tool} disabled={cutting} onClick={toggleCut}>{cutting ? "Cutting out…" : showingCut ? "Show photo" : "Cut out"}</button>
               <button type="button" style={tool} onClick={toFront}>Front</button>
               <button type="button" style={tool} onClick={toBack}>Back</button>
             </div>
@@ -109,7 +114,7 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
           {items === null && <div style={{ fontSize: 14, color: "var(--muted)" }}>Loading your closet…</div>}
           {tray.map(i => (
             <button key={i.id} type="button" onClick={() => add(i)} aria-pressed={on.has(i.id)} aria-label={i.name} style={{ position: "relative", flex: "none", width: 72, border: 0, padding: 0, background: "none", cursor: "pointer" }}>
-              <ItemImage src={i.image_url} store={i.store} name={i.name} w={72} h={86} radius={14} size={26} />
+              <ItemImage cutId={i.id} src={i.image_url} store={i.store} name={i.name} w={72} h={86} radius={14} size={26} />
               {on.has(i.id) && <span style={{ position: "absolute", right: 5, top: 5, width: 20, height: 20, borderRadius: "50%", background: "var(--ink)", color: "#fff", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>}
             </button>
           ))}

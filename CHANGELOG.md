@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-16
 
+- Cut-outs everywhere: her pieces get their plain photo background removed automatically in the background (`ensureCutouts()` in `lib/cutouts.ts`, from Closet and outfits), and every piece tile and outfit board uses the see-through copy when there is one, so no grey or off-white boxes. Busy photos (a model, a room) keep theirs. On a board, "Show photo" switches one back (`cut: false`).
+
 - Today header: search on the left, her profile photo (to Settings) in the far right corner.
 
 - New-user QA fixes: Today no longer sends someone who already connected Gmail back to connect again when nothing was found; the shopping email card shows even with no orders; the import screen says "Looking for points and credit" instead of "All done" early, and explains when nothing was found; Gmail button stays on screen on small iPhones; error reports hide email addresses; the crash screen links to Closet and Orders.
