@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { type FeedItem, type Profile, loadFeed, loadProfilePage, loadSaved, myHandle, similarPeople } from "@/lib/social";
-import { Avatar, FeedCard, FollowButton, FriendFaces, FriendGrid, Loves, MyGrid, ShareLink, TypeTabs, displayName, useLovesStore } from "@/lib/feed-ui";
+import { Avatar, FeedCard, FollowButton, FriendFaces, FriendGrid, Loves, MyGrid, type Order, OrderButton, sortBy, ShareLink, TypeTabs, displayName, useLovesStore } from "@/lib/feed-ui";
 import { loadItems, toSort } from "@/lib/items";
 import { ItemImage, TabBar } from "@/lib/tabs";
 
@@ -22,7 +22,8 @@ export default function Feed() {
   const [toGo, setToGo] = useState(0);
   const [type, setType] = useState("all");
   const [mineType, setMineType] = useState("all");
-  const [order, setOrder] = useState<"new" | "brand" | "type">("new");
+  const [order, setOrder] = useState<Order>("new");
+  const [friendOrder, setFriendOrder] = useState<Order>("new");
   const [who, setWho] = useState<string | null>(null);
   const [saved, setSaved] = useState<FeedItem[] | null>(null);
   const [savedType, setSavedType] = useState("all");
@@ -95,10 +96,10 @@ export default function Feed() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
               </button>
             )}
-            {feed && <TypeTabs items={shown} value={type} onChange={setType} />}
+            {feed && <TypeTabs items={shown} value={type} onChange={setType} end={who ? <OrderButton value={friendOrder} onChange={setFriendOrder} /> : undefined} />}
             {type === "all" && !who
               ? <div style={{ display: "flex", flexDirection: "column", gap: 26, padding: "20px 16px 0" }}>{shown.map(i => <FeedCard key={i.id} item={i} />)}</div>
-              : <div style={{ padding: "16px 16px 0" }}><FriendGrid items={shown.filter(i => type === "all" || i.category === type)} who={!who} /></div>}
+              : <div style={{ padding: "16px 16px 0" }}><FriendGrid items={sortBy(shown.filter(i => type === "all" || i.category === type), who ? friendOrder : "new")} who={!who} /></div>}
             {feed && feed.length === 0 && (
               <div style={{ margin: "0 16px", background: "var(--chip)", borderRadius: 26, padding: "20px 18px" }}>
                 <div className="serif" style={{ fontSize: 24, lineHeight: 1.1 }}>Follow people to fill your <em>feed.</em></div>
@@ -171,18 +172,12 @@ export default function Feed() {
               </Link>
             )}
             {mine && (
-              <TypeTabs items={mine.items} value={mineType} onChange={setMineType} end={
-                <button type="button" onClick={() => setOrder(o => (o === "new" ? "brand" : o === "brand" ? "type" : "new"))} aria-label="Change order" title="Change order" style={{ height: 30, padding: "0 8px", border: 0, background: "none", display: "flex", alignItems: "center", gap: 4, font: "700 12px var(--font-sans), sans-serif", color: "var(--ink)", cursor: "pointer", flex: "none" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M4 7h16M7 12h10M10 17h4" /></svg>
-                  {order === "new" ? "" : order === "brand" ? "Brand" : "Type"}
-                </button>
-              } />
+              <TypeTabs items={mine.items} value={mineType} onChange={setMineType} end={<OrderButton value={order} onChange={setOrder} />} />
             )}
             <div style={{ padding: "14px 16px 0" }}>
               {mine && mine.items.length === 0 && <p className="lead" style={{ padding: "0 4px", margin: 0 }}>Nothing shared yet. Swipe right in Sort to share a piece.</p>}
-              {mine && <MyGrid items={mine.items
-                .filter(i => mineType === "all" || i.category === mineType)
-                .sort((a, b) => order === "brand" ? (a.brand || a.store).localeCompare(b.brand || b.store) : order === "type" ? a.category.localeCompare(b.category) : (b.shared_at ?? "").localeCompare(a.shared_at ?? ""))} />}
+              {mine && <MyGrid items={sortBy(mine.items, order)
+                .filter(i => mineType === "all" || i.category === mineType)} />}
               <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 16, lineHeight: 1.45, padding: "0 4px" }}>Your feed shows the photo, brand, name and your note. Never prices, sizes or order details.</div>
             </div>
           </>

@@ -224,6 +224,20 @@ export function FriendGrid({ items, who = true, saved = false }: { items: FeedIt
   );
 }
 
+// Sort order for a grid of shared pieces: newest, by brand, or by type. Tap to cycle.
+export type Order = "new" | "brand" | "type";
+const ORDER_LABEL: Record<Order, string> = { new: "Newest", brand: "Brand", type: "Type" };
+export const sortBy = <T extends SharedItem>(items: T[], o: Order) => [...items].sort((a, b) =>
+  o === "brand" ? (a.brand || a.store).localeCompare(b.brand || b.store) : o === "type" ? a.category.localeCompare(b.category) : (b.shared_at ?? "").localeCompare(a.shared_at ?? ""));
+export function OrderButton({ value, onChange }: { value: Order; onChange: (o: Order) => void }) {
+  return (
+    <button type="button" onClick={() => onChange(value === "new" ? "brand" : value === "brand" ? "type" : "new")} aria-label={`Sorted by ${ORDER_LABEL[value]}. Tap to change`} style={{ height: 30, padding: "0 8px", border: 0, background: "none", display: "flex", alignItems: "center", gap: 4, font: "700 12px var(--font-sans), sans-serif", color: "var(--ink)", cursor: "pointer", flex: "none" }}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4" /></svg>
+      {ORDER_LABEL[value]}
+    </button>
+  );
+}
+
 // Faces of the people she follows. Tap one to see just their pieces.
 export function FriendFaces({ handles, value, onChange }: { handles: string[]; value: string | null; onChange: (h: string | null) => void }) {
   const face = (h: string | null) => {
