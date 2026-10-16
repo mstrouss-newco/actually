@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Earn: the "worth about" range always stays on one line (replaces old PR #23).
+
 - Pieces now link to their real page on the store's site (found from the order email, tracking stripped). Feed taps and a new "See it on ..." button in the closet use it; a shopping search is the fallback. Older pieces get links on the next import.
 - The app no longer slides sideways, bounces or zooms like a web page on iPhone.
 
