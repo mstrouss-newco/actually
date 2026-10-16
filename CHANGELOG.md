@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-16
 
+- Today greets her by her first name from Google with the time of day ("Good morning, Claire."), and refills her name if the device lost it.
+
 - Blind QA fixes for the new sign-up: name card shows only right after a new account is made (per account); a failed save is no longer treated as success; a failed account lookup never renames someone; accounts always get a row even without a name; accented names keep their letters (José → jose); error reports strip quoted text and links; alert email subject is fixed text; Gmail taps count in the funnel only from the welcome screen.
 
 - Sign-up is now Gmail first: the welcome screen has "Continue with Gmail", her name comes from Google (change it on the import screen), and the name and goal steps are gone. Shopping email moved to a card on Today. Welcome cards now show a return, a friend's love and a resale value.
