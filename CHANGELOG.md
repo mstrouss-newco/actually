@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Fix: photos in an outfit no longer show through each other where they overlap. Each photo sits on its own patch of board color, so white backgrounds still disappear.
+
 - Today: card titles are smaller and never cut off. The returnable card reads "Keep it or send it back?" with the piece, store and return date underneath.
 
 - Delivery tracker labels now read Ordered, Shipped, Out for delivery, Delivered.

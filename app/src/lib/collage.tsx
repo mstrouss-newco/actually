@@ -27,14 +27,15 @@ function PieceArt({ p, cut }: { p: PieceLite; cut?: boolean }) {
   let src = p.image_url;
   if (/media-amazon\.com/.test(src)) src = src.replace(/\._[^/]*_\.(jpg|jpeg|png)$/i, "._SL600_.$1");
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={p.name} referrerPolicy="no-referrer" draggable={false} onError={() => setBad(true)} style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none", userSelect: "none" }} />;
+  return <img src={src} alt={p.name} referrerPolicy="no-referrer" draggable={false} onError={() => setBad(true)} style={{ width: "100%", height: "100%", objectFit: "contain", mixBlendMode: "multiply", pointerEvents: "none", userSelect: "none" }} />;
 }
 
 const box = (l: Placed) => ({
   position: "absolute" as const, left: `${l.x * 100}%`, top: `${(l.y / BOARD_H) * 100}%`,
   width: `${l.w * 100}%`, height: `${((l.w * PIECE_H) / BOARD_H) * 100}%`, transform: `rotate(${l.r ?? 0}deg)`,
-  // White photo backgrounds melt into the board. Set on the tilted box itself so the blend reaches the board.
-  mixBlendMode: (l.cut ? "normal" : "multiply") as React.CSSProperties["mixBlendMode"],
+  // Each photo sits on its own patch of board color, so white backgrounds vanish into the board
+  // but photos never show through each other where they overlap.
+  background: l.cut ? "transparent" : BG,
 });
 
 // A finished look. Tap any piece to see what it is and shop it.
