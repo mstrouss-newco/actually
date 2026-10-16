@@ -137,6 +137,7 @@ Outfits: table `outfits` (owner-only; `layout` is a list of {id, x, y, w, r}, sh
 The "Is this yours?" closet prompt is one line. `likelyWho()` guesses only on a real sign (a men's piece in a women's closet or the reverse means partner); otherwise it asks "Is this one yours?" with Mine, or Change (a small menu). New outfits are private until she turns sharing on; saving a look marks its pieces as hers.
 
 Profile photos: public Storage bucket `avatars`, one file per person at `<handle>.jpg` (shrunk to 320px on the phone by `PhotoPicker` in `lib/feed-ui.tsx`); only the owner can write hers. `Avatar` shows the photo when there is one, else the colored initial.
+Auto-update: each deploy bakes its version into the app (`NEXT_PUBLIC_BUILD_ID` from `next.config.ts`); `AutoUpdate` in `lib/auto-update.tsx` checks `/api/version` when the app comes back to the screen and every 5 minutes, and reloads once per new version (not while she's typing).
 Today shows no spending totals (people don't enjoy seeing them); prices stay on orders and brand pages.
 
 To change the schema: apply a migration with the Supabase connector, then add the same
