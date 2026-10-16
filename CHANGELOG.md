@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Feed by type: Friends and My feed have plain type tabs (All, Tops, Bottoms, Shoes, Bags, Accessories, Skincare; only types that have pieces). Picking a type on Friends shows a two-column grid with who shared each piece. My feed is calmer: one profile line with Share, a quiet "N new pieces · Sort" row, and a small order button (Newest, Brand, Type).
+
 - Returns leave the closet: each return and refund email is read once (`read-order` mode "returns", `readReturns()` in the import) to learn which pieces went back, matched by store and product name, so partial returns and return emails with no order number (Bloomingdale's, Amazon, Loop, Narvar) now work. Returned pieces (`items.returned_at`) are hidden from Closet, Sort, Worth and the feed; whole-order returns with no item list are hidden too. Migration items_returned.
 
 - Sort: a clear "Show my feed" button while swiping; pieces not swiped stay unsorted and wait for next time (no need to mark them private to leave).

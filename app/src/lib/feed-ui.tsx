@@ -104,12 +104,49 @@ export function FollowButton({ handle, initial, small = false, full = false }: {
 }
 
 // Shares her public feed link with the phone's share sheet, or copies it.
-export function ShareLink({ handle, label = "Share my feed", dark = false }: { handle: string; label?: string; dark?: boolean }) {
+export function ShareLink({ handle, label = "Share my feed", dark = false, small = false }: { handle: string; label?: string; dark?: boolean; small?: boolean }) {
   const [copied, setCopied] = useState(false);
   const go = async () => {
     const url = profileUrl(handle);
     try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2200); } catch {}
     try { if (navigator.share && matchMedia("(pointer: coarse)").matches) await navigator.share({ title: `${handle} on Actually`, url }); } catch {}
   };
+  if (small) return <button onClick={go} className="press" style={{ height: 38, padding: "0 16px", borderRadius: 999, border: 0, background: "var(--ink)", color: "#fff", font: "700 13px var(--font-sans), sans-serif", cursor: "pointer", flex: "none", whiteSpace: "nowrap" }}>{copied ? "Copied" : label}</button>;
   return <button onClick={go} className={dark ? "btn" : "btn btn-line"} style={{ height: dark ? 46 : 48, fontSize: dark ? 14 : 15, marginTop: 0 }}>{copied ? "Link copied" : label}</button>;
+}
+
+// Piece types, in the order the tabs show them. Only types someone has shared appear.
+const TYPES: [string, string][] = [["tops", "Tops"], ["bottoms", "Bottoms"], ["dresses", "Dresses"], ["outerwear", "Outerwear"], ["shoes", "Shoes"], ["bags", "Bags"], ["accessories", "Accessories"], ["beauty", "Skincare"]];
+
+// Plain text tabs: All, then each type present. The chosen one sits in a dark pill.
+export function TypeTabs({ items, value, onChange, end }: { items: SharedItem[]; value: string; onChange: (v: string) => void; end?: React.ReactNode }) {
+  const have = new Set(items.map(i => i.category));
+  const tabs: [string, string][] = [["all", "All"], ...TYPES.filter(([k]) => have.has(k))];
+  if (tabs.length < 3) return end ? <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 16px 0" }}>{end}</div> : null;
+  return (
+    <div style={{ display: "flex", alignItems: "center", padding: "12px 12px 0 14px", gap: 4 }}>
+      <div style={{ display: "flex", gap: 2, overflowX: "auto", flex: 1, minWidth: 0 }}>
+        {tabs.map(([k, label]) => (
+          <button key={k} type="button" onClick={() => onChange(k)} aria-pressed={k === value} style={{ flex: "none", height: 30, padding: "0 12px", borderRadius: 999, border: 0, background: k === value ? "var(--ink)" : "transparent", color: k === value ? "#fff" : "var(--muted)", font: `${k === value ? 700 : 500} 13px var(--font-sans), sans-serif`, cursor: "pointer" }}>{label}</button>
+        ))}
+      </div>
+      {end}
+    </div>
+  );
+}
+
+// Friends' pieces of one type, two across, with who shared each.
+export function FriendGrid({ items }: { items: FeedItem[] }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "16px 12px" }}>
+      {items.map((i, n) => (
+        <a key={i.id} href={findIt(i)} target="_blank" rel="noreferrer" className="lift up" style={{ textDecoration: "none", minWidth: 0, animationDelay: `${n * 50}ms` }}>
+          <ItemImage src={i.image_url} store={i.store} name={i.name} w="100%" h={190} radius={20} />
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}><Avatar handle={i.handle} size={20} /><span style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{displayName(i.handle)}</span></div>
+          <div className="kicker" style={{ marginTop: 4 }}>{i.brand || i.store}</div>
+          <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.25 }}>{i.name}</div>
+        </a>
+      ))}
+    </div>
+  );
 }
