@@ -45,6 +45,7 @@ Mike (mstrouss@gmail.com) is not a coder. When talking to him:
 |---|---|
 | `app/` | The real app. Next.js 15 (App Router), TypeScript, no CSS framework. |
 | `app/src/app/` | Screens, one folder per route. `/settings` (from the person icon on Today) has disconnect Gmail, delete data, sign out, delete account. `/brand/[name]` is one brand (from Closet > Brands). |
+| `app/src/app/model/` | Owner-only 5 year money model at `/model`, behind a password (cookie set by the route). HTML lives in `model-html.ts`. |
 | `app/src/lib/` | Shared logic (Gmail reading, orders, items, earn, social, UI pieces). |
 | `supabase/functions/` | Server functions (Deno). Source of truth for what is deployed. |
 | `supabase/migrations/` | Every database change, in order. Source of truth for the schema. |

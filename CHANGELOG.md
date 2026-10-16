@@ -2,6 +2,9 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-16: /model page
+- Added `/model`: owner-only 5 year money model (ad spend, sign ups, revenue, net), behind a password. Source: `app/src/app/model/`.
+
 ## 2026-10-16
 
 - "Taste Match" capitalized on the feed.
