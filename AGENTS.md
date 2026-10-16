@@ -31,6 +31,7 @@ Mike (mstrouss@gmail.com) is not a coder. When talking to him:
 - No spending totals that make people feel bad (no "you spent $X this month").
 - It should feel like an app, not a website: no sideways drift, bounce or zoom on iPhone; tab bar respects the Safari bar.
 - Keep it calm and compact: one line beats two rows of pills; short headers; no extra explainer lines.
+- No emojis or emoji-style symbols (iPhone turns ↗ into an emoji). Use drawn icons. No "Shop" labels where tapping obviously shops.
 - Copy is about pleasure, never spam. Don't promise emails or say "inside the app".
 - Owners see counts (loves), never who. Never prices, sizes or order details on anything shared.
 - Products link to their real store page when we have it; otherwise a shopping search.

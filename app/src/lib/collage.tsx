@@ -41,8 +41,9 @@ export function Collage({ layout, pieces, radius = 28, tags = true }: { layout: 
       ))}
       {tag && tp && (
         <a href={findIt(tp)} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
-          style={{ position: "absolute", zIndex: 99, left: `${Math.min(55, Math.max(2, (tag.x + tag.w / 2) * 100 - 20))}%`, top: `${Math.min(88, ((tag.y + tag.w * PIECE_H * 0.55) / BOARD_H) * 100)}%`, maxWidth: `${96 - Math.min(55, Math.max(2, (tag.x + tag.w / 2) * 100 - 20))}%`, height: 32, padding: "0 12px", borderRadius: 999, background: "var(--ink)", color: "#fff", display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700, textDecoration: "none", boxShadow: "0 4px 12px rgba(20,18,16,.25)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {(tp.brand || tp.store)} {tp.name} ↗
+          style={{ position: "absolute", zIndex: 99, left: "50%", transform: "translateX(-50%)", top: `${Math.min(86, Math.max(4, ((tag.y + tag.w * PIECE_H * 0.55) / BOARD_H) * 100))}%`, maxWidth: "92%", height: 32, padding: "0 12px", borderRadius: 999, background: "var(--ink)", color: "#fff", display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700, textDecoration: "none", boxShadow: "0 4px 12px rgba(20,18,16,.25)", whiteSpace: "nowrap", overflow: "hidden" }}>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>{(tp.brand || tp.store)} {tp.name}</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: "none" }}><path d="M7 17L17 7M9 7h8v8" /></svg>
         </a>
       )}
       {tags && !open && shown.length > 0 && <span style={{ position: "absolute", left: 10, bottom: 10, zIndex: 98, height: 24, padding: "0 10px", borderRadius: 999, background: "rgba(255,255,255,.94)", display: "flex", alignItems: "center", fontSize: 11, fontWeight: 700, pointerEvents: "none" }}>Tap a piece to shop it</span>}
