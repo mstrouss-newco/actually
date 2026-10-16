@@ -97,3 +97,52 @@
   .dk-t { font-size: 13.5px; }
   .dk-nav { display: none; }
 }
+
+/* Go to market: two customers */
+.gt-icps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 26px; }
+.gt-icp { border-radius: 28px; padding: 26px 28px; display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden; }
+.gt-org { background: #FFE1DC; }
+.gt-earn { background: #141210; color: #fff; }
+.gt-tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; background: rgba(20,18,16,.08); }
+.gt-earn .gt-tag { background: rgba(255,255,255,.12); color: #FFF0BF; }
+.gt-icp h3 { font-family: var(--font-serif), serif; font-weight: 400; font-size: 40px; letter-spacing: -.02em; margin: 10px 0 0; line-height: 1; }
+.gt-who { font-size: 15.5px; line-height: 1.45; color: #5E5852; margin: 8px 0 0; }
+.gt-earn .gt-who { color: #C9C3BC; }
+.gt-say { font-family: var(--font-serif), serif; font-style: italic; font-size: 24px; line-height: 1.15; }
+.gt-earn .gt-say { color: #FFF0BF; }
+.gt-feed { display: flex; flex-direction: column; gap: 8px; min-height: 132px; }
+.gt-n { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 10px 14px; font-size: 14px; box-shadow: 0 6px 16px rgba(20,18,16,.08); animation: gtIn 7s cubic-bezier(.2,.9,.25,1.15) infinite both; }
+.gt-n b { flex: 1; }
+.gt-n em { font-style: normal; color: #7A746D; font-size: 13px; }
+.gt-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+@keyframes gtIn { 0%, 4% { opacity: 0; transform: translateX(-24px) } 12%, 86% { opacity: 1; transform: none } 94%, 100% { opacity: 0 } }
+.gt-money { min-height: 132px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+.gt-big { font-family: var(--font-serif), serif; font-size: 64px; line-height: 1; letter-spacing: -.03em; color: #DCEFDF; }
+.gt-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.gt-chips span { font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.1); color: #fff; animation: gtPop .8s ease 1s both; }
+.gt-chips span:nth-child(2) { animation-delay: 1.4s; } .gt-chips span:nth-child(3) { animation-delay: 1.8s; }
+@keyframes gtPop { from { opacity: 0; transform: scale(.8) } to { opacity: 1; transform: none } }
+.gt-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; border-top: 1px solid rgba(20,18,16,.12); padding-top: 14px; font-size: 14px; line-height: 1.4; }
+.gt-earn .gt-meta { border-color: rgba(255,255,255,.14); color: #E7E2DC; }
+.gt-meta span { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #8A837C; margin-bottom: 4px; }
+.gt-steps { display: flex; align-items: center; gap: 14px; margin-top: 18px; }
+.gt-steps > div { flex: 1; display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid #ECE7E1; border-radius: 18px; padding: 12px 16px; }
+.gt-steps b { flex: none; width: 30px; height: 30px; border-radius: 50%; background: #141210; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.gt-steps span { font-size: 13px; color: #7A746D; line-height: 1.3; }
+.gt-steps strong { display: block; font-size: 14.5px; color: #141210; }
+.gt-steps i { flex: none; width: 18px; height: 2px; background: #CFC8BF; position: relative; }
+.gt-steps i::after { content: ""; position: absolute; right: -1px; top: -4px; border: 5px solid transparent; border-left-color: #CFC8BF; border-right: 0; }
+@media (max-height: 820px) and (min-width: 901px) {
+  .gt-icp { padding: 20px 24px; gap: 12px; }
+  .gt-icp h3 { font-size: 32px; }
+  .gt-feed, .gt-money { min-height: 112px; }
+  .gt-big { font-size: 52px; }
+  .gt-icps { margin-top: 18px; }
+}
+@media (max-width: 900px) {
+  .gt-icps { grid-template-columns: minmax(0, 1fr); }
+  .gt-meta { grid-template-columns: minmax(0, 1fr); }
+  .gt-steps { flex-direction: column; align-items: stretch; }
+  .gt-steps i { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .gt-n, .gt-chips span { animation: none !important; } }
