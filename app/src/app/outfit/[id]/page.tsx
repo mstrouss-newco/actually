@@ -1,5 +1,7 @@
 "use client";
 
+import { ensureCutouts } from "@/lib/cutouts";
+
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,7 +18,7 @@ export default function OutfitPage({ params }: { params: Promise<{ id: string }>
   const [o, setO] = useState<Outfit | null | undefined>(undefined);
   const [items, setItems] = useState<Item[]>([]);
   const [sure, setSure] = useState(false);
-  useEffect(() => { loadOutfit(id).then(setO); loadItems().then(setItems); }, [id]);
+  useEffect(() => { loadOutfit(id).then(o => { setO(o); if (o) ensureCutouts(o.layout.map(l => l.id), true); }); loadItems().then(setItems); }, [id]);
 
   if (o === undefined) return <main className="tabscreen"><TabBar /></main>;
   if (o === null) return <main className="tabscreen"><div className="scroll" style={{ padding: "0 20px" }}><Link href="/closet?view=outfits" className="back">← Outfits</Link><p className="lead">We couldn&apos;t find that outfit.</p></div><TabBar /></main>;
@@ -53,7 +55,7 @@ export default function OutfitPage({ params }: { params: Promise<{ id: string }>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "14px 12px", padding: "10px 16px 0" }}>
           {pieces.map(i => (
             <a key={i.id} href={findIt(i)} target="_blank" rel="noreferrer" style={{ textDecoration: "none", minWidth: 0 }}>
-              <ItemImage src={i.image_url} store={i.store} name={i.name} w="100%" h={150} radius={20} />
+              <ItemImage cutId={i.id} src={i.image_url} store={i.store} name={i.name} w="100%" h={150} radius={20} />
               <div className="kicker" style={{ marginTop: 6 }}>{i.brand || i.store}</div>
               <div style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.25 }}>{i.name}</div>
             </a>

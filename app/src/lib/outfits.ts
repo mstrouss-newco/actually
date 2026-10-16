@@ -26,7 +26,7 @@ export async function loadOutfit(id: string): Promise<Outfit | null> {
 export async function saveOutfit(o: { id?: string; name: string; occasion: string | null; note?: string | null; layout: Placed[]; shared: boolean; wasShared?: boolean }) {
   const row = {
     name: o.name.trim().slice(0, 60) || "New outfit", occasion: o.occasion, note: o.note?.trim().slice(0, 140) || null,
-    layout: o.layout.slice(0, 12).map(p => ({ id: p.id, x: +p.x.toFixed(4), y: +p.y.toFixed(4), w: +p.w.toFixed(4), r: Math.round(p.r ?? 0), ...(p.cut ? { cut: true } : {}) })),
+    layout: o.layout.slice(0, 12).map(p => ({ id: p.id, x: +p.x.toFixed(4), y: +p.y.toFixed(4), w: +p.w.toFixed(4), r: Math.round(p.r ?? 0), ...(p.cut === true ? { cut: true } : p.cut === false ? { cut: false } : {}) })),
     shared: o.shared, updated_at: new Date().toISOString(),
     ...(o.shared && !o.wasShared ? { shared_at: new Date().toISOString() } : {}),
   };

@@ -49,7 +49,7 @@ export default function Story() {
   const kick = (txt: string) => <div className="up" style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", opacity: .7, marginTop: 48 }}>{txt}</div>;
   const row = (list: Item[]) => (
     <div style={{ display: "flex", gap: 10, marginTop: 26 }}>
-      {list.slice(0, 3).map((p, k) => <div key={p.id} className="up" style={{ animationDelay: `${250 + k * 110}ms`, borderRadius: 18 }}><ItemImage src={p.image_url} store={p.store} name={p.name} w={100} h={126} radius={18} size={36} /></div>)}
+      {list.slice(0, 3).map((p, k) => <div key={p.id} className="up" style={{ animationDelay: `${250 + k * 110}ms`, borderRadius: 18 }}><ItemImage cutId={p.id} src={p.image_url} store={p.store} name={p.name} w={100} h={126} radius={18} size={36} /></div>)}
     </div>
   );
 
@@ -72,7 +72,7 @@ export default function Story() {
               <div style={{ position: "relative", height: 300, marginTop: 24 }}>
                 {photos.slice(0, 3).map((p, k) => (
                   <div key={p.id} className="float" style={{ position: "absolute", left: [8, 170, 92][k], top: [30, 0, 120][k], transform: `rotate(${[-8, 6, -2][k]}deg)`, animationDelay: `${k * 1.1}s`, borderRadius: 24, boxShadow: "0 16px 30px rgba(0,0,0,.35)", zIndex: k === 2 ? 1 : 0 }}>
-                    <ItemImage src={p.image_url} store={p.store} name={p.name} w={150} h={180} radius={24} size={52} />
+                    <ItemImage cutId={p.id} src={p.image_url} store={p.store} name={p.name} w={150} h={180} radius={24} size={52} />
                   </div>
                 ))}
               </div>

@@ -8,6 +8,7 @@ import { Collage } from "@/lib/collage";
 import { CATS, type Item, type Who, brandOf, confirmMine, hideItem, hueRank, likelyWho, loadItems, needsAsk, setPick, setWho, shortSize, sizesByBrand, toSort, whoFor } from "@/lib/items";
 import { type Ret, dayLabel, fmtDate, loadOrders, matches, returnsByEmail } from "@/lib/orders";
 import { ReadItems } from "@/lib/read-items";
+import { ensureCutouts } from "@/lib/cutouts";
 import { ItemImage, BrandLogo, TabBar, tint } from "@/lib/tabs";
 import { delay } from "@/lib/motion";
 
@@ -91,6 +92,8 @@ export default function Closet() {
   // A link like /closet?piece=… opens that piece's sheet.
   const load = useCallback(() => { loadItems().then(list => {
     setItems(list);
+    // Remove plain photo backgrounds from her pieces in the background, newest first.
+    ensureCutouts(list.filter(i => i.image_url && whoFor(i, list) === "me").map(i => i.id));
     const id = new URLSearchParams(location.search).get("piece");
     const hit = id ? list.find(i => i.id === id) : null;
     if (hit) setSel(hit);
@@ -175,7 +178,7 @@ export default function Closet() {
             )}
             {view === "pieces" && toAsk[0] && (
               <div style={{ margin: "16px 16px 0", background: "#FAF8F6", borderRadius: 22, padding: 14, display: "flex", gap: 12, alignItems: "center" }}>
-                <ItemImage src={toAsk[0].image_url} store={toAsk[0].store} name={toAsk[0].name} w={56} h={70} radius={14} size={22} />
+                <ItemImage cutId={toAsk[0].id} src={toAsk[0].image_url} store={toAsk[0].store} name={toAsk[0].name} w={56} h={70} radius={14} size={22} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 14 }}>{guess ? "Looks like it's for your partner" : "Is this one yours?"}</div>
                   <div style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{guess ? `${toAsk[0].brand || toAsk[0].store} ${toAsk[0].name}` : `Size ${toAsk[0].size} isn't your usual at ${toAsk[0].brand || toAsk[0].store}`}</div>
@@ -223,9 +226,9 @@ export default function Closet() {
                       {back > 0 && <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 8, fontSize: 12, fontWeight: 700, color: "#C9402F" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#FF6159" }} />{back} can still go back</div>}
                     </div>
                     <div style={{ position: "relative", width: 112, height: 92, flex: "none" }}>
-                      {b && <div className="fan1" style={{ position: "absolute", left: 4, top: 10, transform: "rotate(-9deg)", boxShadow: "0 4px 10px rgba(20,18,16,.08)", borderRadius: 12 }}><ItemImage src={b.image_url} store={b.store} name={b.name} w={56} h={72} radius={12} size={20} /></div>}
-                      {c && <div className="fan3" style={{ position: "absolute", right: 4, top: 10, transform: "rotate(9deg)", boxShadow: "0 4px 10px rgba(20,18,16,.08)", borderRadius: 12 }}><ItemImage src={c.image_url} store={c.store} name={c.name} w={56} h={72} radius={12} size={20} /></div>}
-                      <div style={{ position: "absolute", left: 28, top: 2, boxShadow: "0 8px 16px rgba(20,18,16,.12)", borderRadius: 12 }}><ItemImage src={a.image_url} store={a.store} name={a.name} w={56} h={76} radius={12} size={20} /></div>
+                      {b && <div className="fan1" style={{ position: "absolute", left: 4, top: 10, transform: "rotate(-9deg)", boxShadow: "0 4px 10px rgba(20,18,16,.08)", borderRadius: 12 }}><ItemImage cutId={b.id} src={b.image_url} store={b.store} name={b.name} w={56} h={72} radius={12} size={20} /></div>}
+                      {c && <div className="fan3" style={{ position: "absolute", right: 4, top: 10, transform: "rotate(9deg)", boxShadow: "0 4px 10px rgba(20,18,16,.08)", borderRadius: 12 }}><ItemImage cutId={c.id} src={c.image_url} store={c.store} name={c.name} w={56} h={72} radius={12} size={20} /></div>}
+                      <div style={{ position: "absolute", left: 28, top: 2, boxShadow: "0 8px 16px rgba(20,18,16,.12)", borderRadius: 12 }}><ItemImage cutId={a.id} src={a.image_url} store={a.store} name={a.name} w={56} h={76} radius={12} size={20} /></div>
                     </div>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B9B3AC" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
                   </button>
@@ -283,7 +286,7 @@ export default function Closet() {
                   <div style={{ display: "flex", marginTop: 12, paddingLeft: 2 }}>
                     {b.strip.slice(0, 4).map((it, k) => (
                       <div key={it.id} className="fanin" style={{ marginLeft: k ? -10 : 0, transform: `rotate(${[-4, 2, -1, 3][k]}deg)`, position: "relative", zIndex: 4 - k, borderRadius: 14, boxShadow: "0 4px 12px rgba(20,18,16,.08)", animationDelay: `${bi * 70 + k * 60}ms` }}>
-                        <ItemImage src={it.image_url} store={it.store} name={it.name} w={60} h={74} radius={14} />
+                        <ItemImage cutId={it.id} src={it.image_url} store={it.store} name={it.name} w={60} h={74} radius={14} />
                       </div>
                     ))}
                     {b.pieces > 4 && <div style={{ width: 60, height: 74, marginLeft: -10, borderRadius: 14, background: "var(--ink)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, position: "relative" }}>+{b.pieces - 4}</div>}
@@ -329,7 +332,7 @@ export default function Closet() {
                     <button key={i.id} onClick={() => setSel(i)} className="hang" style={{ opacity: r?.returned ? 0.4 : 1, flex: "none", width: 140, border: 0, background: "transparent", padding: 0, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", font: "inherit", color: "inherit" }}>
                       <svg width="44" height="26" viewBox="0 0 44 26" fill="none" stroke="#8C857D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4a3 3 0 1 1 3 3c-1.6.5-3 1.2-3 2.8V11" /><path d="M4 24 22 11l18 13z" /></svg>
                       <div style={{ marginTop: -6, position: "relative", borderRadius: 24, boxShadow: "0 10px 20px rgba(20,18,16,.08)" }}>
-                        <ItemImage src={i.image_url} store={i.store} name={i.name} label="" w={140} h={178} radius={24} size={48} />
+                        <ItemImage cutId={i.id} src={i.image_url} store={i.store} name={i.name} label="" w={140} h={178} radius={24} size={48} />
                         {r?.by && <div style={{ position: "absolute", bottom: -8, right: -6, background: "#FF6159", borderRadius: 999, padding: "5px 9px", fontSize: 11, fontWeight: 700, transform: "rotate(-6deg)" }}>Return by {dayLabel(r.by)}</div>}
                         {r?.returned && <div style={{ position: "absolute", bottom: -8, right: -6, background: "var(--ink)", color: "#fff", borderRadius: 999, padding: "5px 9px", fontSize: 11, fontWeight: 700 }}>Returned</div>}
                         {(i.arriving || isNew(i)) && <div style={{ position: "absolute", top: 10, left: 10, background: i.arriving ? "#FFF0BF" : "#fff", borderRadius: 999, padding: "4px 8px", fontSize: 11, fontWeight: 700 }}>{i.arriving ? "On the way" : "New"}</div>}
@@ -348,7 +351,7 @@ export default function Closet() {
               {sorted.map((i, gi) => (
                 <button key={i.id} onClick={() => setSel(i)} className="press up" style={{ ...delay(gi, 40), opacity: rets.get(i.gmail_id ?? "")?.returned ? 0.4 : 1, border: 0, padding: 0, background: "transparent", cursor: "pointer", display: "flex", flexDirection: "column", gap: 5, font: "inherit", color: "inherit", textAlign: "left", minWidth: 0 }}>
                   <div style={{ position: "relative", width: "100%" }}>
-                    <ItemImage src={i.image_url} store={i.store} name={i.name} label="" w="100%" h={140} radius={16} size={36} />
+                    <ItemImage cutId={i.id} src={i.image_url} store={i.store} name={i.name} label="" w="100%" h={140} radius={16} size={36} />
                     {i.arriving && <div style={{ position: "absolute", top: 8, left: 8, background: "#FFF0BF", borderRadius: 999, padding: "3px 7px", fontSize: 10, fontWeight: 700 }}>On the way</div>}
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 700, width: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{brandOf(i)}</div>
@@ -383,7 +386,7 @@ export default function Closet() {
           <div onClick={e => e.stopPropagation()} className="popIn" style={{ width: "100%", background: "#fff", borderRadius: "30px 30px 0 0", padding: "14px 20px 28px" }}>
             <div style={{ width: 40, height: 5, borderRadius: 3, background: "#E5E0DA", margin: "0 auto 16px" }} />
             <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-              <ItemImage src={sel.image_url} store={sel.store} name={sel.name} w={96} h={120} radius={20} size={44} />
+              <ItemImage cutId={sel.id} src={sel.image_url} store={sel.store} name={sel.name} w={96} h={120} radius={20} size={44} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="kicker">{sel.brand || sel.store}</div>
                 <div className="serif" style={{ fontSize: 24, lineHeight: 1.08, marginTop: 4, overflowWrap: "normal", wordBreak: "normal", hyphens: "none" }}>{sel.name}</div>
@@ -422,7 +425,7 @@ export default function Closet() {
           <div style={{ flex: 1, overflowY: "auto", padding: "8px 16px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
             {everything.filter(i => review.includes(i.id)).map(i => (
               <div key={i.id} style={{ display: "flex", gap: 12, alignItems: "center", background: "#FAF8F6", borderRadius: 18, padding: 10 }}>
-                <ItemImage src={i.image_url} store={i.store} name={i.name} w={48} h={60} radius={12} size={20} />
+                <ItemImage cutId={i.id} src={i.image_url} store={i.store} name={i.name} w={48} h={60} radius={12} size={20} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{i.brand || i.store} {i.name}</div>
                   <div style={{ fontSize: 12, color: "var(--muted)" }}>{i.size ? `Size ${i.size}` : "No size"}</div>

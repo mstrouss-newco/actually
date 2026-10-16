@@ -86,7 +86,7 @@ export default function Earn() {
                   <div style={{ display: "flex", flex: "none" }}>
                     {fan.map((i, n) => (
                       <div key={i.id} className="fanin" style={{ ...delay(n + 3, 110), marginLeft: n ? -14 : 0, transform: `rotate(${[-6, 3, -2][n]}deg)`, borderRadius: 12, boxShadow: "0 4px 10px rgba(20,18,16,.14)" }}>
-                        <ItemImage src={i.image_url} store={i.store} name={i.name} w={46} h={58} radius={12} size={18} />
+                        <ItemImage cutId={i.id} src={i.image_url} store={i.store} name={i.name} w={46} h={58} radius={12} size={18} />
                       </div>
                     ))}
                   </div>

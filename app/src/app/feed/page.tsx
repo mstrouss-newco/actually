@@ -140,7 +140,7 @@ export default function Feed() {
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginTop: 8 }}>
                         {m.picks.map(k => (
                           <div key={k.id} style={{ minWidth: 0 }}>
-                            <ItemImage src={k.image_url} store={k.store} name={k.name} w="100%" h={124} radius={16} size={30} />
+                            <ItemImage cutId={k.id} src={k.image_url} store={k.store} name={k.name} w="100%" h={124} radius={16} size={30} />
                             <div style={{ fontSize: 12, fontWeight: 700, marginTop: 6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{k.name}</div>
                           </div>
                         ))}
