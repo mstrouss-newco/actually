@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PhotoPicker } from "@/lib/feed-ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -66,6 +67,12 @@ export default function Settings() {
         <div style={{ padding: "0 20px" }}>
           <Link href="/today" className="back">← Today</Link>
           <h1 className="serif" style={{ fontWeight: 400, fontSize: 36, lineHeight: 1, letterSpacing: "-0.02em", margin: "18px 0 0" }}>Settings</h1>
+          {me?.handle && (
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16 }}>
+              <PhotoPicker handle={me.handle} size={56} />
+              <div style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.4 }}>Tap to add or change your photo.<br />Friends see it on your feed.</div>
+            </div>
+          )}
           {me && <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 8 }}>Signed in as {me.email}{me.handle ? <><br />Shopping email: {me.handle}@{DOMAIN}</> : null}</div>}
         </div>
 

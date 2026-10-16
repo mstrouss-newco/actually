@@ -95,7 +95,7 @@ design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPAB
 | `value-items` | Yes | AI estimates resale ranges, 40 items at a time. |
 | `inbound-email` | No (checks Resend signature) | Shopping email receiver. |
 | `gmail-token` | Own check (GET is public, says only ready or not) | Saves Google's refresh token, hands out fresh Gmail passes, forgets on disconnect. |
-| `delete-account` | Yes | `data`: deletes orders, items, rewards, blocked stores, brand follows, loves (keeps account). `account`: deletes the user; every table cascades. |
+| `delete-account` | Yes | `data`: deletes orders, items, rewards, blocked stores, brand follows, loves (keeps account). `account`: deletes the user and her photo; every table cascades. |
 
 All AI calls use `claude-haiku-5-5` with structured output, chosen for cost (about
 $0.50 per user to start). Ask Mike before switching to a pricier model.
@@ -118,6 +118,9 @@ and `items.hidden` (removed from closet; kept so imports don't bring it back).
 Every table has row level security: people only see their own rows. Shared pieces
 leave the database only through the `profile_page`, `following_feed` (old), `friends_feed`, `search_people`,
 `similar_people` and `my_people` functions, which return photo, brand and name only (plus the note she wrote, `items.note`, on `profile_page`, and `items.product_url`, the cleaned store page link with nothing after the "?"). `read-order` finds product links from the photo links in order emails (and `fillLinks()` in `lib/items.ts` for older pieces), following tracking redirects server side.
+
+Profile photos: public Storage bucket `avatars`, one file per person at `<handle>.jpg` (shrunk to 320px on the phone by `PhotoPicker` in `lib/feed-ui.tsx`); only the owner can write hers. `Avatar` shows the photo when there is one, else the colored initial.
+Today shows no spending totals (people don't enjoy seeing them); prices stay on orders and brand pages.
 
 To change the schema: apply a migration with the Supabase connector, then add the same
 SQL to `supabase/migrations/<version>_<name>.sql`. Run the security advisor afterwards.

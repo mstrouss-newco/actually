@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { type FeedItem, type Profile, loadFeed, loadProfilePage, loadSaved, myHandle, similarPeople } from "@/lib/social";
-import { Avatar, FeedCard, FollowButton, FriendFaces, FriendGrid, Loves, MyGrid, type Order, OrderButton, sortBy, ShareLink, TypeTabs, displayName, useLovesStore } from "@/lib/feed-ui";
+import { Avatar, FeedCard, FollowButton, FriendFaces, FriendGrid, Loves, MyGrid, PhotoPicker, type Order, OrderButton, sortBy, ShareLink, TypeTabs, displayName, useLovesStore } from "@/lib/feed-ui";
 import { loadItems, toSort } from "@/lib/items";
 import { ItemImage, TabBar } from "@/lib/tabs";
 
@@ -158,7 +158,7 @@ export default function Feed() {
         {handle && tab === "mine" && (
           <>
             <div style={{ padding: "18px 20px 0", display: "flex", alignItems: "center", gap: 14 }}>
-              <Avatar handle={handle} size={56} />
+              <PhotoPicker handle={handle} size={56} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="serif" style={{ fontSize: 24, lineHeight: 1, overflowWrap: "anywhere" }}>{displayName(handle)}</div>
                 <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{mine ? `${mine.followers} ${mine.followers === 1 ? "follower" : "followers"} · ${myLoves ? `${myLoves} ${myLoves === 1 ? "love" : "loves"}` : `${mine.following} following`}` : "Loading…"}</div>

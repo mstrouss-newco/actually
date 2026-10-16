@@ -1,5 +1,5 @@
 // Deletes her data. "data" clears orders, closet, points, blocked stores, followed brands and saved hearts so she can start
-// fresh. "account" deletes the account itself; every table goes with it.
+// fresh. "account" deletes the account itself and her photo; every table goes with it.
 import { createClient } from "npm:@supabase/supabase-js@2.117.3";
 
 const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -15,6 +15,9 @@ Deno.serve(async req => {
   const { mode } = await req.json().catch(() => ({}));
 
   if (mode === "account") {
+    // Her profile photo goes too.
+    const { data: me } = await admin.from("profiles").select("handle").eq("id", uid).maybeSingle();
+    if (me?.handle) await admin.storage.from("avatars").remove([`${me.handle}.jpg`]);
     const { error } = await admin.auth.admin.deleteUser(uid);
     return error ? json({ error: "failed" }, 500) : json({ deleted: true });
   }

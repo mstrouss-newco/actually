@@ -4,6 +4,9 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Profile photos: tap your circle on My feed, your page or Settings to add one. Friends see it everywhere your initial used to be.
+- Today no longer shows how much you spent this month.
+
 - Friends: type tabs and a sort button (Newest, Brand, Type) on a friend's page and when you tap a friend's face. The sort button now always says what it's sorted by.
 
 - Feed: heart a friend's piece (heart and Shop under each photo), a new Saved tab for everything you loved, love counts on your own pieces (never who), and a row of friends' faces to see just one person.
