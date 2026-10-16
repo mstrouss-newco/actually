@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Fixes: "Is this yours?" no longer guesses partner without a real sign (size-only cases now ask "Is this one yours?" with Mine / Change); a ✕ on the selected piece takes it off the outfit board; new looks are private until she turns sharing on; only her own pieces can go in a look (and saving marks them hers); second finger always pinches the held piece; shop tags stay on the board; Wore it today uses her local date; a friend with only looks opens on Outfits; friends who only shared looks show in the faces row; Orders photo view shows every recent order.
+
 - Outfits: build a look from your closet on a board (drag, pinch, front/back), name it, tag an occasion, share it. Lives in Closet > Outfits; shared looks show on feeds under a new Outfits tab, and every piece is tappable to shop. "Make an outfit with this" on each closet piece.
 - Closet: "Is this yours?" is now one line with our guess, Right or Change.
 

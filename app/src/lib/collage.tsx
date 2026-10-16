@@ -31,7 +31,8 @@ export function Collage({ layout, pieces, radius = 28, tags = true }: { layout: 
   const tp = tag ? byId.get(tag.id)! : null;
   return (
     <div onClick={() => setOpen(null)} style={{ position: "relative", width: "100%", aspectRatio: `1 / ${BOARD_H}`, background: BG, borderRadius: radius, overflow: "hidden" }}>
-      {shown.map((l, z) => (
+      {!tags && shown.map((l, z) => <div key={l.id} style={{ ...box(l), zIndex: z + 1 }}><PieceArt p={byId.get(l.id)!} /></div>)}
+      {tags && shown.map((l, z) => (
         <button key={l.id} type="button" aria-label={byId.get(l.id)!.name} disabled={!tags}
           onClick={e => { e.stopPropagation(); setOpen(o => (o === l.id ? null : l.id)); }}
           style={{ ...box(l), zIndex: z + 1, border: 0, padding: 0, background: "none", cursor: tags ? "pointer" : "default" }}>
@@ -40,7 +41,7 @@ export function Collage({ layout, pieces, radius = 28, tags = true }: { layout: 
       ))}
       {tag && tp && (
         <a href={findIt(tp)} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
-          style={{ position: "absolute", zIndex: 99, left: `${Math.min(70, Math.max(2, (tag.x + tag.w / 2) * 100 - 20))}%`, top: `${Math.min(88, ((tag.y + tag.w * PIECE_H * 0.55) / BOARD_H) * 100)}%`, maxWidth: "70%", height: 32, padding: "0 12px", borderRadius: 999, background: "var(--ink)", color: "#fff", display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700, textDecoration: "none", boxShadow: "0 4px 12px rgba(20,18,16,.25)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          style={{ position: "absolute", zIndex: 99, left: `${Math.min(55, Math.max(2, (tag.x + tag.w / 2) * 100 - 20))}%`, top: `${Math.min(88, ((tag.y + tag.w * PIECE_H * 0.55) / BOARD_H) * 100)}%`, maxWidth: `${96 - Math.min(55, Math.max(2, (tag.x + tag.w / 2) * 100 - 20))}%`, height: 32, padding: "0 12px", borderRadius: 999, background: "var(--ink)", color: "#fff", display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700, textDecoration: "none", boxShadow: "0 4px 12px rgba(20,18,16,.25)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {(tp.brand || tp.store)} {tp.name} ↗
         </a>
       )}
@@ -50,7 +51,7 @@ export function Collage({ layout, pieces, radius = 28, tags = true }: { layout: 
 }
 
 // The board she builds on. Drag to move, pinch (or the buttons) to size.
-export function CollageEditor({ layout, pieces, onChange, selected, onSelect }: { layout: Placed[]; pieces: PieceLite[]; onChange: (l: Placed[]) => void; selected: string | null; onSelect: (id: string | null) => void }) {
+export function CollageEditor({ layout, pieces, onChange, selected, onSelect, onRemove }: { layout: Placed[]; pieces: PieceLite[]; onChange: (l: Placed[]) => void; selected: string | null; onSelect: (id: string | null) => void; onRemove: (id: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const pts = useRef(new Map<number, { x: number; y: number }>());
   const start = useRef<{ id: string; l: Placed; px: number; py: number; dist: number } | null>(null);
@@ -63,6 +64,8 @@ export function CollageEditor({ layout, pieces, onChange, selected, onSelect }: 
     e.stopPropagation();
     ref.current?.setPointerCapture(e.pointerId);
     pts.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    // Already holding a piece: this finger pinches it, wherever it lands.
+    if (start.current) { start.current.dist = 0; const cur = layout.find(p => p.id === start.current!.id); if (cur) start.current.l = { ...cur }; return; }
     onSelect(id);
     const l = layout.find(p => p.id === id)!;
     start.current = { id, l: { ...l }, px: e.clientX, py: e.clientY, dist: dist() };
@@ -101,6 +104,10 @@ export function CollageEditor({ layout, pieces, onChange, selected, onSelect }: 
         <div key={l.id} onPointerDown={e => down(e, l.id)}
           style={{ ...box(l), zIndex: z + 1, cursor: "grab", outline: selected === l.id ? "2px dashed var(--ink)" : "none", outlineOffset: 3, borderRadius: 14 }}>
           <PieceArt p={byId.get(l.id)!} />
+          {selected === l.id && (
+            <button type="button" aria-label="Take off the board" onPointerDown={e => { e.stopPropagation(); onRemove(l.id); }}
+              style={{ position: "absolute", right: -10, top: -10, width: 30, height: 30, borderRadius: "50%", border: "2px solid #fff", background: "var(--ink)", color: "#fff", fontSize: 14, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transform: `rotate(${-(l.r ?? 0)}deg)` }}>✕</button>
+          )}
         </div>
       ))}
       {!layout.length && (

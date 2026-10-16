@@ -125,14 +125,13 @@ function sizeOff(i: Item, all: Item[]) {
   return usual >= 2 && counts.get(i.size)! < usual;
 }
 
-// Our best guess at who a piece that doesn't look like hers is for: men's vs women's means a partner,
-// a small kids-style size means kids.
-export function likelyWho(i: Item, all: Item[]): Who {
+// Our guess at who a piece is for, only when there's a real sign: a men's piece in a women's closet
+// (or the other way round) means a partner. Otherwise no guess, and we just ask if it's hers.
+export function likelyWho(i: Item, all: Item[]): Who | null {
   const mine = all.filter(o => whoFor(o, all) === "me");
   const men = mine.filter(o => MEN.test(o.name)).length, women = mine.filter(o => WOMEN.test(o.name)).length;
   if ((WOMEN.test(i.name) && men > women) || (MEN.test(i.name) && women > men)) return "partner";
-  if (/\b(kids?|girls?|boys?|toddler|youth|baby)\b/i.test(i.name) || /^(\d{1,2}[tTyY]|\d{1,2}m|[2-9]|1[0-6]|xs\s*\(\d|youth)/i.test(i.size ?? "")) return "kids";
-  return "partner";
+  return null;
 }
 
 // "All of these are mine": marks the pieces she checked and left alone.

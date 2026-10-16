@@ -23,15 +23,20 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
   const [sheet, setSheet] = useState(false);
   const [name, setName] = useState("");
   const [occasion, setOccasion] = useState<string | null>(null);
-  const [shared, setShared] = useState(true);
+  const [shared, setShared] = useState(false);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    loadItems().then(all => setItems(all.filter(i => whoFor(i, all) === "me")));
-    if (!isNew) loadOutfit(id).then(o => { if (!o) return; setOrig(o); setLayout(o.layout); setName(o.name); setOccasion(o.occasion); setShared(o.shared); });
-    // "Style this" from a closet piece starts the board with it.
-    const start = new URLSearchParams(location.search).get("with");
-    if (isNew && start) setLayout([{ id: start, x: 0.3, y: 0.25, w: 0.42, r: 0 }]);
+    // Only her own pieces can go in a look; anything else is dropped from the board.
+    Promise.all([loadItems(), isNew ? Promise.resolve(null) : loadOutfit(id)]).then(([all, o]) => {
+      const mine = all.filter(i => whoFor(i, all) === "me");
+      const ok = new Set(mine.map(i => i.id));
+      setItems(mine);
+      if (o) { setOrig(o); setLayout(o.layout.filter(l => ok.has(l.id))); setName(o.name); setOccasion(o.occasion); setShared(o.shared); }
+      // "Make an outfit with this" from a closet piece starts the board with it.
+      const start = new URLSearchParams(location.search).get("with");
+      if (isNew && start && ok.has(start)) setLayout([{ id: start, x: 0.3, y: 0.25, w: 0.42, r: 0 }]);
+    });
   }, [id, isNew]);
 
   const pieces = (items ?? []).map(i => ({ id: i.id, brand: i.brand, store: i.store, name: i.name, image_url: i.image_url, category: i.category }));
@@ -52,7 +57,8 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
 
   const save = async () => {
     setSaving(true); setFailed(false);
-    const saved = await saveOutfit({ id: orig?.id, name: name || "New outfit", occasion, layout, shared, wasShared: !!orig?.shared_at });
+    const ok = new Set(pieces.map(p => p.id));
+    const saved = await saveOutfit({ id: orig?.id, name: name || "New outfit", occasion, layout: layout.filter(l => ok.has(l.id)), shared, wasShared: !!orig?.shared_at });
     setSaving(false);
     if (saved) router.replace(`/outfit/${saved}`); else setFailed(true);
   };
@@ -70,7 +76,7 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
         <h1 className="serif" style={{ fontWeight: 400, fontSize: 30, margin: "10px 20px 0", letterSpacing: "-0.02em" }}>{orig ? "Edit outfit" : "New outfit"}</h1>
 
         <div style={{ position: "relative", margin: "12px 16px 0" }}>
-          <CollageEditor layout={layout} pieces={pieces} onChange={setLayout} selected={sel} onSelect={setSel} />
+          <CollageEditor layout={layout} pieces={pieces} onChange={setLayout} selected={sel} onSelect={setSel} onRemove={pid => { setLayout(l => l.filter(p => p.id !== pid)); setSel(null); }} />
           {sel && (
             <div style={{ position: "absolute", left: 0, right: 0, bottom: 10, display: "flex", justifyContent: "center", gap: 6, zIndex: 50, flexWrap: "wrap" }}>
               <button type="button" style={tool} onClick={() => size(1.15)} aria-label="Bigger">＋</button>
@@ -93,7 +99,7 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
           ))}
           {items && !tray.length && <div style={{ fontSize: 14, color: "var(--muted)" }}>Nothing of this type yet.</div>}
         </div>
-        <div style={{ padding: "8px 20px 0", fontSize: 12, color: "var(--muted)" }}>Tap a piece to add it, tap again to take it off. Up to 12.</div>
+        <div style={{ padding: "8px 20px 0", fontSize: 12, color: "var(--muted)" }}>Tap a piece to add it. To take one off, tap it again here or tap ✕ on the board. Up to 12.</div>
       </div>
 
       {sheet && (
@@ -101,7 +107,7 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
           <div onClick={e => e.stopPropagation()} className="sheetUp" style={{ width: "100%", background: "#fff", borderRadius: "30px 30px 0 0", padding: "14px 20px calc(24px + env(safe-area-inset-bottom))" }}>
             <div style={{ width: 40, height: 5, borderRadius: 3, background: "#E2DDD7", margin: "0 auto 14px" }} />
             <div className="serif" style={{ fontSize: 26 }}>Name this look</div>
-            <input value={name} maxLength={60} placeholder="Easy Saturday" onChange={e => setName(e.target.value)} style={{ marginTop: 12, width: "100%", boxSizing: "border-box", height: 50, borderRadius: 14, border: "1.5px solid var(--line)", padding: "0 14px", font: "16px var(--font-sans), sans-serif" }} />
+            <input value={name} maxLength={60} placeholder="Name it, like Easy Saturday" onChange={e => setName(e.target.value)} style={{ marginTop: 12, width: "100%", boxSizing: "border-box", height: 50, borderRadius: 14, border: "1.5px solid var(--line)", padding: "0 14px", font: "16px var(--font-sans), sans-serif" }} />
             <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
               {OCCASIONS.map(o => <button key={o} type="button" onClick={() => setOccasion(occasion === o ? null : o)} style={chip(occasion === o)}>{o}</button>)}
             </div>

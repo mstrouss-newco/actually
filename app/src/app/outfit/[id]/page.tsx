@@ -26,7 +26,7 @@ export default function OutfitPage({ params }: { params: Promise<{ id: string }>
   const lite = pieces.map(i => ({ id: i.id, brand: i.brand, store: i.store, name: i.name, image_url: i.image_url, category: i.category, product_url: i.product_url }));
   const worn = o.worn ? `Worn ${o.worn === 1 ? "once" : `${o.worn} times`}` : "Not worn yet";
   const last = o.last_worn ? `Last on ${new Date(o.last_worn + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : "Tap when you wear it";
-  const today = o.last_worn === new Date().toISOString().slice(0, 10);
+  const today = o.last_worn === new Date().toLocaleDateString("en-CA");
 
   return (
     <main className="tabscreen">

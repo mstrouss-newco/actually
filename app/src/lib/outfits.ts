@@ -31,6 +31,9 @@ export async function saveOutfit(o: { id?: string; name: string; occasion: strin
     ...(o.shared && !o.wasShared ? { shared_at: new Date().toISOString() } : {}),
   };
   const sb = supabase();
+  // Pieces she puts in a look are hers; saying so keeps them in shared looks.
+  const ids = row.layout.map(p => p.id);
+  if (ids.length) await sb.from("items").update({ for_whom: "me" }).in("id", ids).is("for_whom", null);
   const { data, error } = o.id
     ? await sb.from("outfits").update(row).eq("id", o.id).select("id").maybeSingle()
     : await sb.from("outfits").insert(row).select("id").maybeSingle();
@@ -42,7 +45,7 @@ export async function setShared(o: Outfit, shared: boolean) {
 }
 
 export async function woreToday(o: Outfit) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toLocaleDateString("en-CA");
   if (o.last_worn === today) return o;
   const next = { worn: o.worn + 1, last_worn: today };
   await supabase().from("outfits").update(next).eq("id", o.id);
