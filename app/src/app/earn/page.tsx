@@ -81,7 +81,7 @@ export default function Earn() {
           {priced.length > 0 ? (
             <Link href="/earn/worth" style={{ textDecoration: "none", display: "block" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 8 }}>
-                <div className="serif glow" style={{ fontSize: 40, lineHeight: 1, minWidth: 0 }}>{money(loN)}–{money(hiN)}</div>
+                <div className="serif glow" style={{ fontSize: "clamp(28px, 9vw, 40px)", lineHeight: 1, minWidth: 0, whiteSpace: "nowrap" }}>{money(loN)}–{money(hiN)}</div>
                 {fan.length > 0 && (
                   <div style={{ display: "flex", flex: "none" }}>
                     {fan.map((i, n) => (
