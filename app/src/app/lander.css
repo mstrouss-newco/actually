@@ -10,10 +10,10 @@
 .ld-links { display: flex; align-items: center; gap: 30px; font-size: 15px; font-weight: 500; color: #5E5852; }
 .ld-signin { height: 44px; padding: 0 20px; border-radius: 999px; background: #141210; color: #fff !important; display: flex; align-items: center; font-weight: 700; }
 
-.ld-gbtn { display: inline-flex; align-items: center; gap: 12px; height: 58px; padding: 0 28px 0 12px; border-radius: 999px; border: 0; background: #141210; color: #fff; font: 700 17px var(--font-sans), sans-serif; cursor: pointer; box-shadow: 0 12px 28px rgba(20,18,16,.18); transition: transform .15s; }
+.ld-gbtn { flex: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 12px; height: 58px; padding: 0 28px 0 12px; border-radius: 999px; border: 0; background: #141210; color: #fff; font: 700 17px var(--font-sans), sans-serif; cursor: pointer; box-shadow: 0 12px 28px rgba(20,18,16,.18); transition: transform .15s; }
 .ld-gbtn:hover { transform: translateY(-2px); }
 .ld-gbtn-s { height: 52px; font-size: 16px; }
-.ld-g { width: 36px; height: 36px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; }
+.ld-g { flex: none; width: 36px; height: 36px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; }
 .ld-logo { border-radius: 6px; flex: none; display: block; }
 
 .ld-hero { display: flex; align-items: center; gap: 60px; padding: 20px 72px 80px; position: relative; max-width: 1440px; margin: 0 auto; }
@@ -106,7 +106,7 @@
 .ld-big { font-family: var(--font-serif), serif; font-size: 40px; line-height: 1.04; letter-spacing: -.02em; margin-top: 14px; }
 .ld-small { font-size: 15px; color: #5E5852; margin-top: 10px; }
 @property --n { syntax: "<integer>"; initial-value: 0; inherits: false; }
-.ld-cnt { animation: ldCnt 3s ease-out infinite alternate; counter-reset: n var(--n); }
+.ld-cnt { animation: ldCnt 2.5s ease-out 1 both; counter-reset: n var(--n); }
 .ld-cnt::after { content: counter(n); }
 @keyframes ldCnt { to { --n: var(--to) } }
 
@@ -114,6 +114,20 @@
 .ld-end h2 { font-weight: 300; font-size: 60px; line-height: 1; letter-spacing: -.03em; }
 .ld-foot { display: flex; justify-content: space-between; align-items: center; padding: 20px 72px 40px; font-size: 13px; color: #7A746D; }
 .ld-flinks { display: flex; gap: 24px; }
+
+/* Smaller computers: tighten so the phones never run off the edge. */
+@media (max-width: 1240px) and (min-width: 901px) {
+  .ld-hero { padding: 20px 48px 70px; gap: 40px; }
+  .ld-hero h1 { font-size: 68px; }
+  .ld-hero-p { margin-right: 40px; }
+  .ld-feat, .ld-feat.flip { padding: 80px 48px; gap: 48px; }
+  .ld-feat-t { width: 360px; }
+  .ld-feat h2, .ld-money h2 { font-size: 46px; }
+  .ld-money { padding: 80px 48px; }
+  .ld-big { font-size: 32px; }
+  .ld-end { margin: 0 48px 50px; padding: 50px; }
+  .ld-end h2 { font-size: 46px; }
+}
 
 /* Phones and small screens: one column, same story. */
 @media (max-width: 900px) {
@@ -152,3 +166,7 @@
   .ld * { animation: none !important; }
   .ld-ban ~ .ld-ban { display: none; }
 }
+
+/* The app's own welcome only shows when opened from the Home Screen. */
+.only-app { display: none; }
+@media (display-mode: standalone) { .only-app { display: contents; } }
