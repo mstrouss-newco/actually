@@ -23,6 +23,7 @@
 .ld-hero-t { flex: 1; position: relative; z-index: 1; }
 .ld-hero h1 { font-weight: 300; font-size: 86px; line-height: .98; letter-spacing: -.035em; }
 .ld-hero p { font-size: 21px; line-height: 1.45; color: #5E5852; max-width: 520px; margin: 24px 0 0; }
+.ld-hero-cta { margin-top: 32px; }
 .ld-note { font-size: 14px; color: #7A746D; margin-top: 12px; }
 .ld-hero-p { position: relative; z-index: 1; margin-right: 110px; }
 
@@ -139,6 +140,13 @@
   .ld-hero h1 { font-size: 48px; }
   .ld-hero p { font-size: 16px; margin-top: 14px; }
   .ld-hero-p { margin: 0 auto; transform: scale(.85); transform-origin: top center; height: 570px; }
+  /* On phones: headline, then the moving app, then the Gmail button under it. */
+  .ld-hero-t { display: contents; }
+  .ld-hero h1 { order: 1; position: relative; z-index: 1; }
+  .ld-hero p { order: 2; position: relative; z-index: 1; }
+  .ld-hero-p { order: 3; }
+  .ld-hero-cta { order: 4; margin-top: -10px; position: relative; z-index: 2; }
+  .ld-note { order: 5; position: relative; z-index: 1; margin-top: 0; }
   .ld-blob1 { right: -90px; top: 200px; width: 320px; height: 320px; }
   .ld-blob2 { display: none; }
   .ld-gbtn { width: 100%; justify-content: center; }

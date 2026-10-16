@@ -173,7 +173,7 @@ export function Lander() {
         <div className="ld-hero-t">
           <h1>Your order emails, <em>sorted out.</em></h1>
           <p>Connect Gmail and every order becomes your closet. Returns, points and resale, handled. Plus what your friends love.</p>
-          <div style={{ marginTop: 32 }}><LanderGmail /></div>
+          <div className="ld-hero-cta"><LanderGmail /></div>
           <div className="ld-note">Free. We only save your shopping emails.</div>
         </div>
         <div className="ld-hero-p"><Phone className="ld-float"><TodayScreen /></Phone></div>
