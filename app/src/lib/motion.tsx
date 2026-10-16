@@ -44,7 +44,7 @@ export function TrackBar({ step, light = false }: { step: number; light?: boolea
         <div className={`dotslide${step < 3 ? " ping" : ""}`} style={{ position: "absolute", left: `${pct}%`, top: "50%", width: 18, height: 18, margin: "-9px 0 0 -9px", borderRadius: "50%", background: "var(--ink)", border: "3px solid #fff", boxSizing: "border-box" }} />
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 700, color: "var(--muted)", marginTop: 8 }}>
-        {["Ordered", "Shipped", "Out", "Here"].map((s, i) => <span key={s} style={{ color: i === step ? "var(--ink)" : undefined }}>{s}</span>)}
+        {["Ordered", "Shipped", "Out for delivery", "Delivered"].map((s, i) => <span key={s} style={{ color: i === step ? "var(--ink)" : undefined, whiteSpace: "nowrap" }}>{s}</span>)}
       </div>
     </div>
   );
