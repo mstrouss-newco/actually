@@ -86,9 +86,25 @@ const TRACK_SUB = /^(click|clicks|links?|email|em|e|t|r|trk|ctrk|track|tracking|
 const NOT_PRODUCT = /\/(unsubscribe|account|my-account|orders?|order-status|login|signin|sign-in|track\w*|preferences|cart|checkouts?|returns?|tools|recurring|subscriptions?|wishlist|reviews?|survey)(\/|$)/i;
 // Only public https sites: no raw IP addresses, no local or internal names.
 const safeHost = (h: string) => h.includes(".") && !/^[\d.]+$/.test(h) && !h.includes(":") && !/(^|\.)(localhost|local|internal|lan|home|corp|arpa)$/i.test(h);
+// Many tracking links carry the real address inside them (?url=https%3A..., or base64). Pull it out.
+function embedded(u: string): string | null {
+  try {
+    for (const [, v] of new URL(u).searchParams) {
+      for (const cand of [v, (() => { try { return decodeURIComponent(v); } catch { return v; } })(), (() => { try { return atob(v.replace(/-/g, "+").replace(/_/g, "/")); } catch { return ""; } })()]) {
+        const m = cand.match(/^https?:\/\/[^\s"'<>]+/);
+        if (m) { const x = new URL(m[0].replace(/^http:/, "https:")); if (!TRACK_HOST.test(x.hostname) && !TRACK_SUB.test(x.hostname)) return x.toString(); }
+      }
+    }
+  } catch { /* not a URL */ }
+  return null;
+}
+// Looks like a click-tracking hop rather than a store page.
+const isTracker = (u: string) => { try { const x = new URL(u); return TRACK_HOST.test(x.hostname) || TRACK_SUB.test(x.hostname) || /\/(click|clicks|redirect|redir|track|ls\/click|ss\/c|r)\b/i.test(x.pathname); } catch { return false; } };
 async function productPage(url: string | null | undefined, text: string): Promise<string | null> {
   let end = url?.trim() ?? "";
   if (!end.startsWith("https://") || !text.includes(end)) return null;
+  // A tracking link that names its destination: go straight there.
+  if (isTracker(end)) end = embedded(end) ?? end;
   // Follow at most 5 hops ourselves, checking each one.
   try {
     for (let hop = 0; hop < 5; hop++) {
@@ -101,8 +117,11 @@ async function productPage(url: string | null | undefined, text: string): Promis
       const next = res.status >= 300 && res.status < 400 ? res.headers.get("location") : null;
       if (!next) break;
       end = new URL(next, end).toString();
+      if (isTracker(end)) end = embedded(end) ?? end;
     }
   } catch { /* keep the last good address */ }
+  // Stuck on a tracking page (blocked or a script redirect): use the address it carries, if any.
+  if (isTracker(end)) end = embedded(end) ?? end;
   try {
     const x = new URL(end);
     if (x.protocol !== "https:" || !safeHost(x.hostname) || x.pathname.length < 4) return null;

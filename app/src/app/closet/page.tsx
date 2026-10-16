@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { findIt, siteOf, storeLink } from "@/lib/social";
+import { findIt, siteOf, siteSearch, storeLink } from "@/lib/social";
 import { type Outfit, loadOutfits } from "@/lib/outfits";
 import { Collage } from "@/lib/collage";
 import { CATS, type Item, type Who, brandOf, confirmMine, hideItem, hueRank, likelyWho, loadItems, needsAsk, setPick, setWho, shortSize, sizesByBrand, toSort, whoFor } from "@/lib/items";
@@ -407,7 +407,7 @@ export default function Closet() {
               ))}
               {whoFor(sel, everything) === "me" && <Link href={`/outfit/edit/new?with=${sel.id}`} className="btn btn-ghost" style={{ height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>Make an outfit with this</Link>}
               {sel.pick === "sell" && <Link href={`/earn/worth/${sel.id}`} className="btn press" style={{ height: 48, fontSize: 15, background: "#FF6159", color: "var(--ink)" }}>Make a resale post →</Link>}
-              <a href={findIt(sel)} target="_blank" rel="noreferrer" className="btn btn-ghost" style={{ height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>{storeLink(sel) ? `See it on ${siteOf(storeLink(sel)!)}` : "Find it online"}</a>
+              <a href={findIt(sel)} target="_blank" rel="noreferrer" className="btn btn-ghost" style={{ height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>{storeLink(sel) ? `See it on ${siteOf(storeLink(sel)!)}` : siteSearch(sel) ? `Find it on ${siteOf(siteSearch(sel)!).replace(/^www\./, "")}` : "Find it online"}</a>
               <button onClick={() => remove(sel)} className="btn btn-ghost" style={{ marginTop: 0, fontSize: 14, color: "#C9402F" }}>Remove from closet</button>
             </div>
           </div>
