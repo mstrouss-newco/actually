@@ -183,3 +183,6 @@ a { color: var(--ink); }
 @keyframes popOnce { from { transform: scale(.6); opacity: 0 } to { transform: none; opacity: 1 } }
 .sw { animation: sw .5s cubic-bezier(.2,.9,.25,1.3) both; }
 @keyframes sw { from { transform: scale(0) } to { transform: none } }
+
+/* Short phones (iPhone SE): keep the Gmail button on screen. */
+@media (max-height: 700px) { .mailflow { display: none !important; } }

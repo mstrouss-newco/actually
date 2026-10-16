@@ -9,7 +9,7 @@ const sent = new Set<string>();
 const NOISE = /ResizeObserver|Script error|Load failed|NetworkError|Failed to fetch|AbortError|chrome-extension|moz-extension|safari-extension/i;
 
 // Strip anything quoted or after a "?" so no email text or link details ride along.
-const scrub = (t: string) => t.replace(/(["'`])[^"'`]{12,}\1/g, "$1…$1").replace(/\?[^\s)]+/g, "");
+const scrub = (t: string) => t.replace(/(["'`])[^"'`]{12,}\1/g, "$1…$1").replace(/\?[^\s)]+/g, "").replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, "[email]");
 
 export function reportError(raw: string, rawStack?: string) {
   const message = scrub(raw ?? ""); const stack = rawStack ? scrub(rawStack) : undefined;

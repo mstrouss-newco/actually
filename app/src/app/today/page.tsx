@@ -45,6 +45,7 @@ export default function Today() {
   const [items, setItems] = useState<Item[]>([]);
   const [name, setName] = useState("");
   const [first, setFirst] = useState("");
+  const [gmailOn, setGmailOn] = useState(false);
   const [hour, setHour] = useState<number | null>(null);
   useEffect(() => setHour(new Date().getHours()), []);
   const [rewards, setRewards] = useState<Reward[]>([]);
@@ -70,6 +71,8 @@ export default function Today() {
     loadOrders().then(async list => {
       setOrders(list);
       if (!list) return;
+      // Already connected but nothing found yet: don't send her back to connect again.
+      if (!list.length) gmailToken().then(t => setGmailOn(!!t)).catch(() => null);
       loadRewards().then(setRewards);
       loadItems().then(async all => {
         setItems(all);
@@ -180,14 +183,14 @@ export default function Today() {
         <div style={{ padding: "20px 20px 0" }}>
           <div className="serif" style={{ fontSize: 34, lineHeight: 1, letterSpacing: "-0.02em" }}>{hello}{greet ? `, ${greet}` : ""}.</div>
           <div style={{ fontSize: 15, lineHeight: 1.4, color: "var(--soft)", marginTop: 8 }}>
-            {orders === undefined ? "Checking your orders…" : orders === null ? "Sign in to see your orders." : orders.length === 0 ? "No orders yet." : line ? <>{line}. {canReturn.length > 0 && <Link href="/orders?tab=canreturn" style={{ fontWeight: 700, color: "var(--ink)" }}>See returns</Link>}</> : "All quiet. Nothing due."}
+            {orders === undefined ? "Checking your orders…" : orders === null ? "Sign in to see your orders." : orders.length === 0 ? (gmailOn ? "We didn't find store orders in your inbox yet. New ones will show up here." : "No orders yet.") : line ? <>{line}. {canReturn.length > 0 && <Link href="/orders?tab=canreturn" style={{ fontWeight: 700, color: "var(--ink)" }}>See returns</Link>}</> : "All quiet. Nothing due."}
           </div>
         </div>
 
         <HomeScreenTip />
-        {orders && orders.length > 0 && <ShopEmailCard handle={name} />}
+        {orders && <ShopEmailCard handle={name} />}
 
-        {(orders === null || orders?.length === 0) && (
+        {(orders === null || (orders?.length === 0 && !gmailOn)) && (
           <div style={{ margin: "18px 16px 0", background: "var(--chip)", borderRadius: 28, padding: "22px 18px" }}>
             <div className="serif" style={{ fontSize: 26, lineHeight: 1.05 }}>Bring in your past <em>orders.</em></div>
             <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 8, lineHeight: 1.45 }}>Connect Gmail and we&apos;ll find your orders, deliveries and returns.</div>

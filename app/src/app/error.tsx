@@ -12,7 +12,8 @@ export default function Crash({ error, reset }: { error: Error & { digest?: stri
       <p className="lead">We&apos;ve been told about it. Try again, or head back to Today.</p>
       <div className="spacer" />
       <button className="btn" onClick={reset}>Try again</button>
-      <a href="/today" className="btn btn-ghost">Back to Today</a>
+      <a href="/closet" className="btn btn-ghost">Go to my closet</a>
+      <a href="/orders" className="btn btn-ghost">Go to my orders</a>
     </main>
   );
 }

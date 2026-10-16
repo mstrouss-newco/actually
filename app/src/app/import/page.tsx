@@ -86,15 +86,16 @@ export default function Import() {
         {s.stage !== "done" && <svg className="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6159" strokeWidth="3" strokeLinecap="round"><path d="M12 3a9 9 0 1 1-9 9" /></svg>}
         {scanning ? (s.total ? `Checking ${s.read} of ${s.total} emails` : "Finding your shopping emails")
           : s.stage === "items" ? (s.itemsTotal ? `Reading what you bought, ${s.itemsDone} of ${s.itemsTotal}` : "Reading what you bought")
-          : "All done"}
+          : s.stage === "points" ? "Looking for points and credit" : "All done"}
       </div>
-      <h1 className="h1" style={{ marginTop: 14 }}>{s.stage === "done" ? <>Your closet is <em>ready.</em></> : <>Building your <em>closet&hellip;</em></>}</h1>
+      <h1 className="h1" style={{ marginTop: 14 }}>{s.stage !== "done" ? <>Building your <em>closet&hellip;</em></> : s.orders ? <>Your closet is <em>ready.</em></> : <>Nothing to bring in <em>yet.</em></>}</h1>
       <div className="serif" style={{ fontSize: 96, lineHeight: 0.9, letterSpacing: "-0.04em", marginTop: 14 }}>{s.orders}</div>
       <div style={{ fontSize: 17, marginTop: 6 }}>{s.orders === 1 ? "order found" : "orders found"}{s.itemsFound ? ` · ${s.itemsFound} items` : ""}</div>
       <div style={{ marginTop: 18, height: 6, borderRadius: 3, background: "#F1EDE8", overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: "var(--ink)", borderRadius: 3, transition: "width .2s" }} />
       </div>
 
+      {s.stage === "done" && !s.orders && <p className="lead" style={{ marginTop: 14 }}>We didn&apos;t find store orders in your inbox. Use your shopping email at checkout and new orders will show up here.</p>}
       {s.latest.length > 0 && <div className="serif" style={{ marginTop: 24, fontSize: 22 }}>Just found</div>}
       <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
         {s.latest.map(o => {

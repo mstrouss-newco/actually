@@ -32,7 +32,7 @@ export default function Welcome() {
         Connect Gmail and every order becomes your closet. Plus returns, points, resale and friends&apos; finds, handled.
       </p>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 22 }}>
+      <div className="mailflow" style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 22 }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
           {MAILS.map(([b, t]) => (
             <div key={b} className="mail"><b style={{ color: "var(--ink)" }}>{b}</b><br />{t}</div>
