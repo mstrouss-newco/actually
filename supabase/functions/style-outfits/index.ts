@@ -31,6 +31,11 @@ Deno.serve(async req => {
   if (!auth.user) return json({ error: "signed out" }, 401);
   if (!Deno.env.get("ANTHROPIC_API_KEY")) return json({ error: "ai not set up" }, 503);
 
+  // Up to 40 styling runs a day per person, so one person can't use up the shared AI budget.
+  const since = new Date(Date.now() - 86400_000).toISOString();
+  const { count } = await admin.from("ai_runs").select("id", { count: "exact", head: true }).eq("user_id", auth.user.id).eq("kind", "style").gte("created_at", since);
+  if ((count ?? 0) >= 40) return json({ error: "limit" }, 429);
+
   const body = await req.json().catch(() => ({}));
   const ids: string[] = Array.isArray(body.ids) ? body.ids.filter((x: unknown) => typeof x === "string").slice(0, 160) : [];
   const occasion = typeof body.occasion === "string" ? body.occasion.slice(0, 30) : "";
@@ -51,6 +56,7 @@ Deno.serve(async req => {
     "", "Her closet:", list,
   ].join("\n");
 
+  await admin.from("ai_runs").insert({ user_id: auth.user.id, kind: "style" });
   let out: z.infer<typeof Result> | null = null;
   try {
     const res = await anthropic.messages.parse({

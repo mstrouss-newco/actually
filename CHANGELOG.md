@@ -7,6 +7,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-16
 
+- Styling and sharing QA fixes: a share link is made only when she taps "Make a link", looks and pieces show "Link on", and "Turn off this link" works right away (no caching of shared pages; story pictures cached 1 minute). Shared pages show only her first name and aren't listed by search engines. Styling has a daily cap (40 runs per person, `ai_runs`), always includes the piece being styled, has Try again, and keeps shoes on the board. Share to Instagram waits for the picture. Fixed a page redraw on public pages and the shop tag showing through the share sheet.
+
 - AI styling: "Style me from my closet" in Closet > Outfits (pick an occasion, get 3 looks, save, tweak or see 3 more) and "Style this piece" on any piece (3 ways to wear it). New `style-outfits` function (Haiku; sees only type, brand, name, color). Looks are laid out on boards by `autoLayout()` in `lib/style.tsx`.
 - Share links and Instagram: Share on a look or a piece makes a public link (`/l/[id]`, `/p/[id]`; `link_shared` on outfits and items; `public_look` / `public_piece`) with link previews, and a story picture in 3 styles (`/api/story/[kind]/[id]`) that opens the share sheet for Instagram with the link copied for a sticker. "Turn off this link" undoes it. Never prices or sizes. Privacy draft updated.
 - Closet tabs (Pieces, Brands, Outfits) now follow the address, so coming back from a look or a brand always lands on the right tab and hopping between them works.

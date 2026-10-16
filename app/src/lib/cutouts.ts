@@ -31,6 +31,10 @@ export function markCut(id: string, has: boolean) {
 // "yes": show the cut-out. "try": not known yet, try it and fall back. "no": show the photo.
 export function useCutout(id?: string | null): ["yes" | "try" | "no", (has: boolean) => void] {
   const [, redraw] = useState(0);
+  // Wait until the page is on screen before reading what this device knows, so the first draw
+  // matches the server's (the photo), then switch to the cut-out.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   useEffect(() => {
     if (!id) return;
     const f = (e: Event) => { if ((e as CustomEvent).detail === id) redraw(n => n + 1); };
@@ -40,7 +44,7 @@ export function useCutout(id?: string | null): ["yes" | "try" | "no", (has: bool
     if (s.no.has(id) && !s.tried.has(id)) ensureCutouts([id]);
     return () => removeEventListener("cutout", f);
   }, [id]);
-  if (!id || typeof window === "undefined") return ["no", () => {}];
+  if (!id || !mounted) return ["no", () => {}];
   const s = sets();
   return [s.ok.has(id) ? "yes" : s.no.has(id) ? "no" : "try", (has: boolean) => markCut(id, has)];
 }

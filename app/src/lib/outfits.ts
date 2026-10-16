@@ -4,14 +4,14 @@ import { supabase } from "./supabase";
 // lays out the same on any screen. r is a small tilt in degrees.
 export type Placed = { id: string; x: number; y: number; w: number; r?: number; cut?: boolean };
 export type PieceLite = { id: string; brand: string | null; store: string; name: string; image_url: string | null; category: string; product_url?: string | null; store_site?: string | null };
-export type Outfit = { id: string; name: string; occasion: string | null; note: string | null; layout: Placed[]; shared: boolean; shared_at: string | null; worn: number; last_worn: string | null; updated_at: string };
+export type Outfit = { id: string; name: string; occasion: string | null; note: string | null; layout: Placed[]; shared: boolean; link_shared?: boolean; shared_at: string | null; worn: number; last_worn: string | null; updated_at: string };
 // A look someone shared: only their own pieces, photo, brand, name and store link.
 export type SharedOutfit = { id: string; name: string; occasion: string | null; note: string | null; layout: Placed[]; shared_at: string | null; pieces: PieceLite[]; handle?: string };
 
 export const OCCASIONS = ["Weekend", "Work", "Dinner", "Travel", "Event"];
 export const BOARD_H = 1.1; // board height as a share of its width
 
-const COLS = "id, name, occasion, note, layout, shared, shared_at, worn, last_worn, updated_at";
+const COLS = "id, name, occasion, note, layout, shared, shared_at, link_shared, worn, last_worn, updated_at";
 
 export async function loadOutfits(): Promise<Outfit[]> {
   const { data } = await supabase().from("outfits").select(COLS).order("updated_at", { ascending: false }).limit(200);

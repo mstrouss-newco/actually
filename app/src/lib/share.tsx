@@ -17,22 +17,32 @@ export async function setLinkShared(kind: Kind, id: string, on: boolean) {
 
 const IG = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" /></svg>;
 
-export function ShareSheet({ kind, id, title, onClose }: { kind: Kind; id: string; title: string; onClose: () => void }) {
-  const [ready, setReady] = useState(false);
+export function ShareSheet({ kind, id, title, on = false, onChange, onClose }: { kind: Kind; id: string; title: string; on?: boolean; onChange?: (on: boolean) => void; onClose: () => void }) {
+  const [ready, setReady] = useState(on);
   const [failed, setFailed] = useState(false);
+  const [making, setMaking] = useState(false);
+  const [hasPic, setHasPic] = useState(false);
+  const [stamp, setStamp] = useState(() => Date.now());
   const [tpl, setTpl] = useState<Tpl>("blush");
   const [note, setNote] = useState("");
   const blob = useRef<Blob | null>(null);
   const url = typeof window === "undefined" ? "" : shareUrl(kind, id);
-  const img = `/api/story/${kind}/${id}?t=${tpl}`;
-
-  useEffect(() => { setLinkShared(kind, id, true).then(ok => (ok ? setReady(true) : setFailed(true))); }, [kind, id]);
+  const img = `/api/story/${kind}/${id}?t=${tpl}&v=${stamp}`;
+  // Nothing is public until she taps "Make a link".
+  const make = async () => {
+    setMaking(true);
+    const ok = await setLinkShared(kind, id, true);
+    setMaking(false);
+    if (!ok) { setFailed(true); return; }
+    setStamp(Date.now()); setReady(true); onChange?.(true);
+  };
   // Have the picture ready before she taps, so the share sheet opens straight away.
   useEffect(() => {
     if (!ready) return;
     blob.current = null;
+    setHasPic(false);
     let live = true;
-    fetch(img).then(r => (r.ok ? r.blob() : null)).then(b => { if (live) blob.current = b; }).catch(() => null);
+    fetch(img).then(r => (r.ok ? r.blob() : null)).then(b => { if (live) { blob.current = b; setHasPic(!!b); } }).catch(() => null);
     return () => { live = false; };
   }, [ready, img]);
 
@@ -53,16 +63,22 @@ export function ShareSheet({ kind, id, title, onClose }: { kind: Kind; id: strin
     if (navigator.share) { try { await navigator.share({ title, url }); return; } catch { return; } }
     copy(); flash("Link copied.");
   };
-  const stop = async () => { await setLinkShared(kind, id, false); onClose(); };
+  const stop = async () => { await setLinkShared(kind, id, false); onChange?.(false); onClose(); };
 
   const btn = { height: 50, borderRadius: 999, border: 0, font: "700 15px var(--font-sans), sans-serif", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 } as const;
   return (
-    <div onClick={onClose} style={{ position: "absolute", inset: 0, zIndex: 30, background: "rgba(20,18,16,.35)", display: "flex", alignItems: "flex-end" }}>
+    <div onClick={onClose} style={{ position: "absolute", inset: 0, zIndex: 120, background: "rgba(20,18,16,.35)", display: "flex", alignItems: "flex-end" }}>
       <div onClick={e => e.stopPropagation()} className="popIn" style={{ width: "100%", maxHeight: "94%", overflowY: "auto", background: "#FAF8F6", borderRadius: "30px 30px 0 0", padding: "14px 20px calc(24px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", alignItems: "center" }}>
         <div style={{ width: 40, height: 5, borderRadius: 3, background: "#E2DDD7", marginBottom: 12 }} />
         <div style={{ alignSelf: "flex-start", fontWeight: 700, fontSize: 16 }}>Share {kind === "look" ? "this look" : "this piece"}</div>
         {failed && <div style={{ marginTop: 20, fontSize: 14, color: "var(--muted)" }}>Couldn&apos;t make a link just now. Try again in a moment.</div>}
-        {!failed && (
+        {!failed && !ready && (
+          <>
+            <p style={{ alignSelf: "stretch", fontSize: 14.5, color: "var(--soft)", lineHeight: 1.45, margin: "12px 0 0" }}>Make a link anyone can open, even without the app. They&apos;ll see the photo, brand, name and your note, and can tap through to the store. Never prices or sizes. You can turn it off any time.</p>
+            <button type="button" disabled={making} onClick={make} className="press" style={{ ...btn, width: "100%", marginTop: 16, background: "var(--ink)", color: "#fff" }}>{making ? "Making your link" : "Make a link"}</button>
+          </>
+        )}
+        {!failed && ready && (
           <>
             <div style={{ marginTop: 14, width: 190, aspectRatio: "9 / 16", borderRadius: 16, overflow: "hidden", background: "#F3F0EB", boxShadow: "0 16px 32px rgba(20,18,16,.14)" }} className={ready ? "" : "shimmer"}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -75,12 +91,12 @@ export function ShareSheet({ kind, id, title, onClose }: { kind: Kind; id: strin
                 </button>
               ))}
             </div>
-            <button type="button" disabled={!ready} onClick={toStory} className="press" style={{ ...btn, width: "100%", marginTop: 16, background: "var(--ink)", color: "#fff" }}>{IG}Share to Instagram</button>
+            <button type="button" disabled={!hasPic} onClick={toStory} className="press" style={{ ...btn, width: "100%", marginTop: 16, background: "var(--ink)", color: "#fff" }}>{IG}{hasPic ? "Share to Instagram" : "Getting your picture ready"}</button>
             <div style={{ display: "flex", gap: 8, width: "100%", marginTop: 8 }}>
               <button type="button" disabled={!ready} onClick={sendLink} style={{ ...btn, flex: 1, height: 44, fontSize: 14, background: "#fff", color: "var(--ink)", border: "1.5px solid var(--line)" }}>Send link</button>
               <button type="button" disabled={!ready} onClick={save} style={{ ...btn, flex: 1, height: 44, fontSize: 14, background: "#fff", color: "var(--ink)", border: "1.5px solid var(--line)" }}>Save picture</button>
             </div>
-            <div role="status" style={{ minHeight: 18, fontSize: 12.5, color: "var(--soft)", marginTop: 10, textAlign: "center" }}>{note || "Anyone with the link can see it. Never prices or sizes."}</div>
+            <div role="status" style={{ minHeight: 18, fontSize: 12.5, color: "var(--soft)", marginTop: 10, textAlign: "center" }}>{note || "Your link is on. Anyone with it can see this. Never prices or sizes."}</div>
             {ready && <button type="button" onClick={stop} style={{ marginTop: 6, border: 0, background: "none", font: "700 13px var(--font-sans), sans-serif", color: "var(--muted)", cursor: "pointer" }}>Turn off this link</button>}
           </>
         )}
