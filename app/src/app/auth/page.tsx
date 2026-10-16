@@ -26,7 +26,12 @@ export default function Auth() {
       await saveGmailRefresh();
       // Already has an account: use its shopping email and go straight in.
       // Never let a name left on this device from an earlier sign-up replace it.
-      const { data: had } = await sb.from("profiles").select("handle").eq("id", data.session.user.id).maybeSingle();
+      const uid = data.session.user.id;
+      let look = await sb.from("profiles").select("handle").eq("id", uid).maybeSingle();
+      if (look.error) look = await sb.from("profiles").select("handle").eq("id", uid).maybeSingle();
+      // Couldn't check: never treat her as new (that would rename her). Carry on as she is.
+      if (look.error) { router.replace(next); return; }
+      const had = look.data;
       if (had?.handle) {
         saveProfile({ handle: had.handle });
         router.replace(next);
@@ -34,6 +39,7 @@ export default function Auth() {
       }
       // New here: name her from Google. No extra sign-up step.
       await autoHandle();
+      try { localStorage.setItem("new-account", uid); } catch {}
       router.replace(next);
     })();
   }, [router]);

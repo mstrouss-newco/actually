@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-16
 
+- Blind QA fixes for the new sign-up: name card shows only right after a new account is made (per account); a failed save is no longer treated as success; a failed account lookup never renames someone; accounts always get a row even without a name; accented names keep their letters (José → jose); error reports strip quoted text and links; alert email subject is fixed text; Gmail taps count in the funnel only from the welcome screen.
+
 - Sign-up is now Gmail first: the welcome screen has "Continue with Gmail", her name comes from Google (change it on the import screen), and the name and goal steps are gone. Shopping email moved to a card on Today. Welcome cards now show a return, a friend's love and a resale value.
 - Error alerts: app errors go to a new `app_errors` table through the `report-error` function, which emails owners at most once an hour. Errors list on the owner dashboard. A crash screen offers Try again. Privacy draft mentions error reports.
 
