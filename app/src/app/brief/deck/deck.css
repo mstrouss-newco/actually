@@ -149,7 +149,7 @@
 
 /* Tech stack */
 .st-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 30px; }
-.st-card { display: flex; flex-direction: column; gap: 14px; background: #fff; border: 1px solid #ECE7E1; border-radius: 22px; padding: 20px; box-shadow: 0 10px 24px rgba(20,18,16,.05); animation: ldPop 9s cubic-bezier(.2,.9,.25,1.3) 1 both; }
+.st-card { display: flex; flex-direction: column; gap: 14px; background: #fff; border: 1px solid #ECE7E1; border-radius: 22px; padding: 20px; box-shadow: 0 10px 24px rgba(20,18,16,.05); animation: gtPop .6s ease both; }
 .st-card img { width: 44px; height: 44px; border-radius: 10px; }
 .st-card b { display: block; font-size: 17px; }
 .st-card span { display: block; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #8A837C; margin-top: 3px; }
