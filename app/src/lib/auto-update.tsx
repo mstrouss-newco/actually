@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { track } from "./track";
 
 // When a newer version of the app is live, quietly reload into it: when she comes back to the app,
 // or on a timer while it's open (never while she's typing).
@@ -8,6 +9,7 @@ const MINE = process.env.NEXT_PUBLIC_BUILD_ID ?? "";
 
 export function AutoUpdate() {
   useEffect(() => {
+    track("app_open");
     if (!MINE) return;
     let busy = false;
     const typing = () => { const a = document.activeElement; return !!a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT"); };

@@ -2,6 +2,10 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-16
+
+- Owner dashboard at /admin (link in Settings, owners only): users, sign-up funnel, feed activity, last 8 weeks, AI cost estimate, expenses you can add, revenue (waiting on Wildfire), people search with delete, and an owner log. New tables `admins`, `events` (sign-up step names only), `expenses`, `admin_log`; functions `is_admin`, `admin_stats`, `admin_users`; edge function `admin-delete`. Vercel Analytics added for traffic.
+
 ## 2026-10-15
 
 - Blind QA fixes: a shared piece is shared on one copy only (no doubles on friends' feeds); store-site search only for well-known stores with an exact name match (no way to point a friend's tap elsewhere); shared looks no longer carry ids of kids', partner's, hidden or returned pieces; deleting data or an account also deletes her cut-out photos; Today's top card grows to fit instead of spilling; the outfit toolbar fits on one row (✕ on the piece removes it); the app won't auto-reload while she's building an outfit or sorting.

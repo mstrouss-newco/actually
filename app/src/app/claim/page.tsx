@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/track";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Back, Check } from "@/lib/ui";
@@ -48,6 +49,7 @@ export default function Claim() {
       setBusy(false);
       if (res === "taken") return setFree(f => ({ ...f, [name]: false }));
     }
+    track("claimed");
     router.push("/goal");
   };
 

@@ -1,3 +1,4 @@
+import { Track } from "@/lib/track";
 import Link from "next/link";
 import { Art } from "@/lib/ui";
 import { SkipIfSignedIn } from "@/lib/signed-in";
@@ -24,6 +25,7 @@ export default function Welcome() {
   return (
     <main className="screen">
       <SkipIfSignedIn />
+      <Track name="welcome" />
       <div className="logo">Actually</div>
       <h1 className="h1" style={{ marginTop: 26 }}>Your order emails, <em>sorted out.</em></h1>
       <p className="lead" style={{ marginTop: 14, color: "var(--soft)" }}>

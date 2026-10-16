@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/track";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Art, Back } from "@/lib/ui";
@@ -13,7 +14,7 @@ const OPTS: { k: Goal; t: string; s: string; img: string; tint: string }[] = [
 
 export default function GoalPage() {
   const [on, setOn] = useState<Record<Goal, boolean>>({ org: true, earn: false, share: false });
-  useEffect(() => setOn(loadProfile().goals), []);
+  useEffect(() => { setOn(loadProfile().goals); track("goal"); }, []);
 
   const pick = (k: Goal) => {
     const next = { ...on, [k]: !on[k] };
