@@ -56,6 +56,15 @@ const STACK: [string, string, string, string][] = [
   ["wildfire-corp.com", "Wildfire", "Cash back partner", "Pays store fees on purchases (in talks)"],
 ];
 
+const ADS: [string, string, string, string, boolean][] = [
+  ["Taste profile and matchmaker", "Jul", "n/a", "$3.05 to $3.58", false],
+  ["Earn (cash back, resale)", "Sep", "165", "$3.49", true],
+  ["Organizer (orders, returns)", "Sep", "256", "$6.70", true],
+  ["Taste Match", "Sep", "71", "$7.70", false],
+  ["Checker", "Sep", "39", "$14.65", false],
+  ["Private Sharer", "Sep", "31", "$18.15", false],
+];
+
 const MONEY: [string, string, string, string, string, string][] = [
   ["Shopping links", "Store pays a fee when she buys through us; we share some as cash back", "$5 to $15", "30 to 50%", "$2 to $7", "Launch"],
   ["Friends' purchases", "A friend buys what she shared; we split the fee with her", "$1 to $5", "25 to 40%", "$0.25 to $2", "5,000 users"],
@@ -148,6 +157,25 @@ export default async function Deck() {
         <p className="dk-small">Per user, per year. Ad tests cost $3 to $7 per sign-up. Watch-outs: Amazon pays low fees, and links only pay if she buys through us, which we still need to prove.</p>
       </Slide>
 
+      <Slide kick="Ad tests and what a user costs" title={<>Earning beat every <em>September test.</em></>} line="Small paid tests from July to September. None were optimized, so these are benchmarks to beat, not a ceiling.">
+        <div className="ua-wrap">
+          <div className="dk-tw"><table className="dk-t ua-t">
+            <thead><tr><th>Test</th><th>When</th><th>Sign-ups</th><th>Cost per sign-up</th></tr></thead>
+            <tbody>
+              {ADS.map(([t, w, n, c, hi]) => <tr key={t} className={hi ? "ua-hi" : ""}><td>{hi ? <b>{t}</b> : t}</td><td>{w}</td><td>{n}</td><td>{hi ? <b>{c}</b> : c}</td></tr>)}
+            </tbody>
+          </table></div>
+          <div className="ua-math">
+            <div className="ld-kick">What an active user costs</div>
+            <p className="ua-note">If 1 in 2 sign-ups connects Gmail (our guess until testing tells us):</p>
+            <div className="ua-row"><span>Earner</span><b>about $7</b><em>pays back in 3 to 11 months</em></div>
+            <div className="ua-row"><span>Organizer</span><b>about $13</b><em>pays back in 6 to 20 months</em></div>
+            <div className="ua-row ua-free"><span>Chirp users</span><b>almost $0</b><em>already acquired</em></div>
+            <p className="ua-note">Payback uses $8 to $28 net per user a year.</p>
+          </div>
+        </div>
+      </Slide>
+
       <Slide kick="Go to market" tone="soft" title={<>Two customers. <em>Two messages.</em></>} line="We test both, then put the money behind whichever keeps more people.">
         <div className="gt-icps">
           <div className="gt-icp gt-org">
@@ -167,7 +195,7 @@ export default async function Deck() {
               <div className="gt-big">$<span className="ld-cnt" style={{ ["--to" as string]: 124 }} /></div>
               <div className="gt-chips"><span>$20 Sephora points</span><span>$38 cash back</span><span>$66 resale</span></div>
             </div>
-            <div className="gt-meta"><div><span>Why it lands</span>Ads about earning brought our cheapest sign-ups</div><div><span>Where we test it</span>50,000 Chirp users we&apos;ve already acquired, who signed up to make money</div></div>
+            <div className="gt-meta"><div><span>Why it lands</span>Earning ads were our cheapest September test ($3.49 a sign-up)</div><div><span>Where we test it</span>50,000 Chirp users we&apos;ve already acquired, who signed up to make money</div></div>
           </div>
         </div>
         <div className="gt-steps">
@@ -197,7 +225,7 @@ export default async function Deck() {
 
       <Slide kick="What we need" tone="dark" title="A green light to test">
         <div className="dk-grid dk-two">
-          <div className="dk-box"><b>From ownership</b><p>A green light for employee testing. If testing goes well: $500 for actually.shop and $1,000 to $5,000 for Google&apos;s security review.</p></div>
+          <div className="dk-box"><b>From ownership</b><p>A green light for employee testing, and agreement to test the earning message on our 50,000 Chirp users. If testing goes well: $500 for actually.shop and $1,000 to $5,000 for Google&apos;s security review.</p></div>
           <div className="dk-box"><b>From the tech team</b><p>About an hour a week to look over what ships, an owner for the security review, and a view on when we need an App Store app.</p></div>
         </div>
       </Slide>

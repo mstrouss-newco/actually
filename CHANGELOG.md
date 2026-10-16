@@ -2,6 +2,10 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-16: Deck ad tests slide
+
+- New slide with the July to September paid test results (benchmarks, not optimized) and what an active user costs: Earner about $7, Organizer about $13, Chirp users almost $0, with payback months. Ownership ask now includes testing the earning message on Chirp users.
+
 ## 2026-10-16: Deck tech stack slide
 
 - Tech stack moved up to its own slide (after Discover) with each product's real logo: Next.js, Vercel, Supabase, Claude, Gmail, Resend, GitHub, Wildfire. The appendix keeps how it's built and privacy.
