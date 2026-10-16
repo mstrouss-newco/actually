@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { HomeScreenTip } from "@/lib/home-tip";
+import { type BrandFollow, brandsAsked, loadFollows } from "@/lib/brands";
+import { useRouter } from "next/navigation";
 import { type OrderGroup, SOON, cleanupOnce, dayLabel, etaText, isArriving, loadOrders, orderTitle, refreshArriving, returnBy, returnDaysLeft, ruleText, shortTitle, fmtDate, trackStep, justArrived, paid, usd, isReturn } from "@/lib/orders";
 import { gmailToken } from "@/lib/supabase";
 import { loadProfile } from "@/lib/profile";
 import { type Reward, daysUntil, fmtDay, loadRewards, money, programName } from "@/lib/earn";
-import { type Item, loadItems, monthPieces, whoFor } from "@/lib/items";
-import { ItemImage, StoreTile, TabBar } from "@/lib/tabs";
+import { type Item, brandOf, loadItems, monthPieces, whoFor } from "@/lib/items";
+import { ItemImage, StoreTile, TabBar, tint } from "@/lib/tabs";
 import { TrackBar, delay } from "@/lib/motion";
 
 type Slide = { key: string; href: string; bg: string; kc: string; kicker: string; title: string; sub: string; img: React.ReactNode; badge: React.ReactNode };
@@ -22,13 +24,21 @@ export default function Today() {
   const [at, setAt] = useState(0);
   const [paused, setPaused] = useState(false);
   const startX = useRef<number | null>(null);
+  const router = useRouter();
+  const [follows, setFollows] = useState<BrandFollow[]>([]);
   useEffect(() => {
     setName(loadProfile().handle);
     loadOrders().then(async list => {
       setOrders(list);
       if (!list) return;
       loadRewards().then(setRewards);
-      loadItems().then(setItems);
+      loadItems().then(async all => {
+        setItems(all);
+        const [asked, f] = await Promise.all([brandsAsked(), loadFollows()]);
+        setFollows(f);
+        // Once her closet has pieces, ask her which brands she loves (one time only).
+        if (!asked && all.some(i => whoFor(i, all) === "me")) router.push("/follow");
+      });
       // Look up delivery dates for orders on the way that don't have one yet.
       if (list.some(g => isArriving(g) && !g.eta)) {
         const token = await gmailToken().catch(() => null);
@@ -37,7 +47,7 @@ export default function Today() {
     });
     // First visit after sign-in: tidy up anything that isn't a real shopping order.
     cleanupOnce().then(changed => { if (changed) loadOrders().then(setOrders); });
-  }, []);
+  }, [router]);
 
   const all = orders ?? [];
   const arriving = all.filter(isArriving);
@@ -218,6 +228,25 @@ export default function Today() {
                   <div style={{ fontSize: 12, color: "var(--muted)" }}>{i.brand || i.store} · {fmtDate(i.ordered_at)}</div>
                 </Link>
               ))}
+            </div>
+          </>
+        )}
+
+        {follows.length > 0 && (
+          <>
+            <div className="section"><div>Brands you follow</div><Link href="/settings#brands">Edit</Link></div>
+            <div className="rail">
+              {follows.map((f, k) => {
+                const mine = (items ?? []).filter(i => brandOf(i) === f.brand);
+                const pic = mine.find(i => i.image_url) ?? mine[0];
+                return (
+                  <Link key={f.brand} href={`/brand/${encodeURIComponent(f.brand)}`} className="lift up" style={{ ...delay(k, 60), width: 132, flex: "none", textDecoration: "none", background: tint(f.brand), borderRadius: 20, padding: 8 }}>
+                    {pic ? <ItemImage src={pic.image_url} store={pic.store} name={pic.name} w={116} h={120} radius={14} /> : <div style={{ height: 120 }} />}
+                    <div style={{ fontWeight: 700, fontSize: 14, marginTop: 8, padding: "0 4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.brand}</div>
+                    <div style={{ fontSize: 12, color: "var(--soft)", padding: "0 4px" }}>{mine.length} {mine.length === 1 ? "piece" : "pieces"}</div>
+                  </Link>
+                );
+              })}
             </div>
           </>
         )}

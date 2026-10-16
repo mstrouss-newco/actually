@@ -6,6 +6,75 @@ import { CATS, type Item, brandOf, loadItems, shortSize, sizesByBrand, whoFor } 
 import { type OrderGroup, boughtInStore, dayLabel, fmtDate, isArriving, isReturn, loadOrders, orderTitle, returnBy, returnDaysLeft, ruleText, windowDays } from "@/lib/orders";
 import { ItemImage, StoreTile, TabBar, tint } from "@/lib/tabs";
 import { delay } from "@/lib/motion";
+import { type BrandFollow, brandSuggestions, followBrands, loadFollows, setFollowPrefs, unfollowBrand } from "@/lib/brands";
+
+const PREFS: [keyof Omit<BrandFollow, "brand">, string, string][] = [
+  ["sales", "Sales", "When they mark things down"],
+  ["arrivals", "New arrivals", "New pieces in your size"],
+  ["drops", "Price drops on my pieces", "So you can ask for the difference"],
+];
+
+// Follow / Following, what she wants to hear about, and brands their fans also follow.
+function FollowBlock({ name }: { name: string }) {
+  const [f, setF] = useState<BrandFollow | null | undefined>(undefined);
+  const [also, setAlso] = useState<{ brand: string; share: number }[]>([]);
+  const [added, setAdded] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    loadFollows().then(list => setF(list.find(x => x.brand === name) ?? null));
+    brandSuggestions(name).then(setAlso);
+  }, [name]);
+  if (f === undefined) return null;
+  const toggleFollow = async () => {
+    if (f) { setF(null); await unfollowBrand(name); }
+    else { setF({ brand: name, sales: true, arrivals: true, drops: true }); await followBrands([name]); }
+  };
+  const flip = async (k: keyof Omit<BrandFollow, "brand">) => {
+    if (!f) return;
+    const next = { ...f, [k]: !f[k] };
+    setF(next);
+    await setFollowPrefs(name, { [k]: next[k] });
+  };
+  return (
+    <>
+      <div style={{ padding: "16px 20px 0" }}>
+        <button type="button" onClick={toggleFollow} className="press" style={{ height: 42, padding: "0 20px", borderRadius: 999, border: "1.5px solid var(--ink)", background: f ? "#fff" : "var(--ink)", color: f ? "var(--ink)" : "#fff", font: "700 14px var(--font-sans), sans-serif", cursor: "pointer" }}>
+          {f ? "✓ Following" : "Follow"}
+        </button>
+      </div>
+      {f && (
+        <div className="up" style={{ padding: "16px 20px 0" }}>
+          <div className="serif" style={{ fontSize: 20 }}>Tell me about</div>
+          <div style={{ marginTop: 6 }}>
+            {PREFS.map(([k, label, sub]) => (
+              <div key={k} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderTop: "1px solid var(--line)" }}>
+                <div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: 14 }}>{label}</div><div style={{ fontSize: 12, color: "var(--muted)" }}>{sub}</div></div>
+                <button type="button" role="switch" aria-checked={f[k]} aria-label={label} onClick={() => flip(k)} style={{ width: 46, height: 28, borderRadius: 999, border: 0, background: f[k] ? "var(--ink)" : "#E2DDD7", position: "relative", cursor: "pointer", flex: "none" }}>
+                  <span style={{ position: "absolute", top: 3, left: f[k] ? 21 : 3, width: 22, height: 22, borderRadius: "50%", background: "#fff", transition: "left .2s" }} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {also.length > 0 && (
+        <div style={{ padding: "18px 20px 0" }}>
+          <div className="serif" style={{ fontSize: 20 }}>You might also like</div>
+          {also.map(a => (
+            <div key={a.brand} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0" }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>{a.brand}</div>
+                <div style={{ fontSize: 12, color: "var(--muted)" }}>Followed by {Math.round(a.share * 100)}% of {name} fans</div>
+              </div>
+              <button type="button" disabled={added.has(a.brand)} onClick={async () => { setAdded(s => new Set(s).add(a.brand)); await followBrands([a.brand]); }} style={{ height: 34, padding: "0 14px", borderRadius: 999, border: "1.5px solid var(--ink)", background: added.has(a.brand) ? "var(--ink)" : "#fff", color: added.has(a.brand) ? "#fff" : "var(--ink)", font: "700 13px var(--font-sans), sans-serif", cursor: "pointer" }}>
+                {added.has(a.brand) ? "✓ Following" : "Follow"}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
 
 const month = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", year: "numeric" });
 
@@ -91,6 +160,8 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
             <div style={{ padding: "16px 20px 0", fontSize: 13, color: "var(--muted)", textAlign: "center" }}>Your usual size here, from what you bought</div>
           </>
         )}
+
+        <FollowBlock name={name} />
 
         {open.length > 0 && (
           <>
