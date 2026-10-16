@@ -5,6 +5,7 @@ import { zodOutputFormat } from "npm:@anthropic-ai/sdk@0.133.0/helpers/zod";
 import { z } from "npm:zod@4.6.7";
 import { createClient } from "npm:@supabase/supabase-js@2.117.3";
 
+const WEAR_CATS = new Set(["tops", "bottoms", "dresses", "outerwear", "shoes", "bags", "accessories"]);
 const CATEGORIES = ["tops", "bottoms", "dresses", "outerwear", "shoes", "bags", "accessories", "beauty", "home", "other"] as const;
 
 const Result = z.object({
@@ -17,6 +18,7 @@ const Result = z.object({
     price: z.number().nullable().describe("Price paid for one unit, in dollars."),
     quantity: z.number().int(),
     image_url: z.string().nullable().describe("The product photo URL from the email that sits with this item. Each color usually has its own photo next to it; use that one. Never a logo, banner, tracking pixel or another item's photo."),
+    product_url: z.string().nullable().describe("The link to this product's page on the store's site, from the 'link:' part of its photo. Null if none."),
     category: z.enum(CATEGORIES),
   })),
   return_days: z.number().int().nullable().describe("How many days the shopper has to return items, exactly as this email states. Null if it doesn't say."),
@@ -68,6 +70,40 @@ const Photos = z.object({
     image_url: z.string().nullable().describe("The product photo URL from the email that shows this exact piece in this color. Null if none clearly does. Never a logo, banner or another color's photo."),
   })),
 });
+
+// Matches product page links to pieces.
+const Links = z.object({
+  links: z.array(z.object({
+    n: z.number().int().describe("The number of the piece in the list."),
+    url: z.string().nullable().describe("The 'link:' URL from the photo of this exact piece. Null if no photo clearly shows it."),
+  })),
+});
+
+// Follows a store's tracking redirect to the real product page, then drops anything personal after the "?".
+const TRACK = /(click|track|links?|email|mail|e\.|sendgrid|klaviyo|braze|bnc|ct\.|r\.)/i;
+async function productPage(url: string | null | undefined, text: string): Promise<string | null> {
+  const u = url?.trim() ?? "";
+  if (!u.startsWith("https://") || !text.includes(u)) return null;
+  let end = u;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 6000);
+    const res = await fetch(u, { redirect: "follow", signal: ctrl.signal, headers: { "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1" } });
+    clearTimeout(t);
+    end = res.url || u;
+    res.body?.cancel().catch(() => null);
+  } catch { /* keep the link as written */ }
+  try {
+    const x = new URL(end);
+    if (x.protocol !== "https:" || x.pathname.length < 4) return null;
+    if (TRACK.test(x.hostname.split(".")[0]) || /\/(unsubscribe|account|orders?|login|signin|track\w*|preferences|cart)(\/|$)/i.test(x.pathname)) return null;
+    // Amazon: keep just the product id.
+    const asin = x.hostname.includes("amazon.") ? x.pathname.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})/) : null;
+    if (asin) return `https://www.amazon.com/dp/${asin[1]}`;
+    if (x.hostname.includes("amazon.")) return null;
+    return `${x.origin}${x.pathname}`.slice(0, 600);
+  } catch { return null; }
+}
 
 const SYSTEM = `You read online shopping emails and list the products that were bought.
 Rules:
@@ -156,6 +192,28 @@ Deno.serve(async req => {
     return json({ returned: hit.length });
   }
 
+  // Each piece's page on the store's site, for pieces that have none.
+  if (mode === "links") {
+    if (!Array.isArray(item_ids) || !item_ids.length) return json({ error: "bad request" }, 400);
+    const { data: row } = await admin.from("orders").select("store").eq("user_id", auth.user.id).eq("gmail_id", gmail_id).maybeSingle();
+    if (!row) return json({ error: "unknown email" }, 404);
+    const { data: need } = await admin.from("items").select("id, name, brand, color").eq("user_id", auth.user.id)
+      .in("id", item_ids.slice(0, 40).map(String)).is("product_url", null);
+    if (!need?.length) return json({ linked: 0 });
+    const list = need.map((i, n) => `${n + 1}. ${i.brand ?? ""} ${i.name}${i.color ? `, color ${i.color}` : ""}`).join("\n");
+    let r: z.infer<typeof Links> | null = null;
+    try { r = await ask(Links, "You match product page links in a shopping email to the pieces listed. Photos appear as [image: alt | photo url | link: page url]. Only pick the link from a photo that clearly shows that exact piece.", `Pieces:\n${list}\n\nEmail:\n${text.slice(0, 40000)}`); } catch { return json({ error: "ai failed" }, 502); }
+    let linked = 0;
+    for (const p of r?.links ?? []) {
+      const it = need[p.n - 1];
+      const url = it ? await productPage(p.url, text) : null;
+      if (!it || !url) continue;
+      await admin.from("items").update({ product_url: url }).eq("id", it.id).eq("user_id", auth.user.id);
+      linked++;
+    }
+    return json({ linked });
+  }
+
   // Photos for her pieces that have none. The email must be one of hers.
   if (mode === "photos") {
     if (!Array.isArray(item_ids) || !item_ids.length) return json({ error: "bad request" }, 400);
@@ -202,11 +260,14 @@ Deno.serve(async req => {
     return json({ error: "ai failed" }, status);
   }
 
-  const items = (parsed?.is_order ? parsed.items : []).slice(0, 40).map(i => ({
+  const got = (parsed?.is_order ? parsed.items : []).slice(0, 40);
+  const pages = await Promise.all(got.map(i => WEAR_CATS.has(i.category) ? productPage(i.product_url, text) : null));
+  const items = got.map((i, n) => ({
     user_id: auth.user!.id, gmail_id, store: order.store, ordered_at: order.sent_at,
     name: i.name.slice(0, 200), brand: i.brand?.slice(0, 100) ?? null, size: i.size?.slice(0, 40) ?? null,
     color: i.color?.slice(0, 60) ?? null, price: i.price, quantity: Math.max(1, i.quantity || 1),
     image_url: i.image_url?.startsWith("https://") ? i.image_url.slice(0, 1000) : null, category: i.category,
+    ...(pages[n] ? { product_url: pages[n] } : {}),
   }));
   if (items.length) await admin.from("items").upsert(items, { onConflict: "user_id,gmail_id,name,size,color", ignoreDuplicates: true });
   const days = parsed?.final_sale ? 0 : parsed?.return_days != null && parsed.return_days > 0 && parsed.return_days <= 400 ? parsed.return_days : null;

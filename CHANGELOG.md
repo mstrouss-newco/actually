@@ -4,6 +4,9 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Pieces now link to their real page on the store's site (found from the order email, tracking stripped). Feed taps and a new "See it on ..." button in the closet use it; a shopping search is the fallback. Older pieces get links on the next import.
+- The app no longer slides sideways, bounces or zooms like a web page on iPhone.
+
 - Feed by type: Friends and My feed have plain type tabs (All, Tops, Bottoms, Shoes, Bags, Accessories, Skincare; only types that have pieces). Picking a type on Friends shows a two-column grid with who shared each piece. My feed is calmer: one profile line with Share, a quiet "N new pieces · Sort" row, and a small order button (Newest, Brand, Type).
 
 - Returns leave the closet: each return and refund email is read once (`read-order` mode "returns", `readReturns()` in the import) to learn which pieces went back, matched by store and product name, so partial returns and return emails with no order number (Bloomingdale's, Amazon, Loop, Narvar) now work. Returned pieces (`items.returned_at`) are hidden from Closet, Sort, Worth and the feed; whole-order returns with no item list are hidden too. Migration items_returned.

@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 
-export type SharedItem = { id: string; brand: string | null; store: string; name: string; image_url: string | null; category: string; shared_at: string | null; note?: string | null };
+export type SharedItem = { id: string; brand: string | null; store: string; name: string; image_url: string | null; category: string; shared_at: string | null; note?: string | null; product_url?: string | null };
 
 // Her short note on a piece she shares ("Size down one"). Empty clears it.
 export async function saveNote(id: string, note: string) {
@@ -17,7 +17,7 @@ export async function loadProfilePage(handle: string): Promise<Profile | null> {
 }
 
 export async function loadFeed(): Promise<FeedItem[]> {
-  const { data } = await supabase().rpc("following_feed");
+  const { data } = await supabase().rpc("friends_feed");
   return (data ?? []) as FeedItem[];
 }
 
@@ -61,7 +61,8 @@ export async function myHandle(): Promise<string | null> {
 export const profileUrl = (handle: string) => `${location.origin}/u/${handle}`;
 
 // "Find it" link for a piece, until shopping links come with cash back.
-export const findIt = (i: SharedItem) => `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(`${i.brand || i.store} ${i.name}`)}`;
+// The piece's own page on the store's site when we found it, else a shopping search.
+export const findIt = (i: { brand: string | null; store: string; name: string; product_url?: string | null }) => i.product_url || `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(`${i.brand || i.store} ${i.name}`)}`;
 
 export function ago(iso: string | null) {
   if (!iso) return "";

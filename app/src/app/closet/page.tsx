@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { findIt } from "@/lib/social";
 import { CATS, type Item, type Who, brandOf, confirmMine, hideItem, hueRank, loadItems, needsAsk, setPick, setWho, shortSize, sizesByBrand, toSort, whoFor } from "@/lib/items";
 import { type Ret, dayLabel, fmtDate, loadOrders, matches, returnsByEmail } from "@/lib/orders";
 import { ReadItems } from "@/lib/read-items";
@@ -372,6 +373,7 @@ export default function Closet() {
                 </button>
               ))}
               {sel.pick === "sell" && <Link href={`/earn/worth/${sel.id}`} className="btn press" style={{ height: 48, fontSize: 15, background: "#FF6159", color: "var(--ink)" }}>Make a resale post →</Link>}
+              <a href={findIt(sel)} target="_blank" rel="noreferrer" className="btn btn-ghost" style={{ height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>{sel.product_url ? `See it on ${sel.brand || sel.store}` : "Find it online"} ↗</a>
               <button onClick={() => remove(sel)} className="btn btn-ghost" style={{ marginTop: 0, fontSize: 14, color: "#C9402F" }}>Remove from closet</button>
             </div>
           </div>

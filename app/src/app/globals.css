@@ -8,7 +8,9 @@
   --stage: #EDEAE6;
 }
 
-html, body { margin: 0; height: 100%; background: var(--stage); -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--stage); -webkit-tap-highlight-color: transparent; overflow-x: hidden; overscroll-behavior: none; }
+/* Feel like an app, not a web page: no sideways drift, no rubber band, no double-tap zoom. Sideways rails and the Sort swipe still work. */
+body { touch-action: manipulation; position: relative; max-width: 100vw; }
 * { box-sizing: border-box; }
 a { color: var(--ink); }
 

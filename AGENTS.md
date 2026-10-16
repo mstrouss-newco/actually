@@ -116,8 +116,8 @@ Brand follows: `/follow` asks once (`profiles.brands_asked_at`) with every close
 `items.for_whom` (me / kids / partner / other, guessed by `whoFor()` in `lib/items.ts` when empty)
 and `items.hidden` (removed from closet; kept so imports don't bring it back).
 Every table has row level security: people only see their own rows. Shared pieces
-leave the database only through the `profile_page`, `following_feed`, `search_people`,
-`similar_people` and `my_people` functions, which return photo, brand and name only (plus the note she wrote, `items.note`, on `profile_page`).
+leave the database only through the `profile_page`, `following_feed` (old), `friends_feed`, `search_people`,
+`similar_people` and `my_people` functions, which return photo, brand and name only (plus the note she wrote, `items.note`, on `profile_page`, and `items.product_url`, the cleaned store page link with nothing after the "?"). `read-order` finds product links from the photo links in order emails (and `fillLinks()` in `lib/items.ts` for older pieces), following tracking redirects server side.
 
 To change the schema: apply a migration with the Supabase connector, then add the same
 SQL to `supabase/migrations/<version>_<name>.sql`. Run the security advisor afterwards.
