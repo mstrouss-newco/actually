@@ -69,7 +69,7 @@ export type OrderGroup = {
   // Expected delivery, from the store's email or a subject like "Arriving tomorrow".
   eta: { from: string; to: string } | null;
 };
-export type Piece = { name: string; img: string | null; wear: boolean; color?: string | null; price?: number | null; qty?: number };
+export type Piece = { name: string; img: string | null; wear: boolean; cat?: string; color?: string | null; price?: number | null; qty?: number };
 
 type FullRow = Row & { subject: string | null; store_domain: string | null; return_days?: number | null; return_note?: string | null; arrive_from?: string | null; arrive_to?: string | null };
 const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -296,7 +296,7 @@ async function fetchOrders(): Promise<OrderGroup[] | null> {
     names.set(i.gmail_id, [...(names.get(i.gmail_id) ?? []), i.name]);
     const isWear = WEAR.includes(i.category) && !NOT_WEAR.test(i.name);
     if (isWear) wear.add(i.gmail_id);
-    pieces.set(i.gmail_id, [...(pieces.get(i.gmail_id) ?? []), { name: i.name, img: i.image_url || null, wear: isWear, color: i.color, price: i.price == null ? null : Number(i.price), qty: i.quantity || 1 }]);
+    pieces.set(i.gmail_id, [...(pieces.get(i.gmail_id) ?? []), { name: i.name, img: i.image_url || null, wear: isWear, cat: isWear ? i.category : i.category === "beauty" || i.category === "home" ? i.category : "other", color: i.color, price: i.price == null ? null : Number(i.price), qty: i.quantity || 1 }]);
   }
   // Orders that are only pet prescriptions don't show anywhere.
   return groupOrders((data ?? []) as FullRow[], names, wear, pieces).filter(g => !(g.items.length && g.items.every(n => PET_RX.test(n))))

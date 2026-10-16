@@ -1,22 +1,25 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { TypeTabs } from "@/lib/feed-ui";
 import Link from "next/link";
 import { type OrderGroup, dayLabel, fmtDate, isArriving, isReturn, loadOrders, matches, orderTitle, paid, returnBy, returnDaysLeft, ruleText, SOON, usd } from "@/lib/orders";
 import { Progress, ItemImage, TabBar } from "@/lib/tabs";
 import { delay } from "@/lib/motion";
 
 // A photo card for the clothes-and-shoes view.
-function PhotoCard({ g, chipText, chipBg, i }: { g: OrderGroup; chipText: string | null; chipBg: string; i: number }) {
+function PhotoCard({ g, chipText, chipBg, i, cat }: { g: OrderGroup; chipText: string | null; chipBg: string; i: number; cat: string }) {
+  // Lead with a piece of the type she picked.
+  const lead = cat === "all" ? null : g.pieces.find(p => p.cat === cat);
   return (
     <Link href={`/order/${encodeURIComponent(g.key)}`} className="press up" style={{ ...delay(i, 60), textDecoration: "none", color: "var(--ink)", display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
       <div style={{ position: "relative" }}>
-        <ItemImage src={g.photo} store={g.store} name={g.items[0] ?? g.what ?? undefined} label="" w="100%" h={196} radius={22} size={48} />
+        <ItemImage src={lead ? lead.img : g.photo} store={g.store} name={lead?.name ?? g.items[0] ?? g.what ?? undefined} label="" w="100%" h={196} radius={22} size={48} />
         {chipText && <div style={{ position: "absolute", left: 10, top: 10, background: chipBg, borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 700 }}>{chipText}</div>}
         {g.pieces.length > 1 && <div style={{ position: "absolute", right: 10, bottom: 10, background: "rgba(20,18,16,.78)", color: "#fff", borderRadius: 999, padding: "4px 9px", fontSize: 11, fontWeight: 700 }}>+{g.pieces.length - 1}</div>}
       </div>
       <div className="kicker" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{g.store}</div>
-      <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.25, marginTop: -3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{g.items[0] ?? orderTitle(g)}</div>
+      <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.25, marginTop: -3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{lead?.name ?? g.items[0] ?? orderTitle(g)}</div>
     </Link>
   );
 }
@@ -63,6 +66,7 @@ export default function Orders() {
   const [orders, setOrders] = useState<OrderGroup[] | null | undefined>(undefined);
   const [tab, setTab] = useState<Tab>("arriving");
   const [q, setQ] = useState("");
+  const [cat, setCat] = useState("all");
   const findRef = useRef<HTMLInputElement>(null);
   // From the search button on Today: ready to type.
   useEffect(() => { if (new URLSearchParams(location.search).get("find")) findRef.current?.focus(); }, []);
@@ -94,12 +98,13 @@ export default function Orders() {
     : tab === "canreturn" ? all.filter(FILTER.canreturn).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!)
     : all.filter(FILTER[tab]);
   const soon = tab === "canreturn" && !query ? rows.filter(g => returnDaysLeft(g)! <= SOON) : [];
-  // The photo view: only orders with clothes, shoes, bags or accessories.
-  const wear = all.filter(g => g.wear && g.stage !== "cancelled");
+  // The photo view: every order with pieces, by type. Only types she has show as tabs.
+  const withPieces = all.filter(g => g.pieces.length && g.stage !== "cancelled");
+  const wear = withPieces.filter(g => cat === "all" || g.pieces.some(p => p.cat === cat));
   const pArriving = wear.filter(isArriving);
   const pReturn = wear.filter(g => returnDaysLeft(g) != null).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!);
   const pRecent = wear.filter(g => !isArriving(g) && returnDaysLeft(g) == null).slice(0, 12);
-  const other = all.filter(g => !g.wear && g.stage !== "cancelled").length;
+  const other = all.filter(g => !g.pieces.length && g.stage !== "cancelled").length;
   const photos = view === "photos" && !query;
 
   return (
@@ -111,13 +116,17 @@ export default function Orders() {
           <input ref={findRef} value={q} onChange={e => setQ(e.target.value)} placeholder="Find any order or receipt" aria-label="Find any order or receipt" style={{ border: 0, outline: 0, background: "transparent", font: "500 15px var(--font-sans), sans-serif", flex: 1, color: "var(--ink)", minWidth: 0 }} />
         </label>
 
-        {!query && (
-          <div role="tablist" style={{ display: "flex", gap: 6, padding: "14px 16px 0" }}>
-            {([["photos", "Clothes and shoes"], ["list", "Every order"]] as const).map(([k, label]) => (
-              <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)} className="press" style={{ border: "1.5px solid var(--ink)", background: view === k ? "var(--ink)" : "#fff", color: view === k ? "#fff" : "var(--ink)", borderRadius: 999, padding: "8px 14px", font: "700 13px var(--font-sans), sans-serif", cursor: "pointer" }}>{label}</button>
-            ))}
+        {!query && (photos ? (
+          <TypeTabs items={withPieces.flatMap(g => g.pieces.map(p => ({ category: p.cat ?? "other" })))} value={cat} onChange={setCat} end={
+            <button type="button" onClick={() => setView("list")} style={{ height: 30, padding: "0 8px", border: 0, background: "none", display: "flex", alignItems: "center", gap: 4, font: "700 12px var(--font-sans), sans-serif", color: "var(--ink)", cursor: "pointer", flex: "none" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" /></svg>List
+            </button>
+          } />
+        ) : (
+          <div style={{ display: "flex", padding: "12px 16px 0" }}>
+            <button type="button" onClick={() => setView("photos")} style={{ border: 0, background: "none", padding: 0, font: "700 13px var(--font-sans), sans-serif", color: "var(--ink)", cursor: "pointer" }}>← Photos</button>
           </div>
-        )}
+        ))}
 
         {photos && orders && (
           <>
@@ -126,13 +135,13 @@ export default function Orders() {
                 <div key={title}>
                   <div className="section"><div>{title}</div>{title === "Can return" && list.some(g => returnDaysLeft(g)! <= SOON) && <span style={{ fontSize: 13, fontWeight: 700, color: "#C9402F" }}>{list.filter(g => returnDaysLeft(g)! <= SOON).length} closing soon</span>}</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12, padding: "12px 16px 0" }}>
-                    {list.map((g, i) => { const [t, bg] = chipOf(g); return <PhotoCard key={g.key} g={g} chipText={t} chipBg={bg} i={i} />; })}
+                    {list.map((g, i) => { const [t, bg] = chipOf(g); return <PhotoCard key={g.key} g={g} chipText={t} chipBg={bg} i={i} cat={cat} />; })}
                   </div>
                 </div>
               ))}
-            {other > 0 && (
+            {other > 0 && cat === "all" && (
               <button onClick={() => setView("list", "all")} className="press up" style={{ margin: "18px 16px 0", width: "calc(100% - 32px)", display: "flex", alignItems: "center", gap: 12, border: "1.5px solid var(--line)", background: "#fff", borderRadius: 22, padding: "14px 16px", font: "inherit", color: "var(--ink)", textAlign: "left", cursor: "pointer" }}>
-                <div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: 15 }}>Home and everything else</div><div style={{ fontSize: 13, color: "var(--muted)" }}>{other} orders: household, garden, pets and more</div></div>
+                <div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: 15 }}>Every other order</div><div style={{ fontSize: 13, color: "var(--muted)" }}>{other} {other === 1 ? "order" : "orders"} without photos yet</div></div>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
               </button>
             )}
