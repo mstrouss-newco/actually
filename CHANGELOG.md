@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-16
 
+- New-user QA fixes: Today no longer sends someone who already connected Gmail back to connect again when nothing was found; the shopping email card shows even with no orders; the import screen says "Looking for points and credit" instead of "All done" early, and explains when nothing was found; Gmail button stays on screen on small iPhones; error reports hide email addresses; the crash screen links to Closet and Orders.
+
 - Today greets her by her first name from Google with the time of day ("Good morning, Claire."), and refills her name if the device lost it.
 
 - Blind QA fixes for the new sign-up: name card shows only right after a new account is made (per account); a failed save is no longer treated as success; a failed account lookup never renames someone; accounts always get a row even without a name; accented names keep their letters (José → jose); error reports strip quoted text and links; alert email subject is fixed text; Gmail taps count in the funnel only from the welcome screen.
