@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { type FeedItem, type Profile, loadFeed, loadProfilePage, myHandle, similarPeople } from "@/lib/social";
-import { Avatar, FeedCard, FollowButton, MyGrid, ShareLink, displayName } from "@/lib/feed-ui";
+import { Avatar, FeedCard, FollowButton, FriendGrid, MyGrid, ShareLink, TypeTabs, displayName } from "@/lib/feed-ui";
 import { loadItems, toSort } from "@/lib/items";
 import { ItemImage, TabBar } from "@/lib/tabs";
 
@@ -20,6 +20,9 @@ export default function Feed() {
   const [mine, setMine] = useState<Profile | null>(null);
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [toGo, setToGo] = useState(0);
+  const [type, setType] = useState("all");
+  const [mineType, setMineType] = useState("all");
+  const [order, setOrder] = useState<"new" | "brand" | "type">("new");
 
   useEffect(() => {
     const t = new URLSearchParams(location.search).get("tab");
@@ -69,9 +72,10 @@ export default function Feed() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
               </button>
             )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 26, padding: "20px 16px 0" }}>
-              {feed?.map(i => <FeedCard key={i.id} item={i} />)}
-            </div>
+            {feed && <TypeTabs items={feed} value={type} onChange={setType} />}
+            {type === "all"
+              ? <div style={{ display: "flex", flexDirection: "column", gap: 26, padding: "20px 16px 0" }}>{feed?.map(i => <FeedCard key={i.id} item={i} />)}</div>
+              : <div style={{ padding: "16px 16px 0" }}><FriendGrid items={(feed ?? []).filter(i => i.category === type)} /></div>}
             {feed && feed.length === 0 && (
               <div style={{ margin: "0 16px", background: "var(--chip)", borderRadius: 26, padding: "20px 18px" }}>
                 <div className="serif" style={{ fontSize: 24, lineHeight: 1.1 }}>Follow people to fill your <em>feed.</em></div>
@@ -129,32 +133,34 @@ export default function Feed() {
 
         {handle && tab === "mine" && (
           <>
-            <div style={{ padding: "22px 20px 0", display: "flex", alignItems: "center", gap: 16 }}>
-              <Avatar handle={handle} size={76} />
-              <div style={{ minWidth: 0 }}>
-                <div className="serif" style={{ fontSize: 28, lineHeight: 1, overflowWrap: "anywhere" }}>{displayName(handle)}</div>
-                <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 4 }}>{mine ? `${mine.followers} ${mine.followers === 1 ? "follower" : "followers"} · ${mine.following} following` : "Loading…"}</div>
-                <div style={{ display: "inline-flex", marginTop: 8, background: "#DCEFDF", color: "#2F5C3E", borderRadius: 999, padding: "5px 10px", fontSize: 12, fontWeight: 700 }}>Earn when friends buy what you share</div>
+            <div style={{ padding: "18px 20px 0", display: "flex", alignItems: "center", gap: 14 }}>
+              <Avatar handle={handle} size={56} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="serif" style={{ fontSize: 24, lineHeight: 1, overflowWrap: "anywhere" }}>{displayName(handle)}</div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{mine ? `${mine.followers} ${mine.followers === 1 ? "follower" : "followers"} · ${mine.following} following` : "Loading…"}</div>
               </div>
+              <ShareLink handle={handle} label="Share" small />
             </div>
-            <div style={{ display: "flex", gap: 8, padding: "16px 20px 0" }}>
-              <div style={{ flex: 1, minWidth: 0 }}><ShareLink handle={handle} dark /></div>
-              <Link href="/sort" style={{ flex: 1, minWidth: 0, height: 46, borderRadius: 999, border: "1.5px solid var(--ink)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, textDecoration: "none", whiteSpace: "nowrap" }}>
-                {toGo ? `Sort ${toGo} ${toGo === 1 ? "piece" : "pieces"}` : "Add pieces"}
+            {toGo > 0 && (
+              <Link href="/sort" className="press" style={{ margin: "14px 16px 0", display: "flex", alignItems: "center", gap: 10, background: "#FAF8F6", borderRadius: 16, padding: "10px 14px", textDecoration: "none" }}>
+                <div style={{ flex: 1, fontSize: 13 }}><b>{toGo} new {toGo === 1 ? "piece" : "pieces"}</b> <span style={{ color: "var(--muted)" }}>to add to your feed</span></div>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>Sort →</span>
               </Link>
-            </div>
-            <Link href="/people" style={{ margin: "16px 16px 0", display: "flex", alignItems: "center", gap: 12, background: "#EBE3FF", borderRadius: 20, padding: "14px 16px", textDecoration: "none" }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>Find your people</div>
-                <div style={{ fontSize: 13, color: "#5B4A8A" }}>{matches?.length ? `${matches.length} ${matches.length === 1 ? "person shops" : "people shop"} like you.` : "Follow friends to see what they buy."}</div>
-              </div>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
-            </Link>
-            <div className="serif" style={{ padding: "24px 20px 0", fontSize: 24 }}>On your feed</div>
-            <div style={{ padding: "16px 16px 0" }}>
+            )}
+            {mine && (
+              <TypeTabs items={mine.items} value={mineType} onChange={setMineType} end={
+                <button type="button" onClick={() => setOrder(o => (o === "new" ? "brand" : o === "brand" ? "type" : "new"))} aria-label="Change order" title="Change order" style={{ height: 30, padding: "0 8px", border: 0, background: "none", display: "flex", alignItems: "center", gap: 4, font: "700 12px var(--font-sans), sans-serif", color: "var(--ink)", cursor: "pointer", flex: "none" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M4 7h16M7 12h10M10 17h4" /></svg>
+                  {order === "new" ? "" : order === "brand" ? "Brand" : "Type"}
+                </button>
+              } />
+            )}
+            <div style={{ padding: "14px 16px 0" }}>
               {mine && mine.items.length === 0 && <p className="lead" style={{ padding: "0 4px", margin: 0 }}>Nothing shared yet. Swipe right in Sort to share a piece.</p>}
-              {mine && <MyGrid items={mine.items} />}
-              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 16, lineHeight: 1.45, padding: "0 4px" }}>Your feed shows the photo, brand and name only. Never prices, sizes or order details.</div>
+              {mine && <MyGrid items={mine.items
+                .filter(i => mineType === "all" || i.category === mineType)
+                .sort((a, b) => order === "brand" ? (a.brand || a.store).localeCompare(b.brand || b.store) : order === "type" ? a.category.localeCompare(b.category) : (b.shared_at ?? "").localeCompare(a.shared_at ?? ""))} />}
+              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 16, lineHeight: 1.45, padding: "0 4px" }}>Your feed shows the photo, brand, name and your note. Never prices, sizes or order details.</div>
             </div>
           </>
         )}
