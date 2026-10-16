@@ -143,7 +143,7 @@ export default function Today() {
   else if (landed[0]) slides.push({
     key: "new", href: `/closet?piece=${landed[0]?.id}`, bg: "#DCEFDF", kc: "#3F7A55", kicker: "New in your closet",
     title: landed[0].name, sub: `${landed[0].brand || landed[0].store} · ${fmtDate(landed[0].ordered_at)}`,
-    img: <ItemImage src={landed[0].image_url} store={landed[0].store} name={landed[0].name} w={104} h={136} radius={20} size={44} />,
+    img: <ItemImage cutId={landed[0].id} src={landed[0].image_url} store={landed[0].store} name={landed[0].name} w={104} h={136} radius={20} size={44} />,
     badge: <div className="serif" style={{ fontWeight: 600, fontSize: 15, lineHeight: 1 }}>New</div>,
   });
 
@@ -264,7 +264,7 @@ export default function Today() {
             <div className="rail">
               {landed.map((i, k) => (
                 <Link key={i.id} href={`/closet?piece=${i.id}`} className="lift up" style={{ ...delay(k, 70), width: 140, flex: "none", textDecoration: "none" }}>
-                  <ItemImage src={i.image_url} store={i.store} name={i.name} label="" w={140} h={172} radius={22} size={56} />
+                  <ItemImage cutId={i.id} src={i.image_url} store={i.store} name={i.name} label="" w={140} h={172} radius={22} size={56} />
                   <div style={{ fontWeight: 700, fontSize: 14, marginTop: 8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{i.name}</div>
                   <div style={{ fontSize: 12, color: "var(--muted)" }}>{i.brand || i.store} · {fmtDate(i.ordered_at)}</div>
                 </Link>
@@ -282,7 +282,7 @@ export default function Today() {
                 const pic = mine.find(i => i.image_url) ?? mine[0];
                 return (
                   <Link key={f.brand} href={`/brand/${encodeURIComponent(f.brand)}`} className="lift up" style={{ ...delay(k, 60), width: 132, flex: "none", textDecoration: "none", background: tint(f.brand), borderRadius: 20, padding: 8 }}>
-                    {pic ? <ItemImage src={pic.image_url} store={pic.store} name={pic.name} w={116} h={120} radius={14} /> : <div style={{ height: 120 }} />}
+                    {pic ? <ItemImage cutId={pic.id} src={pic.image_url} store={pic.store} name={pic.name} w={116} h={120} radius={14} /> : <div style={{ height: 120 }} />}
                     <div style={{ fontWeight: 700, fontSize: 14, marginTop: 8, padding: "0 4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.brand}</div>
                     <div style={{ fontSize: 12, color: "var(--soft)", padding: "0 4px" }}>{mine.length} {mine.length === 1 ? "piece" : "pieces"}</div>
                   </Link>

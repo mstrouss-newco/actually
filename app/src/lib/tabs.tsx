@@ -1,5 +1,7 @@
 "use client";
 
+import { cutoutUrl, useCutout } from "./cutouts";
+
 import { Drawing, drawingFor } from "./drawings";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -202,11 +204,19 @@ function usePhotoBg(src: string | null) {
 
 // Product photo from the order email. Without one, a tile with the product's name.
 // `label=""` keeps the no-photo tile to a single letter, for places that print the name right below.
-export function ItemImage({ src, store, name, label, w, h, radius = 18, size = 28 }: { src: string | null; store: string; name?: string; label?: string; domain?: string | null; w: number | string; h: number | string; radius?: number; size?: number }) {
+export function ItemImage({ src, store, name, label, w, h, radius = 18, size = 28, cutId }: { src: string | null; store: string; name?: string; label?: string; domain?: string | null; w: number | string; h: number | string; radius?: number; size?: number; cutId?: string }) {
   const [bad, setBad] = useState(false);
+  const [cut, markCut] = useCutout(src ? cutId : null);
   // Amazon emails link a tiny 90px photo. Ask Amazon for a sharp one instead.
   if (src && /media-amazon\.com/.test(src)) src = src.replace(/\._[^/]*_\.(jpg|jpeg|png)$/i, "._SL600_.$1");
-  const bg = usePhotoBg(bad ? null : src);
+  const bg = usePhotoBg(bad || cut === "yes" ? null : src);
+  // A see-through copy of the piece, when there is one: no photo edge at all.
+  if (src && !bad && cut !== "no") return (
+    <div style={{ width: w, height: h, borderRadius: radius, background: "var(--tile)", flex: "none", overflow: "hidden" }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={cutoutUrl(cutId!)} alt="" onLoad={() => cut === "try" && markCut(true)} onError={() => markCut(false)} style={{ display: "block", width: "100%", height: "100%", objectFit: "contain", padding: "8%" }} />
+    </div>
+  );
   if (!src || bad) return <NameTile name={name ?? store} store={store} w={w} h={h} radius={radius} size={size} letterOnly={label === ""} />;
   return (
     <div style={{ width: w, height: h, borderRadius: radius, background: bg ?? "var(--tile)", flex: "none", overflow: "hidden", transition: "background .2s" }}>

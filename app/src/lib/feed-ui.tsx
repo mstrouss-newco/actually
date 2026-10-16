@@ -127,7 +127,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
         </div>
       </Link>
       <a href={findIt(item)} target="_blank" rel="noreferrer" style={{ display: "block" }}>
-        <ItemImage src={item.image_url} store={item.store} name={item.name} w="100%" h={300} radius={28} size={80} />
+        <ItemImage cutId={item.id} src={item.image_url} store={item.store} name={item.name} w="100%" h={300} radius={28} size={80} />
       </a>
       <ActionRow item={item} />
       <a href={findIt(item)} target="_blank" rel="noreferrer" style={{ display: "block", padding: "8px 4px 0", textDecoration: "none", color: "inherit" }}>
@@ -169,7 +169,7 @@ function MyTile({ item, n }: { item: SharedItem; n: number }) {
   return (
     <div className="lift up" style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0, animationDelay: `${n * 50}ms` }}>
       <div style={{ aspectRatio: "4 / 5", borderRadius: 22, overflow: "hidden", position: "relative" }}>
-        <ItemImage src={item.image_url} store={item.store} name={item.name} w="100%" h="100%" radius={22} />
+        <ItemImage cutId={item.id} src={item.image_url} store={item.store} name={item.name} w="100%" h="100%" radius={22} />
         <LoveCount id={item.id} />
       </div>
       <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)" }}>{item.brand || item.store}</div>
@@ -193,7 +193,7 @@ export function ItemGrid({ items, mine = false }: { items: SharedItem[]; mine?: 
       {items.map(i => (
         <a key={i.id} href={findIt(i)} target="_blank" rel="noreferrer" className="lift" style={{ textDecoration: "none" }}>
           <div style={{ position: "relative" }}>
-            <ItemImage src={i.image_url} store={i.store} name={i.name} w="100%" h={190} radius={22} size={56} />
+            <ItemImage cutId={i.id} src={i.image_url} store={i.store} name={i.name} w="100%" h={190} radius={22} size={56} />
             {mine ? <LoveCount id={i.id} /> : <HeartBubble id={i.id} />}
           </div>
           <div className="kicker" style={{ marginTop: 8 }}>{i.brand || i.store}</div>
@@ -264,7 +264,7 @@ export function FriendGrid({ items, who = true, saved = false }: { items: FeedIt
       {items.map((i, n) => (
         <a key={i.id} href={findIt(i)} target="_blank" rel="noreferrer" className="lift up" style={{ textDecoration: "none", minWidth: 0, animationDelay: `${n * 50}ms` }}>
           <div style={{ position: "relative" }}>
-            <ItemImage src={i.image_url} store={i.store} name={i.name} w="100%" h={190} radius={20} />
+            <ItemImage cutId={i.id} src={i.image_url} store={i.store} name={i.name} w="100%" h={190} radius={20} />
             <HeartBubble id={i.id} />
           </div>
           {who && !saved && face(i.handle)}
@@ -334,7 +334,7 @@ export function OutfitPost({ o, handle }: { o: SharedOutfit; handle?: string }) 
       <div style={{ display: "flex", gap: 10, padding: "12px 4px 0", overflowX: "auto" }}>
         {o.pieces.map(p => (
           <a key={p.id} href={findIt(p)} target="_blank" rel="noreferrer" style={{ flex: "none", width: 92, textDecoration: "none" }}>
-            <ItemImage src={p.image_url} store={p.store} name={p.name} w={92} h={96} radius={16} size={30} />
+            <ItemImage cutId={p.id} src={p.image_url} store={p.store} name={p.name} w={92} h={96} radius={16} size={30} />
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginTop: 5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.brand || p.store}</div>
           </a>
         ))}
