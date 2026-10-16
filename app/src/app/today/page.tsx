@@ -6,8 +6,8 @@ import { HomeScreenTip } from "@/lib/home-tip";
 import { type BrandFollow, brandsAsked, loadFollows } from "@/lib/brands";
 import { useRouter } from "next/navigation";
 import { type OrderGroup, SOON, cleanupOnce, dayLabel, etaText, isArriving, loadOrders, orderTitle, refreshArriving, returnBy, returnDaysLeft, shortTitle, fmtDate, trackStep, justArrived } from "@/lib/orders";
-import { gmailToken } from "@/lib/supabase";
-import { DOMAIN, loadProfile } from "@/lib/profile";
+import { gmailToken, supabase } from "@/lib/supabase";
+import { DOMAIN, loadProfile, saveProfile } from "@/lib/profile";
 import { type Reward, daysUntil, fmtDay, loadRewards, money, programName } from "@/lib/earn";
 import { type Item, brandOf, loadItems, monthPieces, whoFor } from "@/lib/items";
 import { ItemImage, StoreTile, TabBar, tint } from "@/lib/tabs";
@@ -44,6 +44,9 @@ export default function Today() {
   const [orders, setOrders] = useState<OrderGroup[] | null | undefined>(undefined);
   const [items, setItems] = useState<Item[]>([]);
   const [name, setName] = useState("");
+  const [first, setFirst] = useState("");
+  const [hour, setHour] = useState<number | null>(null);
+  useEffect(() => setHour(new Date().getHours()), []);
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [at, setAt] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -52,6 +55,18 @@ export default function Today() {
   const [follows, setFollows] = useState<BrandFollow[]>([]);
   useEffect(() => {
     setName(loadProfile().handle);
+    // Greet her by her real first name (from Google). Also fill in her name if this device lost it.
+    (async () => {
+      const sb = supabase();
+      const { data } = await sb.auth.getUser();
+      const m = (data.user?.user_metadata ?? {}) as Record<string, string | undefined>;
+      const f = (m.given_name || m.full_name || m.name || "").split(" ")[0];
+      if (f) setFirst(f);
+      if (data.user && !loadProfile().handle) {
+        const { data: p } = await sb.from("profiles").select("handle").eq("id", data.user.id).maybeSingle();
+        if (p?.handle) { saveProfile({ handle: p.handle }); setName(p.handle); }
+      }
+    })();
     loadOrders().then(async list => {
       setOrders(list);
       if (!list) return;
@@ -78,7 +93,8 @@ export default function Today() {
   const canReturn = all.filter(g => returnDaysLeft(g) != null).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!);
   const closing = canReturn.filter(g => returnDaysLeft(g)! <= SOON);
   const returns = all.filter(g => g.stage === "returning");
-  const greet = name ? name.split(".")[0].replace(/^./, c => c.toUpperCase()) : "";
+  const greet = first || (name ? name.split(".")[0].replace(/\d+$/, "").replace(/^./, c => c.toUpperCase()) : "");
+  const hello = hour == null ? "Hi" : hour < 5 ? "Up late" : hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const mine = items.filter(i => whoFor(i, items) === "me");
   // Only pieces that arrived in the last 45 days.
   const landed = mine.filter(i => i.image_url && !i.arriving && Date.now() - Date.parse(i.ordered_at) < 45 * 86400000).slice(0, 8);
@@ -162,7 +178,7 @@ export default function Today() {
         </div>
 
         <div style={{ padding: "20px 20px 0" }}>
-          <div className="serif" style={{ fontSize: 34, lineHeight: 1, letterSpacing: "-0.02em" }}>Hi{greet ? `, ${greet}` : ""}.</div>
+          <div className="serif" style={{ fontSize: 34, lineHeight: 1, letterSpacing: "-0.02em" }}>{hello}{greet ? `, ${greet}` : ""}.</div>
           <div style={{ fontSize: 15, lineHeight: 1.4, color: "var(--soft)", marginTop: 8 }}>
             {orders === undefined ? "Checking your orders…" : orders === null ? "Sign in to see your orders." : orders.length === 0 ? "No orders yet." : line ? <>{line}. {canReturn.length > 0 && <Link href="/orders?tab=canreturn" style={{ fontWeight: 700, color: "var(--ink)" }}>See returns</Link>}</> : "All quiet. Nothing due."}
           </div>
