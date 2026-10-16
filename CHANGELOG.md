@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Today: card titles are smaller and never cut off. The returnable card reads "Keep it or send it back?" with the piece, store and return date underneath.
+
 - Delivery tracker labels now read Ordered, Shipped, Out for delivery, Delivered.
 
 - Fix: answers stick. A piece that arrived in two emails (order and shipping) kept asking "Is this yours?" because the answer was saved on one copy and the other showed. Now who it's for, Sort choices and Remove apply to every copy.

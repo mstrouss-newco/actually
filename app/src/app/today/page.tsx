@@ -5,7 +5,7 @@ import Link from "next/link";
 import { HomeScreenTip } from "@/lib/home-tip";
 import { type BrandFollow, brandsAsked, loadFollows } from "@/lib/brands";
 import { useRouter } from "next/navigation";
-import { type OrderGroup, SOON, cleanupOnce, dayLabel, etaText, isArriving, loadOrders, orderTitle, refreshArriving, returnBy, returnDaysLeft, ruleText, shortTitle, fmtDate, trackStep, justArrived } from "@/lib/orders";
+import { type OrderGroup, SOON, cleanupOnce, dayLabel, etaText, isArriving, loadOrders, orderTitle, refreshArriving, returnBy, returnDaysLeft, shortTitle, fmtDate, trackStep, justArrived } from "@/lib/orders";
 import { gmailToken } from "@/lib/supabase";
 import { loadProfile } from "@/lib/profile";
 import { type Reward, daysUntil, fmtDay, loadRewards, money, programName } from "@/lib/earn";
@@ -77,8 +77,8 @@ export default function Today() {
     const left = returnDaysLeft(hero)!;
     slides.push({
       key: "ret", href: `/order/${encodeURIComponent(hero.key)}`, bg: "#FFE1DC", kc: "#C9402F",
-      kicker: "Still returnable", title: hero.pieces.length > 1 ? `Keep the ${shortTitle(hero)}, or send some back?` : `Keep the ${orderTitle(hero)}, or send it back?`,
-      sub: `Return by ${dayLabel(returnBy(hero))}${ruleText(hero) ? ` · ${ruleText(hero)}` : ""}`,
+      kicker: "Still returnable", title: `Keep it or send it back?`,
+      sub: `${shortTitle(hero)} from ${hero.store}. Return by ${dayLabel(returnBy(hero))}.`,
       img: <ItemImage src={hero.photo} store={hero.store} name={hero.items[0] ?? hero.what ?? undefined} w={104} h={136} radius={20} size={44} />,
       badge: <><div className="serif" style={{ fontWeight: 600, fontSize: 22, lineHeight: 1 }}>{left}</div><div style={{ fontSize: 10, fontWeight: 700 }}>{left === 1 ? "day" : "days"}</div></>,
     });
@@ -175,7 +175,7 @@ export default function Today() {
               <Link key={slide.key} href={slide.href} className="heroIn press" draggable={false} style={{ background: slide.bg, borderRadius: 28, padding: "20px 18px", display: "flex", gap: 14, position: "relative", textDecoration: "none", height: 196, boxSizing: "border-box" }}>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
                   <div className="kicker" style={{ color: slide.kc }}>{slide.kicker}</div>
-                  <div className="serif" style={{ fontSize: 26, lineHeight: 1.06, letterSpacing: "-0.02em", overflowWrap: "break-word", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{slide.title}</div>
+                  <div className="serif" style={{ fontSize: 22, lineHeight: 1.1, letterSpacing: "-0.02em", overflowWrap: "break-word" }}>{slide.title}</div>
                   <div style={{ fontSize: 13, color: "#5E5852", lineHeight: 1.35 }}>{slide.sub}</div>
                 </div>
                 <div className="float" style={{ flex: "none", alignSelf: "center", transform: "rotate(4deg)", borderRadius: 20, boxShadow: "0 12px 26px rgba(20,18,16,.14)" }}>{slide.img}</div>
