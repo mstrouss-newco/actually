@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Delivery tracker labels now read Ordered, Shipped, Out for delivery, Delivered.
+
 - Fix: answers stick. A piece that arrived in two emails (order and shipping) kept asking "Is this yours?" because the answer was saved on one copy and the other showed. Now who it's for, Sort choices and Remove apply to every copy.
 
 - Outfits: white photo backgrounds now melt into the board (no more white boxes). New "Cut out" button on a selected piece removes the photo's background for real (new `cut-out` server function, saved once per piece in the `cutouts` bucket); "Show photo" puts it back. Photos with a busy background (someone wearing it, a street) are left as is, and she's told why. Removed wear tracking (Wore it today, Not worn yet) from outfits.
