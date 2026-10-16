@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-16
 
+- Today header: search on the left, profile and settings in the far right corner.
+
 - New-user QA fixes: Today no longer sends someone who already connected Gmail back to connect again when nothing was found; the shopping email card shows even with no orders; the import screen says "Looking for points and credit" instead of "All done" early, and explains when nothing was found; Gmail button stays on screen on small iPhones; error reports hide email addresses; the crash screen links to Closet and Orders.
 
 - Today greets her by her first name from Google with the time of day ("Good morning, Claire."), and refills her name if the device lost it.
