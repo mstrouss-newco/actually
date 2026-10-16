@@ -1,4 +1,4 @@
-// Removes the plain background from one of her product photos, for outfit boards.
+// Removes the plain background from a product photo: one of her own pieces, or one a friend shares.
 // Only works when the photo sits on a mostly even background (a studio shot); a photo of
 // someone wearing it, or a street scene, is left alone and we say so.
 import { Image, decode } from "https://deno.land/x/imagescript@1.3.0/mod.ts";
@@ -34,8 +34,13 @@ Deno.serve(async req => {
   const { item_id } = await req.json().catch(() => ({}));
   if (typeof item_id !== "string") return json({ error: "bad request" }, 400);
 
-  const { data: item } = await admin.from("items").select("id, image_url").eq("id", item_id).eq("user_id", auth.user.id).maybeSingle();
+  const { data: item } = await admin.from("items").select("id, image_url, user_id, pick").eq("id", item_id).maybeSingle();
   if (!item?.image_url) return json({ error: "no photo" }, 404);
+  // Her own pieces, or pieces someone already shares with friends (on its own or in a shared look).
+  if (item.user_id !== auth.user.id && item.pick !== "share") {
+    const { data: look } = await admin.from("outfits").select("id").eq("user_id", item.user_id).eq("shared", true).contains("layout", [{ id: item.id }]).limit(1);
+    if (!look?.length) return json({ error: "no photo" }, 404);
+  }
   const path = `${item.id}.png`;
   const url = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/cutouts/${path}`;
   // Already done once: reuse it.
