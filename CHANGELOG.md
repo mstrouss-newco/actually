@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Links work more often: (1) when we don't have the exact product page, tapping opens the store's own site search for that piece (new `items.store_site` from the order's sender, `item_sites` for feeds); (2) the server now reads the real address many tracking links carry inside them; (3) older pieces get checked faster (80 orders per visit, and every piece gets a fresh try).
+
 - Photos with a plain gray or colored background no longer sit in a visible box: the tile takes the photo's background color (read from its corners when the store allows). White backgrounds already blend in.
 
 - Fix: photos in an outfit no longer show through each other where they overlap. Each photo sits on its own patch of board color, so white backgrounds still disappear.
