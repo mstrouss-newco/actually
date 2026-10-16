@@ -112,6 +112,7 @@ Product images never fall back to a store logo or a letter: `ItemImage` shows a 
 
 Tables: `profiles`, `orders`, `items`, `rewards`, `follows` (people), `brand_follows` (brands she chose, with sales / arrivals / drops switches), `blocked_stores`, `gmail_tokens` (no policies; server only).
 Brand follows: `/follow` asks once (`profiles.brands_asked_at`) with every closet brand pre-checked; she confirms with one tap. Offers and alerts must come from brands she follows, never picked straight from Gmail data (Google's Limited Use rule). `brand_suggestions` returns brands followed by at least 3 of a brand's fans, counts only.
+`items.returned_at`: set when a return or refund email names that piece (`readReturns()` → `read-order` mode `returns`, which marks the email `items_read`). Returned pieces, and pieces of whole-order returns with no item list, stay out of Closet, Sort, Worth and the feed.
 `items.for_whom` (me / kids / partner / other, guessed by `whoFor()` in `lib/items.ts` when empty)
 and `items.hidden` (removed from closet; kept so imports don't bring it back).
 Every table has row level security: people only see their own rows. Shared pieces

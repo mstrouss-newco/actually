@@ -115,7 +115,7 @@ export function closetWorth(mine: Item[], groups: OrderGroup[] | null) {
     const i = twin ? { ...raw, resale_low: twin.resale_low, resale_high: twin.resale_high } : raw;
     const g = byEmail.get(i.gmail_id ?? "");
     if (g && isArriving(g) && i.resale_high != null && i.resale_high >= 10) counted.push(i);
-    else if (g && isReturn(g)) skipped.push({ item: i, why: "Sent back" });
+    else if (g && isReturn(g) && !i.kept) skipped.push({ item: i, why: "Sent back" });
     else if (i.resale_high == null) skipped.push({ item: i, why: "Not priced yet" });
     else if (i.resale_high < 10) skipped.push({ item: i, why: "Sells for under $10" });
     else counted.push(i);

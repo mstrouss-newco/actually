@@ -39,6 +39,28 @@ const Rules = z.object({
 const RULES_SYSTEM = `You read one online shopping email and report the store's return rules as written in it.
 Only use what the email says. Never use what you know about the store. The shopper is in the US: ignore rules that only apply to other countries (for example "EU customers only"). If returns aren't mentioned, return nulls and final_sale false. Also report the expected delivery dates if the email states them (e.g. "Est. Delivery Oct 15 - Oct 18"); use the email's year.`;
 
+// What a return or refund email says was sent back.
+const Returned = z.object({
+  items: z.array(z.object({
+    name: z.string().describe("Short product name as a shopper would say it, without size or color."),
+    color: z.string().nullable(),
+    size: z.string().nullable(),
+  })).describe("Only the items being returned or refunded in this email. Empty if the email doesn't name them."),
+  whole_order: z.boolean().describe("True only if the email says the entire order was returned or refunded."),
+  order_number: z.string().nullable().describe("The original order number, if stated. Not a return or RMA number."),
+});
+const RETURNS_SYSTEM = `You read one return or refund email from an online store. List only the products being sent back or refunded, as named in the email. Ignore ads and recommendations. Use null for anything the email doesn't say.`;
+
+// "Women's Lima Sneaker - Black" and "Lima sneaker" are the same product.
+const words = (s: string) => s.toLowerCase().replace(/\b(women|men|girl|boy|kid)s?['’]?s?\b/g, " ").replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(w => w.length > 2);
+const sameProduct = (a: string, b: string) => {
+  const x = words(a), y = words(b);
+  if (!x.length || !y.length) return false;
+  const hit = x.filter(w => y.includes(w)).length;
+  return hit / Math.min(x.length, y.length) >= 0.6;
+};
+const shop = (s: string | null | undefined) => (s ?? "").toLowerCase().replace(/\.com$/, "").replace(/[^a-z0-9]/g, "");
+
 // Matches product photos to pieces that came in without one.
 const Photos = z.object({
   photos: z.array(z.object({
@@ -102,6 +124,36 @@ Deno.serve(async req => {
     const total = r?.order_total != null && r.order_total > 0 && r.order_total < 100000 ? Math.round(r.order_total * 100) / 100 : null;
     await admin.from("orders").update({ rules_read: true, return_days: days, return_note: note, ...eta(r), ...(total != null ? { amount: total } : {}) }).eq("user_id", auth.user.id).eq("gmail_id", gmail_id);
     return json({ return_days: days, note, ...eta(r) });
+  }
+
+  // Which of her pieces a return or refund email is about. Marks them sent back.
+  if (mode === "returns") {
+    const uid = auth.user.id;
+    const { data: row } = await admin.from("orders").select("store, store_domain, sent_at, order_no").eq("user_id", uid).eq("gmail_id", gmail_id).maybeSingle();
+    if (!row) return json({ error: "unknown email" }, 404);
+    let r: z.infer<typeof Returned> | null = null;
+    try { r = await ask(Returned, RETURNS_SYSTEM, `Store: ${row.store}\nSubject and email:\n${text.slice(0, 30000)}`); } catch { return json({ error: "ai failed" }, 502); }
+    const since = new Date(Date.parse(row.sent_at) - 180 * 86400000).toISOString();
+    const { data: its } = await admin.from("items").select("id, name, color, store, gmail_id, ordered_at").eq("user_id", uid).is("returned_at", null).gte("ordered_at", since).lte("ordered_at", row.sent_at).limit(1000);
+    const ids = [...new Set((its ?? []).map(i => i.gmail_id))];
+    const { data: ords } = ids.length ? await admin.from("orders").select("gmail_id, store, store_domain, order_no").eq("user_id", uid).in("gmail_id", ids) : { data: [] };
+    const byMail = new Map((ords ?? []).map(o => [o.gmail_id, o]));
+    const relay = /(loopreturns|narvar|happyreturns|optiturn|getredo|returnly|shopifyemail)/i.test(row.store_domain ?? "");
+    const sameShop = (i: { store: string; gmail_id: string }) => {
+      const o = byMail.get(i.gmail_id);
+      return shop(i.store) === shop(row.store) || (!relay && !!row.store_domain && o?.store_domain === row.store_domain) || shop(o?.store) === shop(row.store);
+    };
+    const mine = (its ?? []).filter(sameShop);
+    const orderNo = r?.order_number?.replace(/^#/, "") || row.order_no;
+    let hit: string[] = [];
+    if (r?.items.length) {
+      hit = mine.filter(i => r!.items.some(x => sameProduct(x.name, i.name) && (!x.color || !i.color || x.color.toLowerCase() === i.color.toLowerCase()))).map(i => i.id);
+    } else if (r?.whole_order && orderNo) {
+      hit = mine.filter(i => byMail.get(i.gmail_id)?.order_no === orderNo).map(i => i.id);
+    }
+    if (hit.length) await admin.from("items").update({ returned_at: row.sent_at }).eq("user_id", uid).in("id", hit);
+    await admin.from("orders").update({ items_read: true }).eq("user_id", uid).eq("gmail_id", gmail_id);
+    return json({ returned: hit.length });
   }
 
   // Photos for her pieces that have none. The email must be one of hers.

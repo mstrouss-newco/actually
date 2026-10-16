@@ -4,7 +4,7 @@
 // and any screen can show its progress.
 import { gmailToken, supabase } from "./supabase";
 import { type Order, listIds, readOne } from "./gmail";
-import { fillPhotos, readItems, readReturnRules } from "./items";
+import { fillPhotos, readItems, readReturnRules, readReturns } from "./items";
 import { scanRewards } from "./earn";
 
 export type ImportState = {
@@ -94,6 +94,8 @@ export async function startImport() {
     // Photos for pieces that came in without one, and each store's return rules.
     await fillPhotos(token).catch(() => null);
     await readReturnRules(token).catch(() => null);
+    // Which pieces went back, from each return and refund email.
+    await readReturns(token).catch(() => null);
     if ((catchUp || !me?.last_import_at) && !state.skipped) await sb.from("profiles").update({ backfill_v: BACKFILL }).eq("id", uid);
     // Points and credit too, while Google's pass is still fresh.
     set({ stage: "points" });

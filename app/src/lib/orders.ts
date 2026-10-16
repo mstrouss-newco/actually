@@ -261,14 +261,15 @@ export function loadOrders(): Promise<OrderGroup[] | null> {
 // For each email: whether its order was cancelled, is still on the way, and when it was ordered.
 export async function orderInfo() {
   const groups = await loadOrders();
-  const cancelled = new Set<string>(), arriving = new Set<string>();
+  const cancelled = new Set<string>(), arriving = new Set<string>(), returned = new Set<string>();
   const ordered = new Map<string, string>();
   for (const g of groups ?? []) for (const e of g.events) {
     if (g.stage === "cancelled") cancelled.add(e.gmail_id);
     if (isArriving(g)) arriving.add(e.gmail_id);
+    if (isReturn(g)) returned.add(e.gmail_id);
     ordered.set(e.gmail_id, g.ordered_at);
   }
-  return { cancelled, arriving, ordered };
+  return { cancelled, arriving, ordered, returned };
 }
 
 // Tracking step for the 4-step bar: ordered, shipped, out for delivery, here.
