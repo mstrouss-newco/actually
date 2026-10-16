@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { SUPABASE_URL, supabase } from "./supabase";
 import Link from "next/link";
 import { type FeedItem, type Love, type SharedItem, ago, findIt, loveState, profileUrl, saveNote, setFollow, setLove } from "./social";
 import { ItemImage, tint } from "./tabs";
@@ -8,11 +9,54 @@ import { ItemImage, tint } from "./tabs";
 // "mike" reads as a name: "Mike".
 export const displayName = (h: string) => h.charAt(0).toUpperCase() + h.slice(1);
 
+// Profile photos live at avatars/<handle>.jpg. People without one keep their colored initial.
+const noPhoto = new Set<string>();
+const photoV = () => { try { return localStorage.getItem("avatar-v") ?? ""; } catch { return ""; } };
+const photoUrl = (h: string) => `${SUPABASE_URL}/storage/v1/object/public/avatars/${encodeURIComponent(h)}.jpg${photoV() ? `?v=${photoV()}` : ""}`;
+
 export function Avatar({ handle, size = 36 }: { handle: string; size?: number }) {
+  const [, redraw] = useState(0);
+  const [ok, setOk] = useState(false);
+  useEffect(() => { const f = () => { noPhoto.delete(handle); setOk(false); redraw(n => n + 1); }; addEventListener("avatar", f); return () => removeEventListener("avatar", f); }, [handle]);
   return (
-    <div className="serif" style={{ width: size, height: size, borderRadius: "50%", background: tint(handle), display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: size * 0.45, flex: "none" }}>
+    <div className="serif" style={{ width: size, height: size, borderRadius: "50%", background: tint(handle), display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: size * 0.45, flex: "none", position: "relative", overflow: "hidden" }}>
       {handle.charAt(0).toUpperCase()}
+      {!noPhoto.has(handle) && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={photoUrl(handle)} alt="" onLoad={() => setOk(true)} onError={() => { noPhoto.add(handle); redraw(n => n + 1); }}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: ok ? 1 : 0, transition: "opacity .2s" }} />
+      )}
     </div>
+  );
+}
+
+// Her own avatar, tappable to add or change her photo. Shrunk to a small square on the phone first.
+export function PhotoPicker({ handle, size = 56 }: { handle: string; size?: number }) {
+  const [busy, setBusy] = useState(false);
+  const pick = async (file: File | undefined) => {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const img = await createImageBitmap(file);
+      const side = Math.min(img.width, img.height), out = 320;
+      const c = document.createElement("canvas"); c.width = out; c.height = out;
+      c.getContext("2d")!.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, out, out);
+      const blob = await new Promise<Blob | null>(r => c.toBlob(r, "image/jpeg", 0.85));
+      if (blob) {
+        const { error } = await supabase().storage.from("avatars").upload(`${handle}.jpg`, blob, { upsert: true, contentType: "image/jpeg", cacheControl: "60" });
+        if (!error) { try { localStorage.setItem("avatar-v", String(Date.now())); } catch {} dispatchEvent(new Event("avatar")); }
+      }
+    } catch {}
+    setBusy(false);
+  };
+  return (
+    <label style={{ position: "relative", cursor: "pointer", flex: "none", display: "block", opacity: busy ? 0.6 : 1 }} aria-label="Change your photo">
+      <Avatar handle={handle} size={size} />
+      <span style={{ position: "absolute", right: -2, bottom: -2, width: size * 0.4, height: size * 0.4, minWidth: 22, minHeight: 22, borderRadius: "50%", background: "var(--ink)", border: "2px solid #fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg>
+      </span>
+      <input type="file" accept="image/*" onChange={e => pick(e.target.files?.[0])} style={{ display: "none" }} />
+    </label>
   );
 }
 
