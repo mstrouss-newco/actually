@@ -25,6 +25,19 @@ Mike (mstrouss@gmail.com) is not a coder. When talking to him:
   give him a short prompt he can paste into a Claude chat that has Chrome.
 - Never ask him to paste keys or secrets into chat.
 
+## Mike's product rules (from his feedback; keep them)
+
+- No letter tiles for brands or products, ever. A brand's name written out is enough; products get a drawing.
+- No spending totals that make people feel bad (no "you spent $X this month").
+- It should feel like an app, not a website: no sideways drift, bounce or zoom on iPhone; tab bar respects the Safari bar.
+- Keep it calm and compact: one line beats two rows of pills; short headers; no extra explainer lines.
+- Copy is about pleasure, never spam. Don't promise emails or say "inside the app".
+- Owners see counts (loves), never who. Never prices, sizes or order details on anything shared.
+- Products link to their real store page when we have it; otherwise a shopping search.
+- Show only what she has: type tabs, rows and filters appear only when there's something in them.
+- Mock first on the design board for anything new, then build what he picks. Design board: claude.ai artifact "Actually" Design (HpSXVJtLvkRLiXjAchBbdw).
+- After a batch of changes, run a blind QA pass (a separate agent that didn't build it), fix what it finds, then log it here and in CHANGELOG.md.
+
 ## Repo layout
 
 | Path | What it is |
