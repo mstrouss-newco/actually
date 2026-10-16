@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { type FeedItem, type Profile, loadFeed, loadProfilePage, loadSaved, myHandle, similarPeople } from "@/lib/social";
 import { Avatar, FeedCard, FollowButton, FriendFaces, FriendGrid, Loves, MyGrid, OutfitPost, PhotoPicker, type Order, OrderButton, sortBy, ShareLink, TypeTabs, displayName, useLovesStore } from "@/lib/feed-ui";
 import { loadItems, toSort } from "@/lib/items";
@@ -32,7 +33,8 @@ export default function Feed() {
   // Unloving a piece on Saved takes it off the list.
   const loves = useLovesStore(true, (id, on) => { if (!on) setSaved(s => s?.filter(i => i.id !== id) ?? s); else loadSaved().then(setSaved); });
   const { load } = loves;
-  const pick = (k: Tab) => { setTab(k); history.replaceState(history.state, "", `?tab=${k}`); };
+  const router = useRouter();
+  const pick = (k: Tab) => { setTab(k); router.replace(`/feed?tab=${k}`, { scroll: false }); };
   // Filters stay put when she opens a piece or a person and comes back.
   const [restored, setRestored] = useState(false);
   useEffect(() => {
@@ -70,6 +72,10 @@ export default function Feed() {
 
   // People she follows, most recent posters first.
   const friends = [...new Set([...(feed ?? []).map(i => i.handle), ...looks.map(o => o.handle!).filter(Boolean)])];
+  // A remembered friend filter for someone she no longer follows shows nothing: drop it.
+  useEffect(() => {
+    if (feed && who && !feed.some(i => i.handle === who) && !looks.some(o => o.handle === who)) setWho(null);
+  }, [feed, looks, who]);
   const shown = (feed ?? []).filter(i => !who || i.handle === who);
   const shownLooks = looks.filter(o => !who || o.handle === who);
   // Pieces and looks together, newest first.

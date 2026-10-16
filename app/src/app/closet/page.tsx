@@ -70,11 +70,7 @@ function ClosetPage() {
   const [undo, setUndo] = useState<Item | null>(null);
   // The pieces shown in "Is all of this yours?", fixed when it opens so answers don't reshuffle it.
   const [review, setReview] = useState<string[] | null>(null);
-  // Closing a piece opened by a link (?piece=) takes ?piece out of the address, so a reload doesn't reopen it.
-  const closeSel = () => {
-    setSel(null);
-    if (params.get("piece")) { const u = new URLSearchParams(params.toString()); u.delete("piece"); router.replace(u.size ? `/closet?${u}` : "/closet", { scroll: false }); }
-  };
+  const closeSel = () => setSel(null);
   useSheetHistory(!!sel, closeSel);
   useSheetHistory(sortOpen, () => setSortOpen(false));
   useSheetHistory(!!styleFor, () => setStyleFor(null));
@@ -113,6 +109,8 @@ function ClosetPage() {
     ensureCutouts(list.filter(i => i.image_url && whoFor(i, list) === "me").map(i => i.id));
     const id = new URLSearchParams(location.search).get("piece");
     const hit = id ? list.find(i => i.id === id) : null;
+    // Take ?piece out of the address first, so closing the sheet or a reload doesn't bring it back.
+    if (id) { const u = new URLSearchParams(location.search); u.delete("piece"); history.replaceState(null, "", u.size ? `/closet?${u}` : "/closet"); }
     if (hit) setSel(hit);
   }); }, []);
   useEffect(load, [load]);

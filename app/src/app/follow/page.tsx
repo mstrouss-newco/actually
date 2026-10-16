@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { canGoBack } from "@/lib/nav";
 import { type Item, brandOf, loadItems, whoFor } from "@/lib/items";
 import { followBrands, loadFollows, markBrandsAsked } from "@/lib/brands";
 import { ItemImage } from "@/lib/tabs";
@@ -42,7 +43,7 @@ export default function FollowBrands() {
     setBusy(true);
     if (follow) await followBrands(picked.map(r => r.brand));
     await markBrandsAsked();
-    router.replace(fromSettings ? "/settings" : "/today");
+    if (fromSettings && canGoBack()) router.back(); else router.replace(fromSettings ? "/settings" : "/today");
   };
 
   return (

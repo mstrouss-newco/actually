@@ -69,7 +69,7 @@ export default function Story() {
           <div style={{ fontSize: 12, fontWeight: 700, opacity: .7 }}>{label}</div>
         </div>
 
-        <button type="button" onClick={e => { const r = e.currentTarget.getBoundingClientRect(); if (e.clientX - r.left < r.width / 3 && i > 0) setI(i - 1); else if (i + 1 < n) setI(i + 1); else leave(); }} aria-label={i + 1 < n ? "Next card" : "Close"} style={{ flex: 1, border: 0, background: "transparent", color: "#fff", cursor: "pointer", padding: 0, textAlign: "left", font: "inherit", display: "flex", flexDirection: "column", minHeight: 0 }}>
+        <button type="button" onClick={e => { const r = e.currentTarget.getBoundingClientRect(); if (e.detail > 0 && e.clientX - r.left < r.width / 3 && i > 0) setI(i - 1); else if (i + 1 < n) setI(i + 1); else leave(); }} aria-label={i + 1 < n ? "Next card" : "Close"} style={{ flex: 1, border: 0, background: "transparent", color: "#fff", cursor: "pointer", padding: 0, textAlign: "left", font: "inherit", display: "flex", flexDirection: "column", minHeight: 0 }}>
           {items === null ? <div style={{ marginTop: 60, opacity: .7 }}>Putting your month together…</div>
           : pieces.length === 0 ? <>{kick(label)}{big("Nothing new yet.")}<div style={{ fontSize: 16, opacity: .8, marginTop: 10 }}>Your story fills in as orders come in.</div></>
           : card === "new" ? (

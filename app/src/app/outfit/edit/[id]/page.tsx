@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useEffect, useRef, useState } from "react";
-import { BackLink, useSheetHistory } from "@/lib/nav";
+import { BackLink, leaveSheets, useSheetHistory } from "@/lib/nav";
 import { useRouter } from "next/navigation";
 import { type Item, loadItems, whoFor } from "@/lib/items";
 import { OCCASIONS, type Outfit, type Placed, loadOutfit, saveOutfit } from "@/lib/outfits";
@@ -84,7 +84,7 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
     const ok = new Set(pieces.map(p => p.id));
     const saved = await saveOutfit({ id: orig?.id, name: name || "New outfit", occasion, layout: layout.filter(l => ok.has(l.id)), shared, wasShared: !!orig?.shared_at });
     setSaving(false);
-    if (saved) router.replace(`/outfit/${saved}`); else setFailed(true);
+    if (saved) { await leaveSheets(); router.replace(`/outfit/${saved}`); } else setFailed(true);
   };
 
   const tool = { height: 34, padding: "0 12px", borderRadius: 999, border: 0, background: "#fff", boxShadow: "0 2px 8px rgba(20,18,16,.1)", font: "700 12px var(--font-sans), sans-serif", color: "var(--ink)", cursor: "pointer" } as const;
