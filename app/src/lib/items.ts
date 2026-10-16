@@ -4,7 +4,7 @@ import { orderInfo } from "./orders";
 
 export type Item = {
   id: string; store: string; name: string; brand: string | null; size: string | null; color: string | null;
-  price: number | null; image_url: string | null; category: string; ordered_at: string; pick: "share" | "sell" | "private" | null;
+  price: number | null; image_url: string | null; product_url?: string | null; category: string; ordered_at: string; pick: "share" | "sell" | "private" | null;
   resale_low?: number | null; resale_high?: number | null; resale_note?: string | null;
   for_whom?: Who | null; gmail_id?: string;
   // Its order hasn't arrived yet.
@@ -36,7 +36,7 @@ export async function loadItems(): Promise<Item[]> {
   // Pieces from cancelled orders never arrived, so they stay out of the closet.
   // Every piece uses its order's date, so one purchase shows one date everywhere.
   const { cancelled, arriving, ordered, returned } = await orderInfo();
-  const { data } = await supabase().from("items").select("id, store, name, brand, size, color, price, image_url, category, ordered_at, pick, resale_low, resale_high, resale_note, for_whom, gmail_id, returned_at").in("category", WEAR).eq("hidden", false).order("ordered_at", { ascending: false }).limit(3000);
+  const { data } = await supabase().from("items").select("id, store, name, brand, size, color, price, image_url, category, ordered_at, pick, resale_low, resale_high, resale_note, for_whom, gmail_id, returned_at, product_url").in("category", WEAR).eq("hidden", false).order("ordered_at", { ascending: false }).limit(3000);
   // Keep the more specific name ("Women's Lima" over "Lima"): it tells us who it's for.
   // Two colors of one piece (a tee in Black and White) stay separate; a missing color matches any.
   const best = new Map<string, Item[]>();
@@ -230,6 +230,25 @@ export async function fillPhotos(token: string) {
     ids.forEach(id => done.add(id));
   }
   remember("photos-tried", done);
+}
+
+// Finds each piece's page on the store's site, from the links in its order email. Once per piece.
+export async function fillLinks(token: string) {
+  const sb = supabase();
+  const { data } = await sb.from("items").select("id, gmail_id").in("category", WEAR).eq("hidden", false).is("product_url", null).order("ordered_at", { ascending: false }).limit(300);
+  const done = tried("links-tried");
+  const byEmail = new Map<string, string[]>();
+  for (const i of (data ?? []) as { id: string; gmail_id: string }[]) if (!done.has(i.id)) byEmail.set(i.gmail_id, [...(byEmail.get(i.gmail_id) ?? []), i.id]);
+  let reads = 0;
+  for (const [gmail_id, ids] of byEmail) {
+    if (reads++ >= 30) break;
+    try {
+      const text = await readFullText(gmail_id, token);
+      if (text.includes("link: https://")) await sb.functions.invoke("read-order", { body: { gmail_id, text, mode: "links", item_ids: ids } });
+    } catch (err) { if ((err as Error).message === "expired") throw err; }
+    ids.forEach(id => done.add(id));
+  }
+  remember("links-tried", done);
 }
 
 // Reads each recent order's return rules from its email, once.

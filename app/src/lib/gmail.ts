@@ -156,7 +156,10 @@ export function emailToText(html: string | null, plain: string | null) {
     const w = Number(img.getAttribute("width") ?? 99);
     // Skip tracking pixels, spacers and tiny icons.
     if (!src.startsWith("https://") || w < 40) return img.remove();
-    img.replaceWith(doc.createTextNode(` [image: ${img.getAttribute("alt") ?? ""} | ${src}] `));
+    // Keep the product page link a photo points to, so the piece can link to its store page.
+    const href = img.closest("a")?.getAttribute("href") ?? "";
+    const link = href.startsWith("https://") && href.length < 400 ? ` | link: ${href}` : "";
+    img.replaceWith(doc.createTextNode(` [image: ${img.getAttribute("alt") ?? ""} | ${src}${link}] `));
   });
   doc.querySelectorAll("br, p, div, tr, li, h1, h2, h3, td").forEach(n => n.append("\n"));
   return (doc.body.textContent ?? "").replace(/[ \t ]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
