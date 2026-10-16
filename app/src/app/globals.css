@@ -186,3 +186,24 @@ a { color: var(--ink); }
 
 /* Short phones (iPhone SE): keep the Gmail button on screen. */
 @media (max-height: 700px) { .mailflow { display: none !important; } }
+
+/* Owner dashboard: a full-width web page, outside the phone frame. */
+.adm { position: fixed; inset: 0; z-index: 100; overflow-y: auto; background: #fff; color: var(--ink); font-family: var(--font-sans), sans-serif; display: flex; align-items: flex-start; }
+.adm-side { position: sticky; top: 0; width: 220px; flex: none; min-height: 100vh; background: #FAF8F6; padding: 28px 14px; display: flex; flex-direction: column; gap: 2px; }
+.adm-nav { padding: 9px 12px; border-radius: 12px; font-size: 14.5px; color: var(--soft); text-decoration: none; }
+.adm-nav:hover { background: #fff; color: var(--ink); }
+.adm-main { flex: 1; min-width: 0; padding: 30px 40px 60px; max-width: 1400px; }
+.adm-card { border: 1.5px solid #EFEBE6; border-radius: 22px; background: #fff; }
+.adm-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+.adm-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 18px; }
+.adm-wide { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 18px; margin-top: 18px; align-items: start; }
+.adm-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.adm-table th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 700; padding: 8px 8px 8px 0; border-bottom: 1px solid #EFEBE6; white-space: nowrap; }
+.adm-table td { padding: 10px 8px 10px 0; border-bottom: 1px solid #F3F0EB; white-space: nowrap; }
+@media (max-width: 900px) {
+  .adm { display: block; }
+  .adm-side { position: static; width: auto; min-height: 0; flex-direction: row; flex-wrap: wrap; padding: 16px; }
+  .adm-main { padding: 20px 16px 60px; }
+  .adm-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .adm-two, .adm-wide { grid-template-columns: minmax(0, 1fr); }
+}
