@@ -164,17 +164,54 @@ export function NameTile({ name, store, w, h, radius = 18 }: { name: string; sto
   );
 }
 
+// The plain background color of a product photo (a gray studio wall, say), read from its corners,
+// so the tile can match it and the photo has no visible edge. White needs nothing: it melts into the tile.
+// Only works when the store lets us read the photo; otherwise the tile stays as it is.
+const bgCache = new Map<string, string | null>();
+function usePhotoBg(src: string | null) {
+  const [bg, setBg] = useState<string | null>(src ? bgCache.get(src) ?? null : null);
+  useEffect(() => {
+    if (!src || bgCache.has(src)) { setBg(src ? bgCache.get(src) ?? null : null); return; }
+    let live = true;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.referrerPolicy = "no-referrer";
+    img.onload = () => {
+      let out: string | null = null;
+      try {
+        const W = 48, H = Math.max(8, Math.round((48 * img.naturalHeight) / Math.max(1, img.naturalWidth)));
+        const c = document.createElement("canvas"); c.width = W; c.height = H;
+        const g = c.getContext("2d", { willReadFrequently: true })!;
+        g.drawImage(img, 0, 0, W, H);
+        const pts = [[1, 1], [W - 2, 1], [1, H - 2], [W - 2, H - 2], [W >> 1, 1], [1, H >> 1], [W - 2, H >> 1]];
+        const px = pts.map(([x, y]) => Array.from(g.getImageData(x, y, 1, 1).data));
+        const mean = [0, 1, 2].map(k => px.reduce((t, p) => t + p[k], 0) / px.length);
+        const even = px.every(p => Math.hypot(p[0] - mean[0], p[1] - mean[1], p[2] - mean[2]) < 22 && p[3] > 200);
+        const white = mean.every(v => v > 236);
+        if (even && !white) out = `rgb(${mean.map(Math.round).join(",")})`;
+      } catch { /* the store doesn't let us read it */ }
+      bgCache.set(src, out);
+      if (live) setBg(out);
+    };
+    img.onerror = () => { bgCache.set(src, null); if (live) setBg(null); };
+    img.src = src;
+    return () => { live = false; };
+  }, [src]);
+  return bg;
+}
+
 // Product photo from the order email. Without one, a tile with the product's name.
 // `label=""` keeps the no-photo tile to a single letter, for places that print the name right below.
 export function ItemImage({ src, store, name, label, w, h, radius = 18, size = 28 }: { src: string | null; store: string; name?: string; label?: string; domain?: string | null; w: number | string; h: number | string; radius?: number; size?: number }) {
   const [bad, setBad] = useState(false);
   // Amazon emails link a tiny 90px photo. Ask Amazon for a sharp one instead.
   if (src && /media-amazon\.com/.test(src)) src = src.replace(/\._[^/]*_\.(jpg|jpeg|png)$/i, "._SL600_.$1");
+  const bg = usePhotoBg(bad ? null : src);
   if (!src || bad) return <NameTile name={name ?? store} store={store} w={w} h={h} radius={radius} size={size} letterOnly={label === ""} />;
   return (
-    <div style={{ width: w, height: h, borderRadius: radius, background: "var(--tile)", flex: "none", overflow: "hidden" }}>
+    <div style={{ width: w, height: h, borderRadius: radius, background: bg ?? "var(--tile)", flex: "none", overflow: "hidden", transition: "background .2s" }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" referrerPolicy="no-referrer" onError={() => setBad(true)} style={{ display: "block", width: "100%", height: "100%", objectFit: "contain", padding: "8%", mixBlendMode: "multiply" }} />
+      <img src={src} alt="" referrerPolicy="no-referrer" onError={() => setBad(true)} style={{ display: "block", width: "100%", height: "100%", objectFit: "contain", padding: "8%", mixBlendMode: bg ? "normal" : "multiply" }} />
     </div>
   );
 }
