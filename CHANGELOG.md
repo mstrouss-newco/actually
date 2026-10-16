@@ -4,6 +4,9 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Outfits: build a look from your closet on a board (drag, pinch, front/back), name it, tag an occasion, share it. Lives in Closet > Outfits; shared looks show on feeds under a new Outfits tab, and every piece is tappable to shop. "Make an outfit with this" on each closet piece.
+- Closet: "Is this yours?" is now one line with our guess, Right or Change.
+
 - Feed: removed the "What people you follow just bought" line under Friends.
 
 - Orders: the photo view now shows every order with pieces, with feed-style type tabs (Tops, Shoes, Bags, Skincare, Home, Other...) that only appear when you have that type. "List" switches to every order.

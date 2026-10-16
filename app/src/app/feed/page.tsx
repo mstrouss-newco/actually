@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { type FeedItem, type Profile, loadFeed, loadProfilePage, loadSaved, myHandle, similarPeople } from "@/lib/social";
-import { Avatar, FeedCard, FollowButton, FriendFaces, FriendGrid, Loves, MyGrid, PhotoPicker, type Order, OrderButton, sortBy, ShareLink, TypeTabs, displayName, useLovesStore } from "@/lib/feed-ui";
+import { Avatar, FeedCard, FollowButton, FriendFaces, FriendGrid, Loves, MyGrid, OutfitPost, PhotoPicker, type Order, OrderButton, sortBy, ShareLink, TypeTabs, displayName, useLovesStore } from "@/lib/feed-ui";
 import { loadItems, toSort } from "@/lib/items";
+import { type SharedOutfit, friendsOutfits } from "@/lib/outfits";
 import { ItemImage, TabBar } from "@/lib/tabs";
 
 type Tab = "friends" | "match" | "mine" | "saved";
@@ -27,6 +28,7 @@ export default function Feed() {
   const [who, setWho] = useState<string | null>(null);
   const [saved, setSaved] = useState<FeedItem[] | null>(null);
   const [savedType, setSavedType] = useState("all");
+  const [looks, setLooks] = useState<SharedOutfit[]>([]);
   // Unloving a piece on Saved takes it off the list.
   const loves = useLovesStore(true, (id, on) => { if (!on) setSaved(s => s?.filter(i => i.id !== id) ?? s); else loadSaved().then(setSaved); });
   const { load } = loves;
@@ -41,6 +43,7 @@ export default function Feed() {
       loadFeed().then(f => { setFeed(f); setTab(x => x ?? (f.length ? "friends" : "mine")); load(f.map(i => i.id)); });
       loadProfilePage(h).then(p => { setMine(p); if (p) load(p.items.map(i => i.id)); });
       loadSaved().then(s => { setSaved(s); load(s.map(i => i.id)); });
+      friendsOutfits().then(setLooks);
       loadItems().then(all => setToGo(toSort(all).length));
       // Each match shows three pieces from their feed.
       similarPeople().then(async list => {
@@ -53,6 +56,10 @@ export default function Feed() {
   // People she follows, most recent posters first.
   const friends = [...new Set((feed ?? []).map(i => i.handle))];
   const shown = (feed ?? []).filter(i => !who || i.handle === who);
+  const shownLooks = looks.filter(o => !who || o.handle === who);
+  // Pieces and looks together, newest first.
+  const stream = [...shown.map(i => ({ at: i.shared_at ?? "", item: i, look: null })), ...shownLooks.map(o => ({ at: o.shared_at ?? "", item: null, look: o }))].sort((a, b) => b.at.localeCompare(a.at));
+  const myLooks = mine?.outfits ?? [];
   const myLoves = (mine?.items ?? []).reduce((n, i) => n + (loves.get(i.id)?.n ?? 0), 0);
 
   return (
@@ -95,9 +102,11 @@ export default function Feed() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
               </button>
             )}
-            {feed && <TypeTabs items={shown} value={type} onChange={setType} end={who ? <OrderButton value={friendOrder} onChange={setFriendOrder} /> : undefined} />}
-            {type === "all" && !who
-              ? <div style={{ display: "flex", flexDirection: "column", gap: 26, padding: "20px 16px 0" }}>{shown.map(i => <FeedCard key={i.id} item={i} />)}</div>
+            {feed && <TypeTabs items={shown} value={type} onChange={setType} lead={shownLooks.length ? [["looks", "Outfits"]] : []} end={who && type !== "looks" ? <OrderButton value={friendOrder} onChange={setFriendOrder} /> : undefined} />}
+            {type === "looks"
+              ? <div style={{ display: "flex", flexDirection: "column", gap: 30, padding: "20px 16px 0" }}>{shownLooks.map(o => <OutfitPost key={o.id} o={o} handle={who ? undefined : o.handle} />)}</div>
+              : type === "all" && !who
+              ? <div style={{ display: "flex", flexDirection: "column", gap: 26, padding: "20px 16px 0" }}>{stream.map(s => s.item ? <FeedCard key={s.item.id} item={s.item} /> : <OutfitPost key={s.look!.id} o={s.look!} handle={s.look!.handle} />)}</div>
               : <div style={{ padding: "16px 16px 0" }}><FriendGrid items={sortBy(shown.filter(i => type === "all" || i.category === type), who ? friendOrder : "new")} who={!who} /></div>}
             {feed && feed.length === 0 && (
               <div style={{ margin: "0 16px", background: "var(--chip)", borderRadius: 26, padding: "20px 18px" }}>
@@ -171,11 +180,18 @@ export default function Feed() {
               </Link>
             )}
             {mine && (
-              <TypeTabs items={mine.items} value={mineType} onChange={setMineType} end={<OrderButton value={order} onChange={setOrder} />} />
+              <TypeTabs items={mine.items} value={mineType} onChange={setMineType} lead={[["looks", "Outfits"]]} end={mineType === "looks" ? undefined : <OrderButton value={order} onChange={setOrder} />} />
             )}
             <div style={{ padding: "14px 16px 0" }}>
-              {mine && mine.items.length === 0 && <p className="lead" style={{ padding: "0 4px", margin: 0 }}>Nothing shared yet. Swipe right in Sort to share a piece.</p>}
-              {mine && <MyGrid items={sortBy(mine.items, order)
+              {mineType === "looks" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+                  <Link href="/outfit/edit/new" className="btn press" style={{ marginTop: 0, height: 48, fontSize: 15 }}>+ Make an outfit</Link>
+                  {myLooks.map(o => <div key={o.id}><OutfitPost o={o} /><Link href={`/outfit/${o.id}`} style={{ display: "inline-block", padding: "10px 4px 0", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Open this outfit →</Link></div>)}
+                  {!myLooks.length && <p className="lead" style={{ padding: "0 4px", margin: 0 }}>Build a look from your closet and share it here. Friends can tap each piece to shop it.</p>}
+                </div>
+              )}
+              {mineType !== "looks" && mine && mine.items.length === 0 && <p className="lead" style={{ padding: "0 4px", margin: 0 }}>Nothing shared yet. Swipe right in Sort to share a piece.</p>}
+              {mineType !== "looks" && mine && <MyGrid items={sortBy(mine.items, order)
                 .filter(i => mineType === "all" || i.category === mineType)} />}
               <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 16, lineHeight: 1.45, padding: "0 4px" }}>Your feed shows the photo, brand, name and your note. Never prices, sizes or order details.</div>
             </div>

@@ -4,7 +4,7 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { type Profile, loadProfilePage } from "@/lib/social";
 import { supabase } from "@/lib/supabase";
-import { Avatar, FollowButton, ItemGrid, Loves, PhotoPicker, type Order, OrderButton, ShareLink, TypeTabs, displayName, sortBy, useLovesStore } from "@/lib/feed-ui";
+import { Avatar, FollowButton, ItemGrid, Loves, OutfitPost, PhotoPicker, type Order, OrderButton, ShareLink, TypeTabs, displayName, sortBy, useLovesStore } from "@/lib/feed-ui";
 import { TabBar } from "@/lib/tabs";
 
 // Public feed page. Works for anyone with the link, signed in or not.
@@ -47,9 +47,10 @@ export default function PublicFeed({ params }: { params: Promise<{ handle: strin
                 : signedIn ? <FollowButton handle={p.handle} initial={p.i_follow} />
                 : <Link href="/" className="btn" style={{ height: 48, fontSize: 15 }}>Join Actually to follow {p.handle}</Link>}
             </div>
-            {p.items.length > 0 && <TypeTabs items={p.items} value={type} onChange={setType} end={<OrderButton value={order} onChange={setOrder} />} />}
+            {(p.items.length > 0 || !!p.outfits?.length) && <TypeTabs items={p.items} value={type} onChange={setType} lead={p.outfits?.length ? [["looks", "Outfits"]] : []} end={type === "looks" ? undefined : <OrderButton value={order} onChange={setOrder} />} />}
             <div style={{ padding: "16px 16px 0" }}>
-              {p.items.length === 0 ? <p className="lead" style={{ padding: "0 4px" }}>Nothing shared yet.</p> : <Loves store={loves}><ItemGrid items={sortBy(p.items.filter(i => type === "all" || i.category === type), order)} mine={p.is_me} /></Loves>}
+              {type === "looks" ? <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>{(p.outfits ?? []).map(o => <OutfitPost key={o.id} o={o} />)}</div>
+                : p.items.length === 0 ? <p className="lead" style={{ padding: "0 4px" }}>Nothing shared yet.</p> : <Loves store={loves}><ItemGrid items={sortBy(p.items.filter(i => type === "all" || i.category === type), order)} mine={p.is_me} /></Loves>}
               {p.items.length > 0 && !p.is_me && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 16, padding: "0 4px", lineHeight: 1.45 }}>{displayName(p.handle)} may earn a small reward if you buy something you find here.</div>}
             </div>
           </>

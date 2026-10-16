@@ -1,0 +1,124 @@
+"use client";
+
+import { use, useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { type Item, loadItems, whoFor } from "@/lib/items";
+import { OCCASIONS, type Outfit, type Placed, loadOutfit, saveOutfit } from "@/lib/outfits";
+import { CollageEditor } from "@/lib/collage";
+import { TypeTabs } from "@/lib/feed-ui";
+import { ItemImage } from "@/lib/tabs";
+
+// Build or change an outfit: a board on top, her closet below.
+export default function OutfitBuilder({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const router = useRouter();
+  const isNew = id === "new";
+  const [items, setItems] = useState<Item[] | null>(null);
+  const [orig, setOrig] = useState<Outfit | null>(null);
+  const [layout, setLayout] = useState<Placed[]>([]);
+  const [sel, setSel] = useState<string | null>(null);
+  const [type, setType] = useState("all");
+  const [saving, setSaving] = useState(false);
+  const [sheet, setSheet] = useState(false);
+  const [name, setName] = useState("");
+  const [occasion, setOccasion] = useState<string | null>(null);
+  const [shared, setShared] = useState(true);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    loadItems().then(all => setItems(all.filter(i => whoFor(i, all) === "me")));
+    if (!isNew) loadOutfit(id).then(o => { if (!o) return; setOrig(o); setLayout(o.layout); setName(o.name); setOccasion(o.occasion); setShared(o.shared); });
+    // "Style this" from a closet piece starts the board with it.
+    const start = new URLSearchParams(location.search).get("with");
+    if (isNew && start) setLayout([{ id: start, x: 0.3, y: 0.25, w: 0.42, r: 0 }]);
+  }, [id, isNew]);
+
+  const pieces = (items ?? []).map(i => ({ id: i.id, brand: i.brand, store: i.store, name: i.name, image_url: i.image_url, category: i.category }));
+  const on = new Set(layout.map(l => l.id));
+  const tray = (items ?? []).filter(i => type === "all" || i.category === type).sort((a, b) => Number(!!b.image_url) - Number(!!a.image_url));
+  // New pieces land in a loose cascade so they don't stack exactly.
+  const add = (i: Item) => {
+    if (on.has(i.id)) { setLayout(l => l.filter(p => p.id !== i.id)); if (sel === i.id) setSel(null); return; }
+    if (layout.length >= 12) return;
+    const n = layout.length;
+    setLayout(l => [...l, { id: i.id, x: 0.08 + ((n * 0.17) % 0.5), y: 0.06 + ((n * 0.21) % 0.6), w: i.category === "shoes" || i.category === "accessories" ? 0.3 : 0.42, r: [-4, 3, 0, -2, 5][n % 5] }]);
+    setSel(i.id);
+  };
+  const nudge = (f: (p: Placed) => Placed) => sel && setLayout(l => l.map(p => (p.id === sel ? f(p) : p)));
+  const toFront = () => sel && setLayout(l => [...l.filter(p => p.id !== sel), l.find(p => p.id === sel)!]);
+  const toBack = () => sel && setLayout(l => [l.find(p => p.id === sel)!, ...l.filter(p => p.id !== sel)]);
+  const size = (k: number) => nudge(p => { const w = Math.min(0.9, Math.max(0.12, p.w * k)); return { ...p, w, x: p.x - (w - p.w) / 2, y: p.y - ((w - p.w) * 1.15) / 2 }; });
+
+  const save = async () => {
+    setSaving(true); setFailed(false);
+    const saved = await saveOutfit({ id: orig?.id, name: name || "New outfit", occasion, layout, shared, wasShared: !!orig?.shared_at });
+    setSaving(false);
+    if (saved) router.replace(`/outfit/${saved}`); else setFailed(true);
+  };
+
+  const tool = { height: 34, padding: "0 12px", borderRadius: 999, border: 0, background: "#fff", boxShadow: "0 2px 8px rgba(20,18,16,.1)", font: "700 12px var(--font-sans), sans-serif", color: "var(--ink)", cursor: "pointer" } as const;
+  const chip = (v: boolean) => ({ height: 34, padding: "0 13px", borderRadius: 999, border: 0, background: v ? "var(--ink)" : "#F3F0EB", color: v ? "#fff" : "var(--ink)", font: "700 13px var(--font-sans), sans-serif", cursor: "pointer" });
+
+  return (
+    <main className="tabscreen" style={{ paddingBottom: 0 }}>
+      <div className="scroll" style={{ paddingBottom: 40 }}>
+        <div style={{ padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Link href={orig ? `/outfit/${orig.id}` : "/closet?view=outfits"} className="back">← {orig ? "Back" : "Closet"}</Link>
+          <button type="button" disabled={!layout.length} onClick={() => setSheet(true)} style={{ border: 0, background: "none", font: "700 15px var(--font-sans), sans-serif", color: layout.length ? "var(--ink)" : "var(--muted)", cursor: "pointer" }}>Done</button>
+        </div>
+        <h1 className="serif" style={{ fontWeight: 400, fontSize: 30, margin: "10px 20px 0", letterSpacing: "-0.02em" }}>{orig ? "Edit outfit" : "New outfit"}</h1>
+
+        <div style={{ position: "relative", margin: "12px 16px 0" }}>
+          <CollageEditor layout={layout} pieces={pieces} onChange={setLayout} selected={sel} onSelect={setSel} />
+          {sel && (
+            <div style={{ position: "absolute", left: 0, right: 0, bottom: 10, display: "flex", justifyContent: "center", gap: 6, zIndex: 50, flexWrap: "wrap" }}>
+              <button type="button" style={tool} onClick={() => size(1.15)} aria-label="Bigger">＋</button>
+              <button type="button" style={tool} onClick={() => size(1 / 1.15)} aria-label="Smaller">－</button>
+              <button type="button" style={tool} onClick={toFront}>Front</button>
+              <button type="button" style={tool} onClick={toBack}>Back</button>
+              <button type="button" style={{ ...tool, color: "#C9402F" }} onClick={() => { setLayout(l => l.filter(p => p.id !== sel)); setSel(null); }}>Remove</button>
+            </div>
+          )}
+        </div>
+
+        {items && <TypeTabs items={items} value={type} onChange={setType} />}
+        <div style={{ display: "flex", gap: 8, padding: "10px 16px 0", overflowX: "auto" }}>
+          {items === null && <div style={{ fontSize: 14, color: "var(--muted)" }}>Loading your closet…</div>}
+          {tray.map(i => (
+            <button key={i.id} type="button" onClick={() => add(i)} aria-pressed={on.has(i.id)} aria-label={i.name} style={{ position: "relative", flex: "none", width: 72, border: 0, padding: 0, background: "none", cursor: "pointer" }}>
+              <ItemImage src={i.image_url} store={i.store} name={i.name} w={72} h={86} radius={14} size={26} />
+              {on.has(i.id) && <span style={{ position: "absolute", right: 5, top: 5, width: 20, height: 20, borderRadius: "50%", background: "var(--ink)", color: "#fff", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>}
+            </button>
+          ))}
+          {items && !tray.length && <div style={{ fontSize: 14, color: "var(--muted)" }}>Nothing of this type yet.</div>}
+        </div>
+        <div style={{ padding: "8px 20px 0", fontSize: 12, color: "var(--muted)" }}>Tap a piece to add it, tap again to take it off. Up to 12.</div>
+      </div>
+
+      {sheet && (
+        <div onClick={() => setSheet(false)} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(20,18,16,.35)", display: "flex", alignItems: "flex-end" }}>
+          <div onClick={e => e.stopPropagation()} className="sheetUp" style={{ width: "100%", background: "#fff", borderRadius: "30px 30px 0 0", padding: "14px 20px calc(24px + env(safe-area-inset-bottom))" }}>
+            <div style={{ width: 40, height: 5, borderRadius: 3, background: "#E2DDD7", margin: "0 auto 14px" }} />
+            <div className="serif" style={{ fontSize: 26 }}>Name this look</div>
+            <input value={name} maxLength={60} placeholder="Easy Saturday" onChange={e => setName(e.target.value)} style={{ marginTop: 12, width: "100%", boxSizing: "border-box", height: 50, borderRadius: 14, border: "1.5px solid var(--line)", padding: "0 14px", font: "16px var(--font-sans), sans-serif" }} />
+            <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+              {OCCASIONS.map(o => <button key={o} type="button" onClick={() => setOccasion(occasion === o ? null : o)} style={chip(occasion === o)}>{o}</button>)}
+            </div>
+            <button type="button" onClick={() => setShared(s => !s)} aria-pressed={shared} style={{ marginTop: 14, width: "100%", display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", border: 0, borderRadius: 16, padding: "12px 14px", textAlign: "left", font: "inherit", color: "var(--ink)", cursor: "pointer" }}>
+              <span style={{ flex: 1 }}>
+                <span style={{ display: "block", fontWeight: 700, fontSize: 14 }}>Share to my feed</span>
+                <span style={{ display: "block", fontSize: 12, color: "var(--muted)" }}>Friends can tap each piece to shop it. Never prices or sizes.</span>
+              </span>
+              <span style={{ width: 46, height: 28, borderRadius: 999, background: shared ? "var(--ink)" : "#D8D2CB", position: "relative", flex: "none", transition: "background .15s" }}>
+                <span style={{ position: "absolute", top: 3, left: shared ? 21 : 3, width: 22, height: 22, borderRadius: "50%", background: "#fff", transition: "left .15s" }} />
+              </span>
+            </button>
+            <button type="button" className="btn press" disabled={saving} onClick={save} style={{ marginTop: 14 }}>{saving ? "Saving" : "Save outfit"}</button>
+            {failed && <div style={{ fontSize: 13, color: "#C9402F", textAlign: "center", marginTop: 8 }}>Couldn&apos;t save. Try again.</div>}
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}

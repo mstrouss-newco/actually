@@ -2,6 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { SUPABASE_URL, supabase } from "./supabase";
+import { Collage } from "./collage";
+import type { SharedOutfit } from "./outfits";
 import Link from "next/link";
 import { type FeedItem, type Love, type SharedItem, ago, findIt, loveState, profileUrl, saveNote, setFollow, setLove } from "./social";
 import { ItemImage, tint } from "./tabs";
@@ -238,10 +240,10 @@ export function ShareLink({ handle, label = "Share my feed", dark = false, small
 const TYPES: [string, string][] = [["tops", "Tops"], ["bottoms", "Bottoms"], ["dresses", "Dresses"], ["outerwear", "Outerwear"], ["shoes", "Shoes"], ["bags", "Bags"], ["accessories", "Accessories"], ["beauty", "Skincare"], ["home", "Home"], ["other", "Other"]];
 
 // Plain text tabs: All, then each type present. The chosen one sits in a dark pill.
-export function TypeTabs({ items, value, onChange, end }: { items: { category: string }[]; value: string; onChange: (v: string) => void; end?: React.ReactNode }) {
+export function TypeTabs({ items, value, onChange, end, lead = [] }: { items: { category: string }[]; value: string; onChange: (v: string) => void; end?: React.ReactNode; lead?: [string, string][] }) {
   const have = new Set(items.map(i => i.category));
-  const tabs: [string, string][] = [["all", "All"], ...TYPES.filter(([k]) => have.has(k))];
-  if (tabs.length < 3) return end ? <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 16px 0" }}>{end}</div> : null;
+  const tabs: [string, string][] = [["all", "All"], ...lead, ...TYPES.filter(([k]) => have.has(k))];
+  if (tabs.length < 3 && !lead.length) return end ? <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 16px 0" }}>{end}</div> : null;
   return (
     <div style={{ display: "flex", alignItems: "center", padding: "12px 12px 0 14px", gap: 4 }}>
       <div style={{ display: "flex", gap: 2, overflowX: "auto", flex: 1, minWidth: 0 }}>
@@ -309,4 +311,36 @@ export function FriendFaces({ handles, value, onChange }: { handles: string[]; v
     );
   };
   return <div style={{ display: "flex", gap: 6, padding: "16px 14px 0", overflowX: "auto" }}>{face(null)}{handles.map(face)}</div>;
+}
+
+// A look someone shared: the collage (tap a piece to shop it), name, note, then each piece.
+export function OutfitPost({ o, handle }: { o: SharedOutfit; handle?: string }) {
+  return (
+    <div>
+      {handle && (
+        <Link href={`/u/${handle}`} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", padding: "0 4px 10px" }}>
+          <Avatar handle={handle} size={38} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 14 }}>{displayName(handle)}</div>
+            <div style={{ fontSize: 12, color: "var(--muted)" }}>Shared a look {ago(o.shared_at)}</div>
+          </div>
+          {o.occasion && <span style={{ height: 26, padding: "0 10px", borderRadius: 999, background: "#DCEFDF", display: "flex", alignItems: "center", fontSize: 11, fontWeight: 700 }}>{o.occasion}</span>}
+        </Link>
+      )}
+      <Collage layout={o.layout} pieces={o.pieces} />
+      <div style={{ padding: "10px 4px 0" }}>
+        <div className="serif" style={{ fontSize: 22 }}>{o.name}</div>
+        {o.note && <div style={{ fontSize: 14, color: "var(--soft)", fontStyle: "italic", marginTop: 2 }}>&ldquo;{o.note}&rdquo;</div>}
+      </div>
+      <div style={{ display: "flex", gap: 10, padding: "12px 4px 0", overflowX: "auto" }}>
+        {o.pieces.map(p => (
+          <a key={p.id} href={findIt(p)} target="_blank" rel="noreferrer" style={{ flex: "none", width: 92, textDecoration: "none" }}>
+            <ItemImage src={p.image_url} store={p.store} name={p.name} w={92} h={96} radius={16} size={30} />
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginTop: 5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.brand || p.store}</div>
+            <div style={{ fontSize: 12, fontWeight: 700 }}>Shop ↗</div>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
 }

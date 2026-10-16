@@ -9,7 +9,7 @@ export async function saveNote(id: string, note: string) {
   return clean;
 }
 export type FeedItem = SharedItem & { handle: string };
-export type Profile = { handle: string; is_me: boolean; i_follow: boolean; followers: number; following: number; items: SharedItem[] };
+export type Profile = { handle: string; is_me: boolean; i_follow: boolean; followers: number; following: number; items: SharedItem[]; outfits?: import("./outfits").SharedOutfit[] };
 
 export async function loadProfilePage(handle: string): Promise<Profile | null> {
   const { data } = await supabase().rpc("profile_page", { name: handle });
