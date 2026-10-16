@@ -2,6 +2,11 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-16: Key features tour
+
+- New `/brief/features` (same password as `/brief`): connect Gmail, organize, earn and discover, each shown as a moving phone built from the lander's screens plus new ones (Gmail import, brand page, Style me, cash back, earn from sharing, resale, her page, Taste Match, saved). Each card says Live or when it's coming.
+- The password check now lives in `brief/pass.ts`, shared by both pages. Lander screens are exported for reuse.
+
 ## 2026-10-16: /model page
 - Added `/model`: owner-only 5 year money model (ad spend, sign ups, revenue, net), behind a password. Source: `app/src/app/model/`.
 

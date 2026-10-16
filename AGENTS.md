@@ -45,7 +45,7 @@ Mike (mstrouss@gmail.com) is not a coder. When talking to him:
 |---|---|
 | `app/` | The real app. Next.js 15 (App Router), TypeScript, no CSS framework. |
 | `app/src/app/` | Screens, one folder per route. `/settings` (from the person icon on Today) has disconnect Gmail, delete data, sign out, delete account. `/brand/[name]` is one brand (from Closet > Brands). |
-| `app/src/app/brief/` | Exec one sheet at `/brief` for ownership and the tech team, behind a password (only a SHA-256 hash in `route.ts`; cookie set by the route). HTML lives in `brief-html.ts`; keep it true to the app when big things change. |
+| `app/src/app/brief/` | Exec one sheet at `/brief` for ownership and the tech team, behind a password (only a SHA-256 hash in `route.ts`; cookie set by the route). HTML lives in `brief-html.ts`; keep it true to the app when big things change. `/brief/features` is the key features tour (same cookie, check in `brief/pass.ts`), phones reuse the lander's screens (`lander.tsx` exports them) plus `brief/features/screens.tsx`. |
 | `app/src/app/model/` | Owner-only 5 year money model at `/model`, behind a password (cookie set by the route). HTML lives in `model-html.ts`. |
 | `app/src/lib/` | Shared logic (Gmail reading, orders, items, earn, social, UI pieces). |
 | `supabase/functions/` | Server functions (Deno). Source of truth for what is deployed. |

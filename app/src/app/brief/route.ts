@@ -1,10 +1,9 @@
 import { cookies } from "next/headers";
 import { createHash } from "node:crypto";
 import { BRIEF_HTML } from "./brief-html";
+import { BRIEF_HASH as HASH, BRIEF_COOKIE as COOKIE } from "./pass";
 
 // The exec one-sheet at /brief, behind a password. Only a hash of the password is kept here.
-const HASH = "c7d79b04b89b99d03cee373b19c17a07d94bc81f0c52c277e1f0b2f6974a9fa4";
-const COOKIE = "brief_ok";
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 
 const gate = (error = false) => `<!doctype html><html lang="en"><head><meta charset="utf-8">
