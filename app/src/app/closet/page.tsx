@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { findIt, siteOf, storeLink } from "@/lib/social";
-import { CATS, type Item, type Who, brandOf, confirmMine, hideItem, hueRank, loadItems, needsAsk, setPick, setWho, shortSize, sizesByBrand, toSort, whoFor } from "@/lib/items";
+import { type Outfit, loadOutfits } from "@/lib/outfits";
+import { Collage } from "@/lib/collage";
+import { CATS, type Item, type Who, brandOf, confirmMine, hideItem, hueRank, likelyWho, loadItems, needsAsk, setPick, setWho, shortSize, sizesByBrand, toSort, whoFor } from "@/lib/items";
 import { type Ret, dayLabel, fmtDate, loadOrders, matches, returnsByEmail } from "@/lib/orders";
 import { ReadItems } from "@/lib/read-items";
 import { ItemImage, BrandLogo, TabBar, tint } from "@/lib/tabs";
@@ -21,7 +23,9 @@ const chip = (on: boolean): React.CSSProperties => ({ border: "1.5px solid var(-
 
 export default function Closet() {
   const [items, setItems] = useState<Item[] | null>(null);
-  const [view, setView] = useState<"pieces" | "brands">("pieces");
+  const [view, setView] = useState<"pieces" | "brands" | "outfits">("pieces");
+  const [outfits, setOutfits] = useState<Outfit[] | null>(null);
+  useEffect(() => { loadOutfits().then(setOutfits); }, []);
   const [rets, setRets] = useState<Map<string, Ret>>(new Map());
   const [sort, setSortState] = useState<SortKey>("new");
   // The sort she picks stays put, on every shelf and after a reload.
@@ -34,9 +38,9 @@ export default function Closet() {
   const setBsort = (k: string) => { setBsortState(k); try { sessionStorage.setItem("brand-sort", k); } catch {} };
   useEffect(() => { try { const k = sessionStorage.getItem("brand-sort"); if (k) setBsortState(k); } catch {} }, []);
   // Coming back from a brand page opens the Brands tab.
-  useEffect(() => { if (new URLSearchParams(location.search).get("view") === "brands") setView("brands"); }, []);
+  useEffect(() => { const v = new URLSearchParams(location.search).get("view"); if (v === "brands" || v === "outfits") setView(v); }, []);
   // Remember the tab in the address, so Back from a brand page lands on Brands.
-  const pickView = (v: "pieces" | "brands") => { setView(v); history.replaceState(history.state, "", v === "brands" ? "?view=brands" : location.pathname); };
+  const pickView = (v: "pieces" | "brands" | "outfits") => { setView(v); history.replaceState(history.state, "", v !== "pieces" ? `?view=${v}` : location.pathname); };
   useEffect(() => { loadOrders().then(g => g && setRets(returnsByEmail(g))); }, []);
   const [cat, setCatState] = useState<string | null>(null);
   // Opening a shelf adds a step to the browser history, so Back returns to the closet.
@@ -147,15 +151,15 @@ export default function Closet() {
       <div className="scroll">
         {!cur && (
           <>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 18, padding: "0 20px" }}>
-              {(["pieces", "brands"] as const).map(v => (
-                <button key={v} onClick={() => pickView(v)} className="serif" style={{ border: 0, borderBottom: `2px solid ${v === view ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 38, color: v === view ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
-                  {v === "pieces" ? "Pieces" : "Brands"}
+            <div style={{ display: "flex", alignItems: "baseline", gap: 16, padding: "0 20px", whiteSpace: "nowrap" }}>
+              {(["pieces", "brands", "outfits"] as const).map(v => (
+                <button key={v} onClick={() => pickView(v)} className="serif" style={{ border: 0, borderBottom: `2px solid ${v === view ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 32, color: v === view ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+                  {v === "pieces" ? "Pieces" : v === "brands" ? "Brands" : "Outfits"}
                 </button>
               ))}
             </div>
             <div style={{ fontSize: 14, color: "var(--muted)", padding: "8px 20px 0" }}>
-              {items === null ? "Loading…" : view === "brands" ? "Your size and their return rules, ready while you shop." : list.length ? `${list.length} ${list.length === 1 ? "piece" : "pieces"}${who === "me" ? " you've bought" : ""}` : "Everything you've bought, in one place."}
+              {items === null ? "Loading…" : view === "outfits" ? "Put looks together from what you own." : view === "brands" ? "Your size and their return rules, ready while you shop." : list.length ? `${list.length} ${list.length === 1 ? "piece" : "pieces"}${who === "me" ? " you've bought" : ""}` : "Everything you've bought, in one place."}
             </div>
             {view === "pieces" && people.length > 1 && (
               <div style={{ display: "flex", gap: 6, padding: "12px 20px 0" }}>
@@ -172,12 +176,17 @@ export default function Closet() {
               <div style={{ margin: "16px 16px 0", background: "#FAF8F6", borderRadius: 22, padding: 14, display: "flex", gap: 12, alignItems: "center" }}>
                 <ItemImage src={toAsk[0].image_url} store={toAsk[0].store} name={toAsk[0].name} w={56} h={70} radius={14} size={22} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 14 }}>Is this yours?</div>
-                  <div style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{toAsk[0].brand || toAsk[0].store} {toAsk[0].name} · Size {toAsk[0].size}</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-                    {WHO.map(([k, label]) => <button key={k} onClick={() => answer(toAsk[0], k)} style={{ ...chip(false), padding: "5px 10px", fontSize: 12 }}>{k === "me" ? "Yes, mine" : label}</button>)}
-                  </div>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>Looks like it&apos;s for {likelyWho(toAsk[0], everything) === "kids" ? "your kids" : "your partner"}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{toAsk[0].brand || toAsk[0].store} {toAsk[0].name}{toAsk[0].size ? ` · Size ${toAsk[0].size}` : ""}</div>
                 </div>
+                <button onClick={() => answer(toAsk[0], likelyWho(toAsk[0], everything))} className="press" style={{ flex: "none", height: 34, padding: "0 14px", borderRadius: 999, border: 0, background: "var(--ink)", color: "#fff", font: "700 13px var(--font-sans), sans-serif", cursor: "pointer" }}>Right</button>
+                <label style={{ flex: "none", position: "relative", fontSize: 13, fontWeight: 700, color: "var(--muted)", padding: "0 2px", cursor: "pointer" }}>
+                  Change
+                  <select aria-label="Who is this for?" value="" onChange={e => e.target.value && answer(toAsk[0], e.target.value as Who)} style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}>
+                    <option value="" disabled>Who is it for?</option>
+                    {WHO.map(([k, label]) => <option key={k} value={k}>{k === "me" ? "It's mine" : label}</option>)}
+                  </select>
+                </label>
               </div>
             )}
           </>
@@ -221,6 +230,29 @@ export default function Closet() {
                   </button>
                 );
               })}
+            </div>
+          </>
+        )}
+
+        {!cur && view === "outfits" && (
+          <>
+            <div style={{ padding: "16px 16px 0" }}>
+              <Link href="/outfit/edit/new" className="btn press" style={{ marginTop: 0, height: 50, fontSize: 15 }}>+ New outfit</Link>
+            </div>
+            {outfits && outfits.length === 0 && (
+              <div style={{ margin: "16px 16px 0", background: "var(--chip)", borderRadius: 26, padding: "20px 18px" }}>
+                <div className="serif" style={{ fontSize: 24, lineHeight: 1.1 }}>Your first <em>look.</em></div>
+                <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 8, lineHeight: 1.45 }}>Pick pieces you own, lay them out, and save it. Share it and friends can shop each piece.</div>
+              </div>
+            )}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "16px 12px", padding: "16px 16px 0" }}>
+              {(outfits ?? []).map((o, n) => (
+                <Link key={o.id} href={`/outfit/${o.id}`} className="up press" style={{ ...delay(n, 50), textDecoration: "none", color: "var(--ink)", minWidth: 0 }}>
+                  <div style={{ pointerEvents: "none" }}><Collage layout={o.layout} pieces={(items ?? []).map(i => ({ id: i.id, brand: i.brand, store: i.store, name: i.name, image_url: i.image_url, category: i.category }))} radius={20} tags={false} /></div>
+                  <div style={{ fontWeight: 700, fontSize: 14, marginTop: 8 }}>{o.name}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)" }}>{[o.occasion, o.worn ? `Worn ${o.worn === 1 ? "once" : `${o.worn} times`}` : "Not worn yet", o.shared ? "Shared" : null].filter(Boolean).join(" · ")}</div>
+                </Link>
+              ))}
             </div>
           </>
         )}
@@ -372,6 +404,7 @@ export default function Closet() {
                   {sel.pick === k ? "✓ " : ""}{label}
                 </button>
               ))}
+              {whoFor(sel, everything) === "me" && <Link href={`/outfit/edit/new?with=${sel.id}`} className="btn btn-ghost" style={{ height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>Make an outfit with this</Link>}
               {sel.pick === "sell" && <Link href={`/earn/worth/${sel.id}`} className="btn press" style={{ height: 48, fontSize: 15, background: "#FF6159", color: "var(--ink)" }}>Make a resale post →</Link>}
               <a href={findIt(sel)} target="_blank" rel="noreferrer" className="btn btn-ghost" style={{ height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>{storeLink(sel) ? `See it on ${siteOf(storeLink(sel)!)}` : "Find it online"} ↗</a>
               <button onClick={() => remove(sel)} className="btn btn-ghost" style={{ marginTop: 0, fontSize: 14, color: "#C9402F" }}>Remove from closet</button>

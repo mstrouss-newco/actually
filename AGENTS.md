@@ -95,7 +95,7 @@ design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPAB
 | `value-items` | Yes | AI estimates resale ranges, 40 items at a time. |
 | `inbound-email` | No (checks Resend signature) | Shopping email receiver. |
 | `gmail-token` | Own check (GET is public, says only ready or not) | Saves Google's refresh token, hands out fresh Gmail passes, forgets on disconnect. |
-| `delete-account` | Yes | `data`: deletes orders, items, rewards, blocked stores, brand follows, loves (keeps account). `account`: deletes the user and her photo; every table cascades. |
+| `delete-account` | Yes | `data`: deletes orders, items, rewards, blocked stores, brand follows, loves, outfits (keeps account). `account`: deletes the user and her photo; every table cascades. |
 
 All AI calls use `claude-haiku-5-5` with structured output, chosen for cost (about
 $0.50 per user to start). Ask Mike before switching to a pricier model.
@@ -118,6 +118,9 @@ and `items.hidden` (removed from closet; kept so imports don't bring it back).
 Every table has row level security: people only see their own rows. Shared pieces
 leave the database only through the `profile_page`, `following_feed` (old), `friends_feed`, `search_people`,
 `similar_people` and `my_people` functions, which return photo, brand and name only (plus the note she wrote, `items.note`, on `profile_page`, and `items.product_url`, the cleaned store page link with nothing after the "?"). `read-order` finds product links from the photo links in order emails (and `fillLinks()` in `lib/items.ts` for older pieces), following tracking redirects server side (manual hops, https only, no IP or internal hosts). Only the server can write `product_url` (trigger `keep_product_url`), and `findIt()` uses it only when the link's site matches the store or brand name; otherwise a Google Shopping search.
+
+Outfits: table `outfits` (owner-only; `layout` is a list of {id, x, y, w, r}, shares of the board width, max 12 pieces). Built at `/outfit/edit/[id]` (`new` to start, `?with=<item>` to start from a piece) with `CollageEditor` in `lib/collage.tsx`; shown at `/outfit/[id]` and in Closet > Outfits. Shared looks reach others only through `friends_outfits` and `profile_page` (via `outfit_public`), which drop pieces marked for kids, partner or someone else, hidden or sent back, and return photo, brand, name and store link only. On feeds, the "Outfits" type tab and the Friends "All" stream show them; each piece in a look is tappable to shop it.
+The "Is this yours?" closet prompt shows our guess (`likelyWho()`): Right, or Change (a small menu).
 
 Profile photos: public Storage bucket `avatars`, one file per person at `<handle>.jpg` (shrunk to 320px on the phone by `PhotoPicker` in `lib/feed-ui.tsx`); only the owner can write hers. `Avatar` shows the photo when there is one, else the colored initial.
 Today shows no spending totals (people don't enjoy seeing them); prices stay on orders and brand pages.
