@@ -21,8 +21,6 @@ const COPY: Record<Exclude<Ask, null>, [string, string, string]> = {
 export default function Settings() {
   const router = useRouter();
   const [me, setMe] = useState<{ email: string; handle: string | null } | null>(null);
-  const [owner, setOwner] = useState(false);
-  useEffect(() => { (async () => { const { data } = await supabase().rpc("is_admin"); setOwner(!!data); })(); }, []);
   const [ask, setAsk] = useState<Ask>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
@@ -113,12 +111,6 @@ export default function Settings() {
             <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
               {row("Delete my orders and closet", "Start fresh: orders, closet, points, saved hearts and outfits. Keeps your account and shopping email.", () => setAsk("data"), true)}
             </div>
-            {owner && (
-              <Link href="/admin" style={{ margin: "18px 16px 0", display: "flex", alignItems: "center", gap: 10, background: "var(--ink)", color: "#fff", borderRadius: 18, padding: "14px 16px", textDecoration: "none", fontWeight: 700, fontSize: 15 }}>
-                <span style={{ flex: 1 }}>Owner dashboard</span>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
-              </Link>
-            )}
             {head("Legal")}
             <Link href="/legal" style={{ margin: "0 16px", display: "flex", alignItems: "center", background: "#FAF8F6", borderRadius: 16, padding: "14px 16px", textDecoration: "none", fontWeight: 700, fontSize: 15 }}>
               <span style={{ flex: 1 }}>Privacy, terms and your data</span>

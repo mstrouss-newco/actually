@@ -4,6 +4,9 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-16
 
+- New lander for browser visitors at "/" (`app/lander.tsx`, `lander.css`): moving phone screens (Today with store alerts, Closet filling in, the outfit maker, a scrolling friends feed), a strip of real store logos, money cards and Gmail buttons. Opened from the Home Screen, "/" is still the app's welcome (`app/welcome.tsx`). Phone and computer layouts.
+- Owner dashboard is now a full-width web page (sidebar, top numbers, funnel and weekly chart side by side, people table, money, errors, owner log). Removed from the app's Settings; open it at /admin. Signed-out visitors there get a Sign in button.
+
 - Cut-outs everywhere: her pieces get their plain photo background removed automatically in the background (`ensureCutouts()` in `lib/cutouts.ts`, from Closet and outfits), and every piece tile and outfit board uses the see-through copy when there is one, so no grey or off-white boxes. Busy photos (a model, a room) keep theirs. On a board, "Show photo" switches one back (`cut: false`).
 
 - Today header: search on the left, her profile photo (to Settings) in the far right corner.
