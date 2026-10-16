@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Follow brands: a one-time "Your brands" screen (`/follow`) after the closet fills in, every brand pre-checked, one tap to follow; Today shows "Brands you follow"; brand pages have Follow / Following, switches for sales, new arrivals and price drops, and "You might also like" (brands at least 3 of its followers also follow, counts only); Settings lists followed brands with Unfollow. New table `brand_follows`, `profiles.brands_asked_at`, function `brand_suggestions` (migration brand_follows). Delete-my-data clears follows. Sales and price drop alerts need the Wildfire deal feed and a price source; not built yet.
+
 - Sharing copy: Sort, My feed and the Closet piece sheet say you could earn when a friend buys something you shared; public pages say the person may earn a small reward. (Assumes the cash back partner, Wildfire, is in place before launch.)
 
 - iPhone: the bottom menu tucks away while scrolling down and comes back on the way up; screens leave room for the phone's edges (safe areas). Added to the Home Screen, Actually opens full screen with its own icon (`manifest.ts`, `apple-icon.png`, `public/icon-*.png`), and Today shows a one-time "Keep Actually on your Home Screen" tip in iPhone Safari (`lib/home-tip.tsx`).

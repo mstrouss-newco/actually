@@ -95,7 +95,7 @@ design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPAB
 | `value-items` | Yes | AI estimates resale ranges, 40 items at a time. |
 | `inbound-email` | No (checks Resend signature) | Shopping email receiver. |
 | `gmail-token` | Own check (GET is public, says only ready or not) | Saves Google's refresh token, hands out fresh Gmail passes, forgets on disconnect. |
-| `delete-account` | Yes | `data`: deletes orders, items, rewards, blocked stores (keeps account). `account`: deletes the user; every table cascades. |
+| `delete-account` | Yes | `data`: deletes orders, items, rewards, blocked stores, brand follows (keeps account). `account`: deletes the user; every table cascades. |
 
 All AI calls use `claude-haiku-5-5` with structured output, chosen for cost (about
 $0.50 per user to start). Ask Mike before switching to a pricier model.
@@ -110,7 +110,8 @@ Order pieces are one per product and color (`groupOrders`), so three colors of a
 Motion lives in `app/globals.css` (classes `up`, `press`, `drop`, `bell`, `float`, `heroIn`, `barfill`, `glow`, `fanin`) and `lib/motion.tsx` (`delay()` for staggered lists, `useCountUp`, `TrackBar`, `Confetti`). Reduced-motion settings shorten all of it.
 Product images never fall back to a store logo or a letter: `ItemImage` shows a small drawing of what the item is (`lib/drawings.tsx`, matched from the item name, then the store; a box if nothing matches). Logos (`StoreTile`, `BrandLogo`) are for brands and stores only, and never fall back to a letter: `StoreTile` shows a drawing, `BrandLogo` shows nothing.
 
-Tables: `profiles`, `orders`, `items`, `rewards`, `follows`, `blocked_stores`, `gmail_tokens` (no policies; server only).
+Tables: `profiles`, `orders`, `items`, `rewards`, `follows` (people), `brand_follows` (brands she chose, with sales / arrivals / drops switches), `blocked_stores`, `gmail_tokens` (no policies; server only).
+Brand follows: `/follow` asks once (`profiles.brands_asked_at`) with every closet brand pre-checked; she confirms with one tap. Offers and alerts must come from brands she follows, never picked straight from Gmail data (Google's Limited Use rule). `brand_suggestions` returns brands followed by at least 3 of a brand's fans, counts only.
 `items.for_whom` (me / kids / partner / other, guessed by `whoFor()` in `lib/items.ts` when empty)
 and `items.hidden` (removed from closet; kept so imports don't bring it back).
 Every table has row level security: people only see their own rows. Shared pieces
