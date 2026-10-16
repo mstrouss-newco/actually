@@ -78,7 +78,7 @@ const ROAD: { when: string; name: string; main?: boolean; cols: [string, string[
     cols: [["1. Feedback and prework", ["Oddbytes employees try it (US only, up to 100 people)", "Get their feedback and fix what they find", "Legal review of policies"]],
       ["2. If they'd keep using it", ["Google approval for Gmail", "Security review (2 to 6 weeks)", "Partner approvals (Wildfire and others)", "New domain: actually.shop", "Ready to launch"]]] },
   { when: "December", name: "Launch", gate: "Needs cash back to be earning",
-    cols: [["", ["Public launch, with an earning test on 50,000 Chirp users", "Cash back links live", "Syncs with the app closed"]], ["", ["Return deadline alerts", "Outlook inbox", "Pinterest sharing"]]] },
+    cols: [["", ["Public launch, plus an earning test with a cohort of Chirp users", "Cash back links live", "Syncs with the app closed"]], ["", ["Return deadline alerts", "Outlook inbox", "Pinterest sharing"]]] },
   { when: "Q1 2027", name: "Grow", cols: [["", ["App Store app"]], ["", ["Resale partners"]]] },
   { when: "Rest of 2027", name: "Scale", cols: [["", ["Brand offers (at about 25,000 users)", "Trend reports"]], ["", ["Yahoo inbox (needs Yahoo to approve us)"]]] },
 ];
@@ -195,13 +195,13 @@ export default async function Deck() {
               <div className="gt-big">$<span className="ld-cnt" style={{ ["--to" as string]: 124 }} /></div>
               <div className="gt-chips"><span>$20 Sephora points</span><span>$38 cash back</span><span>$66 resale</span></div>
             </div>
-            <div className="gt-meta"><div><span>Why it lands</span>Earning ads were our cheapest September test ($3.49 a sign-up)</div><div><span>Where we test it</span>50,000 Chirp users we&apos;ve already acquired, who signed up to make money</div></div>
+            <div className="gt-meta"><div><span>Why it lands</span>Earning ads were our cheapest September test ($3.49 a sign-up)</div><div><span>Where we test it</span>A cohort of Chirp users (we&apos;ve already acquired about 50,000), who signed up to make money</div></div>
           </div>
         </div>
         <div className="gt-steps">
           <div><b>1</b><span><strong>Employees first</strong>Up to 100 Oddbytes employees in the US</span></div>
           <i aria-hidden="true" />
-          <div><b>2</b><span><strong>Test earning on Chirp</strong>50,000 users, almost no cost</span></div>
+          <div><b>2</b><span><strong>Test earning on Chirp</strong>A cohort of users, almost no cost</span></div>
           <i aria-hidden="true" />
           <div><b>3</b><span><strong>Launch in December</strong>When holiday returns pile up</span></div>
         </div>
@@ -225,7 +225,7 @@ export default async function Deck() {
 
       <Slide kick="What we need" tone="dark" title="A green light to test">
         <div className="dk-grid dk-two">
-          <div className="dk-box"><b>From ownership</b><p>A green light for employee testing, and agreement to test the earning message on our 50,000 Chirp users. If testing goes well: $500 for actually.shop and $1,000 to $5,000 for Google&apos;s security review.</p></div>
+          <div className="dk-box"><b>From ownership</b><p>A green light for employee testing, and agreement to test the earning message on a cohort of our Chirp users. If testing goes well: $500 for actually.shop and $1,000 to $5,000 for Google&apos;s security review.</p></div>
           <div className="dk-box"><b>From the tech team</b><p>About an hour a week to look over what ships, an owner for the security review, and a view on when we need an App Store app.</p></div>
         </div>
       </Slide>
