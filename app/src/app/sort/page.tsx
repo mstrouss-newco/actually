@@ -86,7 +86,7 @@ export default function Sort() {
   return (
     <main className="screen" style={{ padding: "20px 20px 26px", overflow: "hidden" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link href="/closet" className="back" style={{ padding: "0 14px" }}>{finished ? "Done" : "Finish later"}</Link>
+        <Link href="/closet" className="back" style={{ padding: "0 14px" }}>{finished ? "Done" : "Later"}</Link>
         {!finished && (
           <button onClick={undo} disabled={!i} style={{ height: 36, padding: "0 14px", borderRadius: 999, border: 0, background: "transparent", font: "700 13px var(--font-sans), sans-serif", color: i ? "var(--ink)" : "#C9C3BC", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14L4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-3" /></svg>Undo
@@ -155,7 +155,10 @@ export default function Sort() {
             <button onClick={() => decide("sell")} style={{ ...hint, fontSize: 12, fontWeight: 500 }}>Swipe up to sell</button>
             <button onClick={() => decide("share")} className="nr" style={{ ...hint, color: "#2F7A4F" }}>Share<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button>
           </div>
-          {total - i > 1 && <button onClick={restPrivate} style={{ marginTop: 10, height: 36, border: 0, background: "transparent", font: "500 13px var(--font-sans), sans-serif", color: "var(--muted)", cursor: "pointer", textDecoration: "underline" }}>Keep all {total - i} left private</button>}
+          {/* Stop any time: the rest stay unsorted and wait here for next time. */}
+          <Link href="/feed?tab=mine" className="btn btn-line press" style={{ marginTop: 12, height: 46, fontSize: 15 }}>Show my feed</Link>
+          <div style={{ fontSize: 12, color: "var(--muted)", textAlign: "center", marginTop: 6 }}>The other {total - i} {total - i === 1 ? "piece waits" : "pieces wait"} here for later.</div>
+          {total - i > 1 && <button onClick={restPrivate} style={{ marginTop: 4, height: 32, border: 0, background: "transparent", font: "500 12px var(--font-sans), sans-serif", color: "var(--muted)", cursor: "pointer", textDecoration: "underline" }}>Keep all {total - i} left private</button>}
         </>
       )}
 
