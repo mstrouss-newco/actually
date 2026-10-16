@@ -2,6 +2,10 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-16: Deck tech stack slide
+
+- Tech stack moved up to its own slide (after Discover) with each product's real logo: Next.js, Vercel, Supabase, Claude, Gmail, Resend, GitHub, Wildfire. The appendix keeps how it's built and privacy.
+
 ## 2026-10-16: Deck go-to-market slide
 
 - Go to market is now two customer cards (The Organizer, our priority, and The Earner), each with who she is, the message, a moving example, why it lands and where we find her, plus the three launch steps underneath.
