@@ -76,8 +76,7 @@ export default function Feed() {
 
         {handle && tab === "friends" && (
           <>
-            {friends.length > 1 ? <FriendFaces handles={friends} value={who} onChange={h => { setWho(h); setType("all"); }} />
-              : <div style={{ padding: "10px 20px 0", fontSize: 14, color: "var(--muted)" }}>What people you follow just bought</div>}
+            {friends.length > 1 && <FriendFaces handles={friends} value={who} onChange={h => { setWho(h); setType("all"); }} />}
             {who && (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 20px 0" }}>
                 <div>
