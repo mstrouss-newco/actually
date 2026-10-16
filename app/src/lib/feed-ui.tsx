@@ -235,10 +235,10 @@ export function ShareLink({ handle, label = "Share my feed", dark = false, small
 }
 
 // Piece types, in the order the tabs show them. Only types someone has shared appear.
-const TYPES: [string, string][] = [["tops", "Tops"], ["bottoms", "Bottoms"], ["dresses", "Dresses"], ["outerwear", "Outerwear"], ["shoes", "Shoes"], ["bags", "Bags"], ["accessories", "Accessories"], ["beauty", "Skincare"]];
+const TYPES: [string, string][] = [["tops", "Tops"], ["bottoms", "Bottoms"], ["dresses", "Dresses"], ["outerwear", "Outerwear"], ["shoes", "Shoes"], ["bags", "Bags"], ["accessories", "Accessories"], ["beauty", "Skincare"], ["home", "Home"], ["other", "Other"]];
 
 // Plain text tabs: All, then each type present. The chosen one sits in a dark pill.
-export function TypeTabs({ items, value, onChange, end }: { items: SharedItem[]; value: string; onChange: (v: string) => void; end?: React.ReactNode }) {
+export function TypeTabs({ items, value, onChange, end }: { items: { category: string }[]; value: string; onChange: (v: string) => void; end?: React.ReactNode }) {
   const have = new Set(items.map(i => i.category));
   const tabs: [string, string][] = [["all", "All"], ...TYPES.filter(([k]) => have.has(k))];
   if (tabs.length < 3) return end ? <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 16px 0" }}>{end}</div> : null;
