@@ -125,12 +125,34 @@ export default async function Deck() {
         <p className="dk-small">Per user, per year. Ad tests cost $3 to $7 per sign-up. Watch-outs: Amazon pays low fees, and links only pay if she buys through us, which we still need to prove.</p>
       </Slide>
 
-      <Slide kick="Go to market" tone="soft" title="Lead with earning and organizing">
-        <div className="dk-grid">
-          <div className="dk-box" style={{ background: "#FFF0BF" }}><b>Two messages</b><p>Earning (unused points, missed returns, cash back) already brings our cheapest sign-ups. Organizing is everything she bought, in one place. We back whichever keeps more people.</p></div>
-          <div className="dk-box" style={{ background: "#DCEFDF" }}><b>50,000 Chirp users</b><p>Already acquired. They signed up to make money, so they test the earning message at almost no cost.</p></div>
-          <div className="dk-box" style={{ background: "#DCEBFF" }}><b>Employees first</b><p>Up to 100 Oddbytes employees in the US test it before launch (Google&apos;s limit until it approves us).</p></div>
-          <div className="dk-box" style={{ background: "#FFE1DC" }}><b>Holiday timing</b><p>December is when returns pile up and tracking matters most. Sharing brings friends in for free.</p></div>
+      <Slide kick="Go to market" tone="soft" title={<>Two customers. <em>Two messages.</em></>} line="We test both, then put the money behind whichever keeps more people.">
+        <div className="gt-icps">
+          <div className="gt-icp gt-org">
+            <div className="gt-top"><span className="gt-tag">Customer 1 · our priority</span><h3>The Organizer</h3><p className="gt-who">Shops online a lot and loses track of what&apos;s coming, what&apos;s due back and what she owns.</p></div>
+            <div className="gt-say">&ldquo;Every order, return and size, in one place.&rdquo;</div>
+            <div className="gt-feed">
+              <div className="gt-n" style={{ animationDelay: "0s" }}><span className="gt-dot" style={{ background: "#C9402F" }} /><b>Return the Zara overshirt</b><em>by Friday</em></div>
+              <div className="gt-n" style={{ animationDelay: ".6s" }}><span className="gt-dot" style={{ background: "#2F6FD6" }} /><b>Nike order</b><em>out for delivery</em></div>
+              <div className="gt-n" style={{ animationDelay: "1.2s" }}><span className="gt-dot" style={{ background: "#2F7A4F" }} /><b>Your Aritzia size</b><em>M, every time</em></div>
+            </div>
+            <div className="gt-meta"><div><span>Why it lands</span>77% of shoppers say they&apos;ve missed a return window</div><div><span>Where we find her</span>Women who already use Shop, Rakuten, ShopMy and LTK</div></div>
+          </div>
+          <div className="gt-icp gt-earn">
+            <div className="gt-top"><span className="gt-tag">Customer 2</span><h3>The Earner</h3><p className="gt-who">Hates leaving money on the table: points that expire, returns she forgot, cash back she never claimed.</p></div>
+            <div className="gt-say">&ldquo;Money you&apos;d otherwise miss.&rdquo;</div>
+            <div className="gt-money">
+              <div className="gt-big">$<span className="ld-cnt" style={{ ["--to" as string]: 124 }} /></div>
+              <div className="gt-chips"><span>$20 Sephora points</span><span>$38 cash back</span><span>$66 resale</span></div>
+            </div>
+            <div className="gt-meta"><div><span>Why it lands</span>Ads about earning brought our cheapest sign-ups</div><div><span>Where we test it</span>50,000 Chirp users we&apos;ve already acquired, who signed up to make money</div></div>
+          </div>
+        </div>
+        <div className="gt-steps">
+          <div><b>1</b><span><strong>Employees first</strong>Up to 100 Oddbytes employees in the US</span></div>
+          <i aria-hidden="true" />
+          <div><b>2</b><span><strong>Test earning on Chirp</strong>50,000 users, almost no cost</span></div>
+          <i aria-hidden="true" />
+          <div><b>3</b><span><strong>Launch in December</strong>When holiday returns pile up</span></div>
         </div>
       </Slide>
 

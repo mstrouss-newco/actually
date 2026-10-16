@@ -2,6 +2,10 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-16: Deck go-to-market slide
+
+- Go to market is now two customer cards (The Organizer, our priority, and The Earner), each with who she is, the message, a moving example, why it lands and where we find her, plus the three launch steps underneath.
+
 ## 2026-10-16: One deck at /brief
 
 - The one sheet and the features tour are merged into one slide deck at `/brief/deck` (same password): cover, connect, organize, earn, discover, money, go to market, roadmap, what we need, appendix. Arrow keys, space or the corner buttons move a slide; phones keep moving. The old one-sheet HTML is gone.
