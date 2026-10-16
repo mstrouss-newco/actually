@@ -5,7 +5,7 @@ import Link from "next/link";
 import { HomeScreenTip } from "@/lib/home-tip";
 import { type BrandFollow, brandsAsked, loadFollows } from "@/lib/brands";
 import { useRouter } from "next/navigation";
-import { type OrderGroup, SOON, cleanupOnce, dayLabel, etaText, isArriving, loadOrders, orderTitle, refreshArriving, returnBy, returnDaysLeft, shortTitle, fmtDate, trackStep, justArrived } from "@/lib/orders";
+import { type OrderGroup, SOON, cleanupOnce, clearOrdersCache, dayLabel, etaText, isArriving, loadOrders, orderTitle, refreshArriving, returnBy, returnDaysLeft, shortTitle, fmtDate, trackStep, justArrived } from "@/lib/orders";
 import { gmailToken, supabase } from "@/lib/supabase";
 import { Avatar } from "@/lib/feed-ui";
 import { DOMAIN, loadProfile, saveProfile } from "@/lib/profile";
@@ -92,6 +92,12 @@ export default function Today() {
     cleanupOnce().then(changed => { if (changed) loadOrders().then(setOrders); });
   }, [router]);
 
+  // A new Gmail check finished: show what came in.
+  useEffect(() => {
+    const fresh = () => { clearOrdersCache(); loadOrders().then(setOrders); loadItems().then(setItems); };
+    addEventListener("orders-updated", fresh);
+    return () => removeEventListener("orders-updated", fresh);
+  }, []);
   const all = orders ?? [];
   const arriving = all.filter(isArriving);
   const canReturn = all.filter(g => returnDaysLeft(g) != null).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!);

@@ -253,6 +253,8 @@ function dedupeNames(list: string[]) {
 
 // One load shared by every screen part that asks within a few seconds.
 let cache: { at: number; p: Promise<OrderGroup[] | null> } | null = null;
+/** Forget the shared copy so the next load reads fresh orders (after a Gmail check). */
+export function clearOrdersCache() { cache = null; }
 export function loadOrders(): Promise<OrderGroup[] | null> {
   if (cache && Date.now() - cache.at < 5000) return cache.p;
   cache = { at: Date.now(), p: fetchOrders() };

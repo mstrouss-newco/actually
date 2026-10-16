@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { TypeTabs } from "@/lib/feed-ui";
 import Link from "next/link";
-import { type OrderGroup, dayLabel, fmtDate, isArriving, isReturn, loadOrders, matches, orderTitle, paid, returnBy, returnDaysLeft, ruleText, SOON, usd } from "@/lib/orders";
+import { type OrderGroup, clearOrdersCache, dayLabel, fmtDate, isArriving, isReturn, loadOrders, matches, orderTitle, paid, returnBy, returnDaysLeft, ruleText, SOON, usd } from "@/lib/orders";
 import { Progress, ItemImage, TabBar } from "@/lib/tabs";
 import { delay } from "@/lib/motion";
 
@@ -78,6 +78,12 @@ export default function Orders() {
     history.replaceState(history.state, "", v === "list" ? `?view=list&tab=${t ?? tab}` : location.pathname);
   };
 
+  // A new Gmail check finished: show what came in.
+  useEffect(() => {
+    const fresh = () => { clearOrdersCache(); loadOrders().then(setOrders); };
+    addEventListener("orders-updated", fresh);
+    return () => removeEventListener("orders-updated", fresh);
+  }, []);
   useEffect(() => {
     const sp = new URLSearchParams(location.search);
     const t = sp.get("tab") as Tab | null;
