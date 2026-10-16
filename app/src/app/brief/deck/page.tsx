@@ -45,6 +45,17 @@ function Slide({ kick, title, line, tone = "", children }: { kick: string; title
   );
 }
 
+const STACK: [string, string, string, string][] = [
+  ["nextjs.org", "Next.js", "The app", "One app for phone and computer, installs to the home screen"],
+  ["vercel.com", "Vercel", "Hosting", "Every change gets a preview and goes live in minutes"],
+  ["supabase.com", "Supabase", "Data and sign-in", "Each person can only ever read her own data"],
+  ["anthropic.com", "Claude by Anthropic", "AI", "Reads order emails, prices resale, styles outfits; capped at $25 a month"],
+  ["gmail.com", "Gmail", "Her orders", "Read-only: we can never send, delete or change her mail"],
+  ["resend.com", "Resend", "Email", "Her shopping email address and our alerts"],
+  ["github.com", "GitHub", "Code", "Every change reviewed and recorded"],
+  ["wildfire-corp.com", "Wildfire", "Cash back partner", "Pays store fees on purchases (in talks)"],
+];
+
 const MONEY: [string, string, string, string, string, string][] = [
   ["Shopping links", "Store pays a fee when she buys through us; we share some as cash back", "$5 to $15", "30 to 50%", "$2 to $7", "Launch"],
   ["Friends' purchases", "A friend buys what she shared; we split the fee with her", "$1 to $5", "25 to 40%", "$0.25 to $2", "5,000 users"],
@@ -114,6 +125,18 @@ export default async function Deck() {
         ]} />
       </Slide>
 
+      <Slide kick="Tech stack" title={<>Built on tools <em>tech teams already know.</em></>} line="Standard, hosted and low cost: about $0.50 of AI per new user, then pennies a month.">
+        <div className="st-grid">
+          {STACK.map(([d, name, what, why]) => (
+            <div key={name} className="st-card">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`https://www.google.com/s2/favicons?domain=${d}&sz=128`} alt="" width={44} height={44} referrerPolicy="no-referrer" />
+              <div><b>{name}</b><span>{what}</span><p>{why}</p></div>
+            </div>
+          ))}
+        </div>
+      </Slide>
+
       <Slide kick="How it makes money" title={<>$20 to $50 a user a year. <em>$8 to $28 net.</em></>} line="Our estimates, based on similar apps (Rakuten, Ibotta, Fetch, LTK), once everything is running. Running cost is under $1 per user a year.">
         <div className="dk-tw"><table className="dk-t">
           <thead><tr><th>Stream</th><th>How</th><th>Revenue</th><th>Margin</th><th>Net</th><th>Starts at</th></tr></thead>
@@ -180,9 +203,9 @@ export default async function Deck() {
       </Slide>
 
       <Slide kick="Appendix" title="Under the hood">
-        <div className="dk-grid dk-three">
+        <div className="dk-grid">
           <div className="dk-box"><b>How it&apos;s built</b><ul><li>AI agents write, design, test and release; one person directs and approves every change.</li><li>A separate AI tester checks each batch as a first-time user.</li><li>Every change is reviewed and logged; the code has a full guide for engineers.</li></ul></div>
-          <div className="dk-box"><b>Tech stack</b><ul><li>Next.js web app that installs to the iPhone home screen</li><li>Vercel hosting, Supabase data and sign-in</li><li>Anthropic Claude (Haiku) for AI, capped at $25 a month</li><li>Gmail read-only, Resend for email, GitHub for code</li></ul></div>
+          
           <div className="dk-box"><b>Privacy</b><ul><li>Health, banking, insurance, legal and adult mail is dropped before anything is read.</li><li>Each person can only read her own data.</li><li>Shared items never show price, size or order details.</li></ul></div>
         </div>
       </Slide>
