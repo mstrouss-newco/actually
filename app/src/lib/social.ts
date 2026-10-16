@@ -21,6 +21,25 @@ export async function loadFeed(): Promise<FeedItem[]> {
   return (data ?? []) as FeedItem[];
 }
 
+// Hearts: counts for shared pieces and whether she loved each. Owners see counts, never who.
+export type Love = { n: number; mine: boolean };
+export async function loveState(ids: string[]) {
+  const m = new Map<string, Love>();
+  if (!ids.length) return m;
+  const { data } = await supabase().rpc("love_state", { ids });
+  for (const r of (data ?? []) as { item_id: string; loves: number; mine: boolean }[]) m.set(r.item_id, { n: r.loves, mine: r.mine });
+  return m;
+}
+export async function setLove(id: string, loved: boolean) {
+  const { data, error } = await supabase().rpc("set_love", { item: id, loved });
+  return error ? null : (data as number);
+}
+// Pieces she loved, newest first.
+export async function loadSaved(): Promise<FeedItem[]> {
+  const { data } = await supabase().rpc("saved_pieces");
+  return (data ?? []) as FeedItem[];
+}
+
 export async function searchPeople(q: string) {
   const { data } = await supabase().rpc("search_people", { q });
   return (data ?? []) as { handle: string; shared: number; i_follow: boolean }[];

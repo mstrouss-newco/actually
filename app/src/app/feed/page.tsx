@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { type FeedItem, type Profile, loadFeed, loadProfilePage, myHandle, similarPeople } from "@/lib/social";
-import { Avatar, FeedCard, FollowButton, FriendGrid, MyGrid, ShareLink, TypeTabs, displayName } from "@/lib/feed-ui";
+import { type FeedItem, type Profile, loadFeed, loadProfilePage, loadSaved, myHandle, similarPeople } from "@/lib/social";
+import { Avatar, FeedCard, FollowButton, FriendFaces, FriendGrid, Loves, MyGrid, ShareLink, TypeTabs, displayName, useLovesStore } from "@/lib/feed-ui";
 import { loadItems, toSort } from "@/lib/items";
 import { ItemImage, TabBar } from "@/lib/tabs";
 
-type Tab = "friends" | "match" | "mine";
-const LABEL: Record<Tab, string> = { friends: "Friends", match: "Taste match", mine: "My feed" };
+type Tab = "friends" | "match" | "mine" | "saved";
+const LABEL: Record<Tab, string> = { friends: "Friends", match: "Taste match", mine: "My feed", saved: "Saved" };
 type Match = { handle: string; brands: string[]; picks: Profile["items"] };
 
 const both = (b: string[]) => (b.length > 1 ? `${b.slice(0, -1).join(", ")} and ${b.at(-1)}` : b[0]);
@@ -23,16 +23,23 @@ export default function Feed() {
   const [type, setType] = useState("all");
   const [mineType, setMineType] = useState("all");
   const [order, setOrder] = useState<"new" | "brand" | "type">("new");
+  const [who, setWho] = useState<string | null>(null);
+  const [saved, setSaved] = useState<FeedItem[] | null>(null);
+  const [savedType, setSavedType] = useState("all");
+  // Unloving a piece on Saved takes it off the list.
+  const loves = useLovesStore(true, (id, on) => { if (!on) setSaved(s => s?.filter(i => i.id !== id) ?? s); else loadSaved().then(setSaved); });
+  const { load } = loves;
 
   useEffect(() => {
     const t = new URLSearchParams(location.search).get("tab");
-    if (t === "mine" || t === "match" || t === "friends") setTab(t);
+    if (t === "mine" || t === "match" || t === "friends" || t === "saved") setTab(t);
     myHandle().then(h => {
       setHandle(h);
       if (!h) { setTab(x => x ?? "friends"); return; }
       // My feed comes first until friends have posted something.
-      loadFeed().then(f => { setFeed(f); setTab(x => x ?? (f.length ? "friends" : "mine")); });
-      loadProfilePage(h).then(setMine);
+      loadFeed().then(f => { setFeed(f); setTab(x => x ?? (f.length ? "friends" : "mine")); load(f.map(i => i.id)); });
+      loadProfilePage(h).then(p => { setMine(p); if (p) load(p.items.map(i => i.id)); });
+      loadSaved().then(s => { setSaved(s); load(s.map(i => i.id)); });
       loadItems().then(all => setToGo(toSort(all).length));
       // Each match shows three pieces from their feed.
       similarPeople().then(async list => {
@@ -40,13 +47,19 @@ export default function Feed() {
         setMatches(list.slice(0, 6).map((p, n) => ({ handle: p.handle, brands: p.brands, picks: pages[n]?.items.slice(0, 3) ?? [] })));
       });
     });
-  }, []);
+  }, [load]);
+
+  // People she follows, most recent posters first.
+  const friends = [...new Set((feed ?? []).map(i => i.handle))];
+  const shown = (feed ?? []).filter(i => !who || i.handle === who);
+  const myLoves = (mine?.items ?? []).reduce((n, i) => n + (loves.get(i.id)?.n ?? 0), 0);
 
   return (
+    <Loves store={loves}>
     <main className="tabscreen">
       <div className="scroll">
-        <div style={{ display: "flex", alignItems: "baseline", gap: 14, padding: "0 20px", whiteSpace: "nowrap" }}>
-          {(feed?.length ? ["friends", "match", "mine"] as Tab[] : ["mine", "friends", "match"] as Tab[]).map(k => [k, LABEL[k]] as const).map(([k, label]) => (
+        <div style={{ display: "flex", alignItems: "baseline", gap: 14, padding: "0 20px", whiteSpace: "nowrap", overflowX: "auto" }}>
+          {(feed?.length ? ["friends", "match", "mine", "saved"] as Tab[] : ["mine", "friends", "match", "saved"] as Tab[]).map(k => [k, LABEL[k]] as const).map(([k, label]) => (
             <button key={k} onClick={() => { setTab(k); history.replaceState(history.state, "", `?tab=${k}`); }} className="serif" style={{ border: 0, borderBottom: `2px solid ${tab === k ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 22, whiteSpace: "nowrap", color: tab === k ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
               {label}
             </button>
@@ -62,8 +75,18 @@ export default function Feed() {
 
         {handle && tab === "friends" && (
           <>
-            <div style={{ padding: "10px 20px 0", fontSize: 14, color: "var(--muted)" }}>What people you follow just bought</div>
-            {!!matches?.length && (
+            {friends.length > 1 ? <FriendFaces handles={friends} value={who} onChange={h => { setWho(h); setType("all"); }} />
+              : <div style={{ padding: "10px 20px 0", fontSize: 14, color: "var(--muted)" }}>What people you follow just bought</div>}
+            {who && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 20px 0" }}>
+                <div>
+                  <div className="serif" style={{ fontSize: 24, lineHeight: 1 }}>{displayName(who)}</div>
+                  <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{shown.length} {shown.length === 1 ? "piece" : "pieces"}</div>
+                </div>
+                <Link href={`/u/${who}`} style={{ fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Their page →</Link>
+              </div>
+            )}
+            {!who && !!matches?.length && (
               <button onClick={() => setTab("match")} style={{ margin: "14px 16px 0", width: "calc(100% - 32px)", display: "flex", alignItems: "center", gap: 12, border: 0, borderRadius: 20, background: "#DCEFDF", padding: "14px 16px", textAlign: "left", font: "inherit", color: "var(--ink)", cursor: "pointer" }}>
                 <span style={{ flex: 1 }}>
                   <span style={{ display: "block", fontWeight: 700, fontSize: 15 }}>See your taste matches</span>
@@ -72,10 +95,10 @@ export default function Feed() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
               </button>
             )}
-            {feed && <TypeTabs items={feed} value={type} onChange={setType} />}
-            {type === "all"
-              ? <div style={{ display: "flex", flexDirection: "column", gap: 26, padding: "20px 16px 0" }}>{feed?.map(i => <FeedCard key={i.id} item={i} />)}</div>
-              : <div style={{ padding: "16px 16px 0" }}><FriendGrid items={(feed ?? []).filter(i => i.category === type)} /></div>}
+            {feed && <TypeTabs items={shown} value={type} onChange={setType} />}
+            {type === "all" && !who
+              ? <div style={{ display: "flex", flexDirection: "column", gap: 26, padding: "20px 16px 0" }}>{shown.map(i => <FeedCard key={i.id} item={i} />)}</div>
+              : <div style={{ padding: "16px 16px 0" }}><FriendGrid items={shown.filter(i => type === "all" || i.category === type)} who={!who} /></div>}
             {feed && feed.length === 0 && (
               <div style={{ margin: "0 16px", background: "var(--chip)", borderRadius: 26, padding: "20px 18px" }}>
                 <div className="serif" style={{ fontSize: 24, lineHeight: 1.1 }}>Follow people to fill your <em>feed.</em></div>
@@ -137,7 +160,7 @@ export default function Feed() {
               <Avatar handle={handle} size={56} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="serif" style={{ fontSize: 24, lineHeight: 1, overflowWrap: "anywhere" }}>{displayName(handle)}</div>
-                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{mine ? `${mine.followers} ${mine.followers === 1 ? "follower" : "followers"} · ${mine.following} following` : "Loading…"}</div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{mine ? `${mine.followers} ${mine.followers === 1 ? "follower" : "followers"} · ${myLoves ? `${myLoves} ${myLoves === 1 ? "love" : "loves"}` : `${mine.following} following`}` : "Loading…"}</div>
               </div>
               <ShareLink handle={handle} label="Share" small />
             </div>
@@ -164,8 +187,25 @@ export default function Feed() {
             </div>
           </>
         )}
+
+        {handle && tab === "saved" && (
+          <>
+            <div style={{ padding: "10px 20px 0", fontSize: 14, color: "var(--muted)" }}>Pieces you loved from friends. Only you see this list.</div>
+            {saved && <TypeTabs items={saved} value={savedType} onChange={setSavedType} />}
+            <div style={{ padding: "16px 16px 0" }}>
+              {saved && saved.length > 0 && <FriendGrid items={saved.filter(i => savedType === "all" || i.category === savedType)} saved />}
+              {saved && saved.length === 0 && (
+                <div style={{ background: "var(--chip)", borderRadius: 26, padding: "20px 18px" }}>
+                  <div className="serif" style={{ fontSize: 24, lineHeight: 1.1 }}>Nothing saved <em>yet.</em></div>
+                  <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 8, lineHeight: 1.45 }}>Tap the heart on a friend&apos;s piece and it lands here, ready when you are.</div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
       <TabBar />
     </main>
+    </Loves>
   );
 }
