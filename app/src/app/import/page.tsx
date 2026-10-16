@@ -4,6 +4,44 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { type ImportState, importState, onImport, startImport } from "@/lib/importer";
 import { StoreTile } from "@/lib/tabs";
+import { DOMAIN, changeHandle, cleanHandle, loadProfile } from "@/lib/profile";
+
+// While the closet fills in: her name for friends, picked from Google. One tap to keep it.
+function NameCard() {
+  const [h, setH] = useState("");
+  const [orig, setOrig] = useState("");
+  const [done, setDone] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    const n = loadProfile().handle;
+    setH(n); setOrig(n);
+    try { if (localStorage.getItem("name-ok")) setDone(true); } catch {}
+  }, []);
+  if (!orig || done) return null;
+  const keep = async () => {
+    setMsg("");
+    if (h !== orig) {
+      setBusy(true);
+      const r = await changeHandle(h);
+      setBusy(false);
+      if (r !== "ok") { setMsg(r === "taken" ? `${h} is taken. Try another.` : "Use 3 or more letters or numbers."); return; }
+    }
+    try { localStorage.setItem("name-ok", "1"); } catch {}
+    setDone(true);
+  };
+  return (
+    <div className="drop" style={{ background: "#FAF8F6", borderRadius: 24, padding: 16, marginBottom: 12 }}>
+      <div style={{ fontWeight: 700, fontSize: 15 }}>While we look, your name for friends</div>
+      <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+        <input value={h} onChange={e => setH(cleanHandle(e.target.value))} onKeyDown={e => e.key === "Enter" && keep()} aria-label="Your name" autoCapitalize="none" autoComplete="off" spellCheck={false}
+          style={{ flex: 1, minWidth: 0, height: 48, borderRadius: 14, background: "#fff", border: "1.5px solid var(--line)", padding: "0 14px", font: "700 17px var(--font-sans), sans-serif", color: "var(--ink)" }} />
+        <button type="button" onClick={keep} disabled={busy} style={{ height: 48, padding: "0 18px", borderRadius: 999, border: 0, background: "var(--ink)", color: "#fff", font: "700 15px var(--font-sans), sans-serif", cursor: "pointer" }}>{busy ? "Saving" : h === orig ? "Looks good" : "Save"}</button>
+      </div>
+      <div style={{ fontSize: 12, color: msg ? "#C9402F" : "var(--muted)", marginTop: 8 }}>{msg || `Also your shopping email: ${h || orig}@${DOMAIN}`}</div>
+    </div>
+  );
+}
 
 const TAGS: Record<string, [string, string]> = {
   order: ["Order", "#DCEBFF"], receipt: ["Receipt", "#DCEFDF"], shipping: ["Shipping", "#FFF0BF"],
@@ -44,7 +82,8 @@ export default function Import() {
           : s.stage === "items" ? (s.itemsTotal ? `Reading what you bought, ${s.itemsDone} of ${s.itemsTotal}` : "Reading what you bought")
           : "All done"}
       </div>
-      <div className="serif" style={{ fontSize: 120, lineHeight: 0.9, letterSpacing: "-0.04em", marginTop: 18 }}>{s.orders}</div>
+      <h1 className="h1" style={{ marginTop: 14 }}>{s.stage === "done" ? <>Your closet is <em>ready.</em></> : <>Building your <em>closet&hellip;</em></>}</h1>
+      <div className="serif" style={{ fontSize: 96, lineHeight: 0.9, letterSpacing: "-0.04em", marginTop: 14 }}>{s.orders}</div>
       <div style={{ fontSize: 17, marginTop: 6 }}>{s.orders === 1 ? "order found" : "orders found"}{s.itemsFound ? ` · ${s.itemsFound} items` : ""}</div>
       <div style={{ marginTop: 18, height: 6, borderRadius: 3, background: "#F1EDE8", overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: "var(--ink)", borderRadius: 3, transition: "width .2s" }} />
@@ -68,8 +107,9 @@ export default function Import() {
       </div>
 
       <div className="spacer" />
+      <NameCard />
       {s.skipped > 0 && s.stage === "done" && <p style={{ margin: "0 0 10px", fontSize: 13, color: "var(--muted)", lineHeight: 1.45 }}>{s.skipped} emails couldn&apos;t be checked. Run this again later to pick them up.</p>}
-      {s.stage !== "done" && <p style={{ margin: "0 0 12px", fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>This keeps going while you look around. Just keep the app open.</p>}
+      {s.stage !== "done" && <p style={{ margin: "0 0 12px", fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>Takes about a minute. Keep the app open while it runs.</p>}
       <Link href="/today" className="btn">{s.stage === "done" ? "See my orders" : "Look around while this runs"}</Link>
     </main>
   );

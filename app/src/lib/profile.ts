@@ -47,3 +47,38 @@ export async function syncProfile(): Promise<"ok" | "taken" | "signed-out"> {
   const { error } = await sb.from("profiles").upsert(row);
   return error?.code === "23505" ? "taken" : "ok";
 }
+
+// New accounts get a name from Google (her first name), so sign-up has no extra step.
+// She can change it on the import screen or in Settings.
+export async function autoHandle(): Promise<string | null> {
+  const { supabase } = await import("./supabase");
+  const sb = supabase();
+  const { data } = await sb.auth.getUser();
+  const u = data.user;
+  if (!u) return null;
+  const m = (u.user_metadata ?? {}) as Record<string, string | undefined>;
+  const first = (m.given_name || m.full_name || m.name || "").split(" ")[0];
+  let base = cleanHandle(first) || cleanHandle((u.email ?? "").split("@")[0].replace(/[._+-]\d*$/, ""));
+  if (base.length < 3) base = `${base}shops`.slice(0, 30);
+  const tries = [base, ...Array.from({ length: 6 }, () => `${base.slice(0, 26)}${Math.floor(10 + Math.random() * 990)}`)];
+  for (const h of tries) {
+    if (!handleOk(h)) continue;
+    const { data: free } = await sb.rpc("handle_available", { name: h });
+    if (free === false) continue;
+    saveProfile({ handle: h });
+    if ((await syncProfile()) === "ok") return h;
+  }
+  saveProfile({ handle: "" });
+  return null;
+}
+
+// Change her name (and shopping email). "taken" if someone has it.
+export async function changeHandle(h: string): Promise<"ok" | "taken" | "bad"> {
+  if (!handleOk(h)) return "bad";
+  const old = loadProfile().handle;
+  saveProfile({ handle: h });
+  const r = await syncProfile();
+  if (r === "ok") return "ok";
+  saveProfile({ handle: old });
+  return r === "taken" ? "taken" : "bad";
+}
