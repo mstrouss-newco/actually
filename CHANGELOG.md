@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Photos with a plain gray or colored background no longer sit in a visible box: the tile takes the photo's background color (read from its corners when the store allows). White backgrounds already blend in.
+
 - Fix: photos in an outfit no longer show through each other where they overlap. Each photo sits on its own patch of board color, so white backgrounds still disappear.
 
 - Today: card titles are smaller and never cut off. The returnable card reads "Keep it or send it back?" with the piece, store and return date underneath.
