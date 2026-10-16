@@ -37,7 +37,7 @@ Deno.serve(async req => {
     if (to.length) {
       const { error } = await resend.emails.send({
         from: `Actually alerts <alerts@${DOMAIN}>`, to,
-        subject: `Actually: something broke on ${page ?? "the app"}`,
+        subject: "Actually: someone hit an error",
         html: `<p>Someone hit an error in Actually.</p><p><b>Where:</b> ${esc(page ?? "unknown")}<br><b>What:</b> ${esc(message)}<br><b>Errors in the last hour:</b> ${(count ?? 0) + 1}</p><p>See them all on the <a href="https://actually-app.vercel.app/admin">owner dashboard</a>. You'll get at most one of these an hour.</p>`,
       }).catch(e => ({ error: e }));
       if (!error) await admin.from("app_errors").update({ emailed: true }).eq("id", row.id);

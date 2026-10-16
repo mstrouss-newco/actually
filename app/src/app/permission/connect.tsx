@@ -10,9 +10,9 @@ const G = (
 );
 
 // Signs her in and asks for read-only Gmail access, all in one Google step.
-export function ConnectGmail({ next = "/import" }: { next?: string }) {
+export function ConnectGmail({ next = "/import", count = false }: { next?: string; count?: boolean }) {
   const [busy, setBusy] = useState(false);
-  const go = async () => { setBusy(true); track("claimed"); await signIn(next, true); };
+  const go = async () => { setBusy(true); if (count) track("claimed"); await signIn(next, true); };
   return (
     <>
       <button className="btn" onClick={go} disabled={busy} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
@@ -34,7 +34,7 @@ export function GmailStart() {
   const small = { color: "var(--muted)", fontSize: 12, background: "none", border: 0, padding: 0, font: "inherit", cursor: "pointer" } as const;
   return (
     <>
-      <ConnectGmail />
+      <ConnectGmail count />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12, fontSize: 12, color: "var(--muted)" }}>
         <span style={{ display: "flex", gap: 14 }}>
           <button type="button" onClick={() => signIn("/today")} style={{ ...small, fontWeight: 700 }}>Not now</button>

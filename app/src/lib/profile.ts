@@ -32,12 +32,12 @@ export const DOMAIN = process.env.NEXT_PUBLIC_SHOPPING_DOMAIN || "shop.myocto.co
 
 // Lowercase letters, numbers and dots. 3 to 30 long.
 export function cleanHandle(s: string) {
-  return s.toLowerCase().replace(/[^a-z0-9.]/g, "").slice(0, 30);
+  return s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^a-z0-9.]/g, "").slice(0, 30);
 }
 export const handleOk = (s: string) => /^[a-z0-9](?:[a-z0-9.]{1,28})[a-z0-9]$/.test(s) && !s.includes("..");
 
 // Copy what's on this device to her account. "taken" means someone else has that name.
-export async function syncProfile(): Promise<"ok" | "taken" | "signed-out"> {
+export async function syncProfile(): Promise<"ok" | "taken" | "signed-out" | "error"> {
   const { supabase } = await import("./supabase");
   const sb = supabase();
   const { data } = await sb.auth.getUser();
@@ -45,7 +45,7 @@ export async function syncProfile(): Promise<"ok" | "taken" | "signed-out"> {
   const p = loadProfile();
   const row = { id: data.user.id, goals: p.goals, updated_at: new Date().toISOString(), ...(p.handle ? { handle: p.handle } : {}) };
   const { error } = await sb.from("profiles").upsert(row);
-  return error?.code === "23505" ? "taken" : "ok";
+  return !error ? "ok" : error.code === "23505" ? "taken" : "error";
 }
 
 // New accounts get a name from Google (her first name), so sign-up has no extra step.
@@ -66,9 +66,13 @@ export async function autoHandle(): Promise<string | null> {
     const { data: free } = await sb.rpc("handle_available", { name: h });
     if (free === false) continue;
     saveProfile({ handle: h });
-    if ((await syncProfile()) === "ok") return h;
+    const r = await syncProfile();
+    if (r === "ok") return h;
+    if (r !== "taken") break;
   }
+  // No name yet: still make her account row, and the import screen asks her to pick one.
   saveProfile({ handle: "" });
+  await syncProfile();
   return null;
 }
 
