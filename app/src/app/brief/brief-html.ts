@@ -44,7 +44,7 @@ a{color:var(--ink)}
 @media print{.wrap{padding:24px}section{break-inside:avoid}}
 </style></head><body><div class="wrap">
 
-<div class="top"><div class="logo">Actually</div><div class="stamp">One sheet for ownership and the tech team · October 16, 2026 · Confidential</div></div>
+<div class="top"><div class="logo">Actually</div><div class="stamp">One sheet for ownership and the tech team · October 16, 2026 · Confidential · <a href="/brief/features" style="color:inherit;font-weight:700">See key features</a></div></div>
 <h1>Your order emails, <em>sorted out.</em></h1>
 <p class="lede">Actually reads a shopper's order emails (with her permission) and turns them into a closet of everything she owns, every return deadline and delivery, points about to expire, what her clothes would resell for, and a feed of what her friends love. It is live in a private beta at <a href="https://actually-app.vercel.app">actually-app.vercel.app</a>.</p>
 

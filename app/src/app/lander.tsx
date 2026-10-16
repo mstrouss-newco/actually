@@ -5,24 +5,24 @@ import "./lander.css";
 // The public front door for browser visitors. Everything moves: the phones are little looping videos
 // made from the app's own screens.
 const logo = (d: string) => `https://www.google.com/s2/favicons?domain=${d}&sz=128`;
-const art = (k: string) => `/art/${k}.webp`;
+export const art = (k: string) => `/art/${k}.webp`;
 
-function Logo({ d, s = 22 }: { d: string; s?: number }) {
+export function Logo({ d, s = 22 }: { d: string; s?: number }) {
   // eslint-disable-next-line @next/next/no-img-element
   return <img src={logo(d)} alt="" width={s} height={s} className="ld-logo" referrerPolicy="no-referrer" />;
 }
-function Pic({ k, h, r = 16 }: { k: string; h: number; r?: number }) {
+export function Pic({ k, h, r = 16 }: { k: string; h: number; r?: number }) {
   // eslint-disable-next-line @next/next/no-img-element
   return <div className="ld-pic" style={{ height: h, borderRadius: r }}><img src={art(k)} alt="" /></div>;
 }
-function Phone({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+export function Phone({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`ld-phone ${className}`}><div className="ld-screen">{children}</div></div>;
 }
-const Heart = ({ d }: { d: number }) => (
+export const Heart = ({ d }: { d: number }) => (
   <svg className="ld-ht" style={{ animationDelay: `${d}s` }} width="22" height="22" viewBox="0 0 24 24" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>
 );
 
-function Banner({ d, store, text, when, col, delay }: { d: string; store: string; text: string; when: string; col: string; delay: number }) {
+export function Banner({ d, store, text, when, col, delay }: { d: string; store: string; text: string; when: string; col: string; delay: number }) {
   return (
     <div className="ld-ban" style={{ animationDelay: `${delay}s` }}>
       <Logo d={d} s={30} />
@@ -32,7 +32,7 @@ function Banner({ d, store, text, when, col, delay }: { d: string; store: string
   );
 }
 
-function TodayScreen() {
+export function TodayScreen() {
   return (
     <div className="ld-pad">
       <div className="ld-row"><div className="ld-mlogo">Actually</div><span className="ld-av">C</span></div>
@@ -65,7 +65,7 @@ const CLOSET: [string, string, string, string][] = [
   ["acc-tote-tan", "J.Crew", "jcrew.com", ""], ["tops-striped-tee", "J.Crew", "jcrew.com", "M"], ["tops-cardigan-sage", "Everlane", "everlane.com", "S"],
   ["dresses-wrap-floral", "Reformation", "thereformation.com", "4"], ["shoes-runner-sky", "Nike", "nike.com", "8"], ["tops-cashmere-lilac", "Naadam", "naadam.co", "S"],
 ];
-function ClosetScreen() {
+export function ClosetScreen() {
   return (
     <>
       <div className="ld-pad" style={{ paddingBottom: 0 }}>
@@ -94,7 +94,7 @@ const BOARD: [string, number, number, number, number, number, number, number][] 
   ["tops-overshirt-rose", 12, 14, 128, -3, -10, 420, 0], ["tops-crew-tee-sky", 160, 22, 112, 3, 60, 420, 0.5],
   ["bottoms-jeans-midwash", 34, 176, 96, 0, 40, 300, 1], ["acc-crossbody-blush", 168, 170, 96, 4, 100, 300, 1.5], ["shoes-sneaker-black-gum", 160, 292, 110, -6, 0, 160, 2],
 ];
-function MakerScreen() {
+export function MakerScreen() {
   return (
     <>
       <div className="ld-pad ld-row" style={{ paddingBottom: 0 }}><div className="ld-title" style={{ fontSize: 24 }}>New outfit</div><span className="ld-save">Save</span></div>
@@ -119,7 +119,7 @@ const POSTS: Post[] = [
   { who: "Sam", av: "#DCEBFF", k: "acc-tote-tan", d: "jcrew.com", brand: "J.Crew", name: "Leather tote", heart: 4 },
 ];
 const LOOK: [string, number, number, number, number][] = [["tops-overshirt-rose", 8, 10, 104, -3], ["bottoms-jeans-midwash", 120, 30, 62, 0], ["tops-crew-tee-sky", 192, 14, 88, 3], ["shoes-sneaker-black-gum", 12, 170, 86, -6], ["acc-crossbody-blush", 196, 150, 72, 4]];
-function FeedScreen() {
+export function FeedScreen() {
   return (
     <>
       <div className="ld-pad" style={{ paddingBottom: 0 }}><div style={{ display: "flex", gap: 14, alignItems: "baseline" }}>{["Friends", "Saved", "Looks"].map(t => <span key={t} className="ld-seg" style={{ fontSize: t === "Friends" ? 20 : 17, color: t === "Friends" ? "#141210" : "#948C84" }}>{t}</span>)}</div></div>
