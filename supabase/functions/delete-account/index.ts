@@ -1,4 +1,4 @@
-// Deletes her data. "data" clears orders, closet, points, blocked stores and followed brands so she can start
+// Deletes her data. "data" clears orders, closet, points, blocked stores, followed brands and saved hearts so she can start
 // fresh. "account" deletes the account itself; every table goes with it.
 import { createClient } from "npm:@supabase/supabase-js@2.117.3";
 
@@ -19,7 +19,7 @@ Deno.serve(async req => {
     return error ? json({ error: "failed" }, 500) : json({ deleted: true });
   }
   if (mode === "data") {
-    for (const t of ["items", "orders", "rewards", "blocked_stores", "brand_follows"]) {
+    for (const t of ["items", "orders", "rewards", "blocked_stores", "brand_follows", "loves"]) {
       const { error } = await admin.from(t).delete().eq("user_id", uid);
       if (error) return json({ error: "failed" }, 500);
     }
