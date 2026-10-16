@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-16
 
+- Cut-outs for looks and pieces already shared: anyone who sees a friend's shared piece or look asks for its cut-out, and `cut-out` now allows pieces that are shared (on their own or in a shared look), not just her own. Failed tries are retried on a later visit.
+
 - Lander on phones: the Gmail button sits right under the moving app screen.
 
 - Lander and dashboard QA fixes: dashboard search and expense boxes keep focus while typing; money shows cents properly and big numbers get commas; phone-width dashboard header tidied. Lander phones fit on smaller laptops (901 to 1240 wide); Gmail buttons never squash; the hidden app welcome no longer sits under the lander; copy says "We only save your shopping emails"; counters count once; page description updated.
