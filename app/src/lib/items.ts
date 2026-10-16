@@ -77,8 +77,14 @@ export async function loadItems(): Promise<Item[]> {
 
 // Every saved copy of a piece (see merge), so an answer sticks whichever copy shows next time.
 const idsOf = (x: string | Item) => (typeof x === "string" ? [x] : x.ids ?? [x.id]);
+// Sharing goes on one copy only, so friends never see a piece twice; the other copies are cleared.
 export async function setPick(x: string | Item, pick: Item["pick"]) {
-  await supabase().from("items").update({ pick }).in("id", idsOf(x));
+  const all = idsOf(x), main = typeof x === "string" ? x : x.id;
+  if (pick === "share") {
+    await supabase().from("items").update({ pick: "share" }).eq("id", main);
+    const rest = all.filter(id => id !== main);
+    if (rest.length) await supabase().from("items").update({ pick: null }).in("id", rest);
+  } else await supabase().from("items").update({ pick }).in("id", all);
 }
 
 // Same choice for many pieces at once ("Keep the other 12 private").

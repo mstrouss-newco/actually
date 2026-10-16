@@ -101,15 +101,24 @@ const SEARCH: Record<string, string> = {
   "oldnavy.com": "/browse/search.do?searchText=", "gap.com": "/browse/search.do?searchText=", "bananarepublic.com": "/browse/search.do?searchText=", "athleta.com": "/browse/search.do?searchText=",
   "sephora.com": "/search?keyword=", "abercrombie.com": "/shop/us/search?searchTerm=", "lululemon.com": "/search?Ntt=", "poshmark.com": "/search?query=",
   "depop.com": "/search/?q=", "ae.com": "/us/en/s/", "macys.com": "/shop/featured/", "walmart.com": "/search?q=", "zara.com": "/us/en/search?searchTerm=",
+  "jcrew.com": "/r/search/?N=0&Nloc=en&Ntrm=", "madewell.com": "/search?q=", "everlane.com": "/search?q=", "aritzia.com": "/us/en/search?q=", "anthropologie.com": "/search?q=",
+  "freepeople.com": "/search?q=", "urbanoutfitters.com": "/search?q=", "hm.com": "/en_us/search-results.html?q=", "uniqlo.com": "/us/en/search?q=", "shopbop.com": "/s/products?query=",
+  "revolve.com": "/r/Search.jsp?search=", "net-a-porter.com": "/en-us/shop/search/", "saksfifthavenue.com": "/search?q=", "neimanmarcus.com": "/search.jsp?q=", "jcpenney.com": "/s?searchTerm=",
+  "kohls.com": "/search.jsp?search=", "dsw.com": "/search?q=", "zappos.com": "/search?term=", "nike.com": "/w?q=", "adidas.com": "/us/search?q=", "newbalance.com": "/search?q=",
+  "vuori.com": "/search?q=", "aloyoga.com": "/search?q=", "quince.com": "/search?query=", "huckberry.com": "/search?q=", "etsy.com": "/search?q=", "shein.com": "/pdsearch/",
+  "reformation.com": "/search?q=", "hollisterco.com": "/shop/us/search?searchTerm=", "loft.com": "/search/searchresults?Ntt=", "anntaylor.com": "/search/searchresults?Ntt=",
+  "llbean.com": "/llb/search/?freeText=", "patagonia.com": "/search/?q=", "rei.com": "/search?q=", "kizik.com": "/search?q=", "allbirds.com": "/search?q=",
+  "ulta.com": "/search?search=", "skims.com": "/search?q=", "spanx.com": "/search?q=", "talbots.com": "/search?q=", "express.com": "/search?q=", "garnethill.com": "/search?q=",
 };
 export function siteSearch(i: { brand: string | null; store: string; name: string; store_site?: string | null }) {
   const raw = i.store_site?.toLowerCase().trim();
   if (!raw || !/^[a-z0-9.-]+\.[a-z]{2,}$/.test(raw)) return null;
   const site = SITE_ALIAS[raw] ?? raw;
   const host = squash(site.replace(/\.[a-z]+$/, ""));
-  const names = [squash(i.store), squash(i.brand), squash(i.store).replace(/and/g, "")].filter(n => n.length >= 3);
-  if (!names.some(n => host.includes(n) || n.includes(host))) return null;
-  const path = SEARCH[site] ?? "/search?q=";
+  const names = [squash(i.store), squash(i.brand), squash(i.store).replace(/and/g, "")].filter(n => n.length >= 2);
+  // Only big, known stores, and only when the name matches exactly: no way to point a friend's tap elsewhere.
+  if (!SEARCH[site] || !names.some(n => n === host || n.replace(/^the/, "") === host)) return null;
+  const path = SEARCH[site];
   const q = encodeURIComponent(i.name);
   return `https://www.${site}${path}${q}`;
 }
