@@ -24,13 +24,22 @@ export const importState = () => state;
 export function onImport(fn: (s: ImportState) => void) { listeners.add(fn); return () => { listeners.delete(fn); }; }
 export const importing = () => state.stage === "scan" || state.stage === "items" || state.stage === "points";
 
-export async function startImport() {
+/** `quiet`: the automatic check when she opens the app. It never starts a first import and never shows a reconnect prompt. */
+export async function startImport(opts: { quiet?: boolean } = {}) {
   if (importing()) return;
-  set({ stage: "scan", read: 0, total: 0, orders: 0, skipped: 0, latest: [], itemsDone: 0, itemsTotal: 0, itemsFound: 0 });
   const sb = supabase();
+  if (opts.quiet) {
+    const { data } = await sb.auth.getSession();
+    if (!data.session) return;
+    const { data: me } = await sb.from("profiles").select("last_import_at").eq("id", data.session.user.id).maybeSingle();
+    if (!me?.last_import_at) return;
+    const token = await gmailToken().catch(() => null);
+    if (!token || importing()) return;
+  }
+  set({ stage: "scan", read: 0, total: 0, orders: 0, skipped: 0, latest: [], itemsDone: 0, itemsTotal: 0, itemsFound: 0 });
   const { data } = await sb.auth.getSession();
-  const token = await gmailToken();
-  if (!token || !data.session) return set({ stage: "reconnect" });
+  const token = await gmailToken().catch(() => null);
+  if (!token || !data.session) return set({ stage: opts.quiet ? "idle" : "reconnect" });
   const uid = data.session.user.id;
   const { data: me } = await sb.from("profiles").select("last_import_at, backfill_v").eq("id", uid).maybeSingle();
   const started = new Date().toISOString();
@@ -102,8 +111,10 @@ export async function startImport() {
     set({ stage: "points" });
     await scanRewards(() => {}).catch(() => null);
     set({ stage: "done" });
+    // Screens that are open reload their orders and pieces.
+    try { dispatchEvent(new Event("orders-updated")); } catch {}
   } catch (e) {
     const m = (e as Error).message;
-    set({ stage: m === "expired" ? "reconnect" : m === "no-access" ? "no-access" : "error" });
+    set({ stage: opts.quiet ? "idle" : m === "expired" ? "reconnect" : m === "no-access" ? "no-access" : "error" });
   }
 }

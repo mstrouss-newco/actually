@@ -88,7 +88,7 @@ design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPAB
    list matching emails → read headers → `parse()` in `lib/gmail.ts` drops non-orders,
    blocked senders and sensitive mail → each batch goes to `screen-emails` (AI) →
    only "shopping" is saved to `orders` → then `read-order` (AI) reads full order emails
-   into `items` (also numbered shipping emails for orders with no order email, except Amazon). After the first import, only mail since `profiles.last_import_at` is read.
+   into `items` (also numbered shipping emails for orders with no order email, except Amazon). After the first import, only mail since `profiles.last_import_at` is read. `AutoSync` (`lib/auto-sync.tsx`, in the layout) runs a quiet `startImport({ quiet: true })` when she opens or returns to the app, at most once an hour per device (`last-sync` in localStorage), never on signed-out or onboarding pages and never as a first import; when any import finishes it fires `orders-updated`, and Today and Orders reload.
 3. **Shopping email:** mail to name@shop.myocto.co → Resend → `inbound-email` forwards
    it to the user's inbox, screens it and saves orders and items.
 3b. **Catch-up pass:** when `profiles.backfill_v` is below `BACKFILL` in `lib/importer.ts`, the next import re-lists all past mail (new emails only), then `fillPhotos()` finds missing product photos and `readReturnRules()` reads return rules for recent orders. Cancellations have their own Gmail search (`CANCEL_QUERY`, includes Promotions).
@@ -197,8 +197,8 @@ SQL to `supabase/migrations/<version>_<name>.sql`. Run the security advisor afte
 
 ## Known gaps and next steps
 
-- Import only runs while the app is open. Refresh tokens are now stored, so a server job
-  for true background sync is the next step.
+- Gmail is checked only while the app is open (hourly quiet check plus Settings > Look for new orders). Refresh tokens are stored, so a server job
+  for true background sync (and alerts with the app closed) is the next step.
 - Cash back is "coming soon". Partner research done (Wildfire recommended); on hold.
 - Shopping email uses `shop.myocto.co` for testing. Real domain (e.g. actually.shop)
   not bought yet.

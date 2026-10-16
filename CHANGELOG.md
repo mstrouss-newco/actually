@@ -2,6 +2,10 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-16: Hourly Gmail check
+
+- When she opens the app or comes back to it, Actually quietly checks Gmail for new orders, shipping and delivery emails (at most once an hour, only mail since the last check). Today and Orders refresh when it finishes. Before this, new mail was only read at sign-up or from Settings.
+
 ## 2026-10-16: Deck stack cards stay visible
 
 - Stack slide cards borrowed the lander's looping pop, which ends invisible after 9 seconds. They now fade in once and stay.
