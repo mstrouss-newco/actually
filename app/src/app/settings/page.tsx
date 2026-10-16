@@ -109,7 +109,7 @@ export default function Settings() {
             </div>
             {head("Your data")}
             <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
-              {row("Delete my orders and closet", "Start fresh. Keeps your account and shopping email.", () => setAsk("data"), true)}
+              {row("Delete my orders and closet", "Start fresh: orders, closet, points and saved hearts. Keeps your account and shopping email.", () => setAsk("data"), true)}
             </div>
             {head("Account")}
             <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>

@@ -33,9 +33,13 @@ export function Avatar({ handle, size = 36 }: { handle: string; size?: number })
 // Her own avatar, tappable to add or change her photo. Shrunk to a small square on the phone first.
 export function PhotoPicker({ handle, size = 56 }: { handle: string; size?: number }) {
   const [busy, setBusy] = useState(false);
-  const pick = async (file: File | undefined) => {
+  const [failed, setFailed] = useState(false);
+  const pick = async (input: HTMLInputElement) => {
+    const file = input.files?.[0];
+    input.value = "";
     if (!file) return;
-    setBusy(true);
+    setBusy(true); setFailed(false);
+    let ok = false;
     try {
       const img = await createImageBitmap(file);
       const side = Math.min(img.width, img.height), out = 320;
@@ -44,10 +48,11 @@ export function PhotoPicker({ handle, size = 56 }: { handle: string; size?: numb
       const blob = await new Promise<Blob | null>(r => c.toBlob(r, "image/jpeg", 0.85));
       if (blob) {
         const { error } = await supabase().storage.from("avatars").upload(`${handle}.jpg`, blob, { upsert: true, contentType: "image/jpeg", cacheControl: "60" });
-        if (!error) { try { localStorage.setItem("avatar-v", String(Date.now())); } catch {} dispatchEvent(new Event("avatar")); }
+        if (!error) { ok = true; try { localStorage.setItem("avatar-v", String(Date.now())); } catch {} dispatchEvent(new Event("avatar")); }
       }
     } catch {}
     setBusy(false);
+    if (!ok) { setFailed(true); setTimeout(() => setFailed(false), 4000); }
   };
   return (
     <label style={{ position: "relative", cursor: "pointer", flex: "none", display: "block", opacity: busy ? 0.6 : 1 }} aria-label="Change your photo">
@@ -55,7 +60,8 @@ export function PhotoPicker({ handle, size = 56 }: { handle: string; size?: numb
       <span style={{ position: "absolute", right: -2, bottom: -2, width: size * 0.4, height: size * 0.4, minWidth: 22, minHeight: 22, borderRadius: "50%", background: "var(--ink)", border: "2px solid #fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg>
       </span>
-      <input type="file" accept="image/*" onChange={e => pick(e.target.files?.[0])} style={{ display: "none" }} />
+      <input type="file" accept="image/*" onChange={e => pick(e.currentTarget)} style={{ display: "none" }} />
+      {failed && <span role="status" style={{ position: "absolute", left: 0, top: "100%", marginTop: 6, whiteSpace: "nowrap", fontSize: 12, fontWeight: 700, color: "#C9402F", fontFamily: "var(--font-sans), sans-serif" }}>Couldn&apos;t save that photo. Try another.</span>}
     </label>
   );
 }
@@ -73,8 +79,11 @@ export function useLovesStore(canLove = true, onChange?: (id: string, loved: boo
     const cur = map.get(id) ?? { n: 0, mine: false };
     const next = { n: Math.max(0, cur.n + (cur.mine ? -1 : 1)), mine: !cur.mine };
     setMap(old => new Map(old).set(id, next));
-    onChange?.(id, next.mine);
-    setLove(id, next.mine).then(n => { if (n != null) setMap(old => new Map(old).set(id, { n, mine: next.mine })); else setMap(old => new Map(old).set(id, cur)); });
+    setLove(id, next.mine).then(n => {
+      if (n == null) { setMap(old => new Map(old).set(id, cur)); return; }
+      setMap(old => new Map(old).set(id, { n, mine: next.mine }));
+      onChange?.(id, next.mine);
+    });
   };
   return { get: id => map.get(id), toggle, load, canLove };
 }
@@ -111,7 +120,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
       <Link href={`/u/${item.handle}`} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", padding: "0 4px 10px" }}>
         <Avatar handle={item.handle} size={38} />
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: 14 }}>{item.handle}</div>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>{displayName(item.handle)}</div>
           <div style={{ fontSize: 12, color: "var(--muted)" }}>Added {ago(item.shared_at)}</div>
         </div>
       </Link>

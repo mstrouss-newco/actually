@@ -81,7 +81,20 @@ export const profileUrl = (handle: string) => `${location.origin}/u/${handle}`;
 
 // "Find it" link for a piece, until shopping links come with cash back.
 // The piece's own page on the store's site when we found it, else a shopping search.
-export const findIt = (i: { brand: string | null; store: string; name: string; product_url?: string | null }) => i.product_url || `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(`${i.brand || i.store} ${i.name}`)}`;
+// A saved link is used only when it's https and on a site named like the store or brand.
+const squash = (s: string | null | undefined) => (s ?? "").toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]/g, "");
+export function storeLink(i: { brand: string | null; store: string; product_url?: string | null }) {
+  const u = i.product_url;
+  if (!u?.startsWith("https://")) return null;
+  try {
+    const host = squash(new URL(u).hostname.replace(/^www\./, "").replace(/\.[a-z]+$/, ""));
+    const names = [squash(i.store), squash(i.brand), squash(i.store).replace(/and/g, ""), squash(i.brand).replace(/and/g, "")].filter(n => n.length >= 3);
+    return names.some(n => host.includes(n) || n.includes(host)) ? u : null;
+  } catch { return null; }
+}
+// Short site name for a link: "nordstrom.com".
+export const siteOf = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } };
+export const findIt = (i: { brand: string | null; store: string; name: string; product_url?: string | null }) => storeLink(i) || `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(`${i.brand || i.store} ${i.name}`)}`;
 
 export function ago(iso: string | null) {
   if (!iso) return "";
