@@ -8,10 +8,10 @@ import { NotShared, PubFrame } from "../../pub";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const p = await getPiece(id);
-  if (!p) return { title: "Actually" };
+  if (!p) return { title: "Actually", robots: { index: false } };
   const title = `${nameOf(p.handle)} loves this: ${p.brand || p.store} ${p.name}`;
   const image = `/api/story/piece/${id}?og=1&t=clean`;
-  return { metadataBase: new URL("https://actually-app.vercel.app"), title, description: "Find it on Actually.", openGraph: { title, description: "Find it on Actually.", images: [{ url: image, width: 1200, height: 630 }] }, twitter: { card: "summary_large_image", images: [image] } };
+  return { robots: { index: false, follow: false }, metadataBase: new URL("https://actually-app.vercel.app"), title, description: "Find it on Actually.", openGraph: { title, description: "Find it on Actually.", images: [{ url: image, width: 1200, height: 630 }] }, twitter: { card: "summary_large_image", images: [image] } };
 }
 
 export default async function SharedPiece({ params }: { params: Promise<{ id: string }> }) {

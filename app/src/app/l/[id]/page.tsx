@@ -9,10 +9,10 @@ import { NotShared, PubFrame } from "../../pub";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const look = await getLook(id);
-  if (!look) return { title: "Actually" };
+  if (!look) return { title: "Actually", robots: { index: false } };
   const title = `${look.name}, ${nameOf(look.handle)}'s look`;
   const image = `/api/story/look/${id}?og=1&t=clean`;
-  return { metadataBase: new URL("https://actually-app.vercel.app"), title, description: "Shop each piece on Actually.", openGraph: { title, description: "Shop each piece on Actually.", images: [{ url: image, width: 1200, height: 630 }] }, twitter: { card: "summary_large_image", images: [image] } };
+  return { robots: { index: false, follow: false }, metadataBase: new URL("https://actually-app.vercel.app"), title, description: "Shop each piece on Actually.", openGraph: { title, description: "Shop each piece on Actually.", images: [{ url: image, width: 1200, height: 630 }] }, twitter: { card: "summary_large_image", images: [image] } };
 }
 
 export default async function SharedLook({ params }: { params: Promise<{ id: string }> }) {
@@ -20,7 +20,7 @@ export default async function SharedLook({ params }: { params: Promise<{ id: str
   const look = await getLook(id);
   if (!look) return <NotShared what="look" />;
   return (
-    <PubFrame who={`${nameOf(look.handle)}'s look`} kicker={[look.name, look.occasion].filter(Boolean).join(" · ")}>
+    <PubFrame who={`${nameOf(look.handle)}'s look`} kicker={look.occasion ?? "Shared a look"}>
       <h1 className="pub-h">{look.name}</h1>
       {look.note && <p style={{ fontSize: 15, color: "var(--soft)", fontStyle: "italic", margin: "6px 0 0" }}>&ldquo;{look.note}&rdquo;</p>}
       <div style={{ marginTop: 14 }}><Collage layout={look.layout} pieces={look.pieces} /></div>

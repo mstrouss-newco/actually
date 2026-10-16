@@ -267,7 +267,7 @@ function ClosetPage() {
                 <Link key={o.id} href={`/outfit/${o.id}`} className="up press" style={{ ...delay(n, 50), textDecoration: "none", color: "var(--ink)", minWidth: 0 }}>
                   <div style={{ pointerEvents: "none" }}><Collage layout={o.layout} pieces={(items ?? []).map(i => ({ id: i.id, brand: i.brand, store: i.store, name: i.name, image_url: i.image_url, category: i.category }))} radius={20} tags={false} /></div>
                   <div style={{ fontWeight: 700, fontSize: 14, marginTop: 8 }}>{o.name}</div>
-                  <div style={{ fontSize: 12, color: "var(--muted)" }}>{[o.occasion, o.shared ? "Shared" : "Only you"].filter(Boolean).join(" · ")}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)" }}>{[o.occasion, o.shared ? "On your feed" : null, o.link_shared ? "Link on" : null, !o.shared && !o.link_shared ? "Only you" : null].filter(Boolean).join(" · ")}</div>
                 </Link>
               ))}
             </div>
@@ -424,7 +424,7 @@ function ClosetPage() {
               {whoFor(sel, everything) === "me" && (
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={() => { setStyleFor(sel); setSel(null); }} className="btn btn-ghost" style={{ flex: 1, marginTop: 0, height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>Style this piece</button>
-                  <button onClick={() => { setShareFor(sel); setSel(null); }} className="btn btn-ghost" style={{ flex: 1, marginTop: 0, height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>Share</button>
+                  <button onClick={() => { setShareFor(sel); setSel(null); }} className="btn btn-ghost" style={{ flex: 1, marginTop: 0, height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>{sel.link_shared ? "Link on" : "Share a link"}</button>
                 </div>
               )}
               {whoFor(sel, everything) === "me" && <Link href={`/outfit/edit/new?with=${sel.id}`} className="btn btn-ghost" style={{ height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>Make an outfit with this</Link>}
@@ -448,7 +448,7 @@ function ClosetPage() {
           </div>
         </div>
       )}
-      {shareFor && <ShareSheet kind="piece" id={shareFor.id} title={shareFor.name} onClose={() => setShareFor(null)} />}
+      {shareFor && <ShareSheet kind="piece" id={shareFor.id} title={shareFor.name} on={!!shareFor.link_shared} onChange={on => setItems(list => list && list.map(i => (i.id === shareFor.id ? { ...i, link_shared: on } : i)))} onClose={() => setShareFor(null)} />}
       {review && (
         <div style={{ position: "absolute", inset: 0, zIndex: 25, background: "#fff", display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "22px 20px 8px" }}>

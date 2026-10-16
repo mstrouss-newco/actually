@@ -27,7 +27,7 @@ const best = async (id: string, url: string | null) => (await pic(cutoutOf(id)))
 
 let fonts: { name: string; data: ArrayBuffer; style: "normal" | "italic"; weight: 400 | 600 }[] | null = null;
 async function loadFonts() {
-  if (fonts) return fonts;
+  if (fonts?.length) return fonts;
   const get = async (q: string) => {
     const css = await (await fetch(`https://fonts.googleapis.com/css2?family=${q}`, { headers: { "user-agent": "" } })).text();
     const src = css.match(/src: url\((.+?)\)/)?.[1];
@@ -40,7 +40,7 @@ async function loadFonts() {
       ...(ital ? [{ name: "Fraunces", data: ital, style: "italic" as const, weight: 600 as const }] : []),
       ...(sans ? [{ name: "DM Sans", data: sans, style: "normal" as const, weight: 600 as const }] : []),
     ];
-  } catch { fonts = []; }
+  } catch { return []; }
   return fonts;
 }
 
@@ -48,13 +48,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ kind: st
   const { kind, id } = await params;
   const q = new URL(req.url).searchParams;
   const og = q.get("og") === "1";
-  const theme = THEMES[(q.get("t") as keyof typeof THEMES) ?? "clean"] ?? THEMES.clean;
+  const t = q.get("t");
+  const theme = t === "blush" || t === "night" ? THEMES[t] : THEMES.clean;
   const W = og ? 1200 : 1080, H = og ? 630 : 1920;
 
   let title = "", sub = "", art: React.ReactNode = null;
   if (kind === "look") {
     const look = await getLook(id);
-    if (!look) return new Response("Not shared", { status: 404 });
+    if (!look) return new Response("Not shared", { status: 404, headers: { "cache-control": "no-store" } });
     title = look.name; sub = `${nameOf(look.handle)}'s look on Actually`;
     const bw = og ? 480 : 920;
     const imgs = await Promise.all(look.layout.map(l => best(l.id, look.pieces.find(p => p.id === l.id)?.image_url ?? null)));
@@ -68,7 +69,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ kind: st
     );
   } else if (kind === "piece") {
     const p = await getPiece(id);
-    if (!p) return new Response("Not shared", { status: 404 });
+    if (!p) return new Response("Not shared", { status: 404, headers: { "cache-control": "no-store" } });
     title = p.name; sub = [p.brand || p.store, p.note].filter(Boolean).join("  ·  ");
     const src = await best(p.id, p.image_url);
     const s = og ? 500 : 900;
@@ -103,6 +104,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ kind: st
         <div style={{ display: "flex", marginTop: 70 }}>{words}</div>
       </div>
     ),
-    { width: W, height: H, fonts: f.length ? f : undefined, headers: { "cache-control": "public, max-age=300" } },
+    { width: W, height: H, fonts: f.length ? f : undefined, headers: { "cache-control": "public, max-age=60" } },
   );
 }

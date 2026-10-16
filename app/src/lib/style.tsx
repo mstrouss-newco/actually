@@ -11,9 +11,9 @@ import { ensureCutouts } from "./cutouts";
 // AI styling: looks put together from her own closet.
 export type Look = { name: string; why: string; ids: string[] };
 
-export async function styleLooks(o: { ids: string[]; occasion?: string; anchor?: string; avoid?: string[] }): Promise<Look[] | null> {
+export async function styleLooks(o: { ids: string[]; occasion?: string; anchor?: string; avoid?: string[] }): Promise<Look[] | null | "limit"> {
   const { data, error } = await supabase().functions.invoke("style-outfits", { body: o });
-  if (error) return null;
+  if (error) return (error as { context?: Response })?.context?.status === 429 ? "limit" : null;
   return ((data as { looks?: Look[] })?.looks ?? []);
 }
 
@@ -23,11 +23,11 @@ const SLOTS: Record<string, { x: number; y: number; w: number }[]> = {
   tops: [{ x: 0.5, y: 0.04, w: 0.42 }, { x: 0.06, y: 0.04, w: 0.42 }],
   dresses: [{ x: 0.08, y: 0.03, w: 0.46 }],
   bottoms: [{ x: 0.08, y: 0.5, w: 0.38 }],
-  shoes: [{ x: 0.52, y: 0.76, w: 0.32 }],
+  shoes: [{ x: 0.52, y: 0.7, w: 0.32 }],
   bags: [{ x: 0.56, y: 0.47, w: 0.32 }],
-  accessories: [{ x: 0.6, y: 0.3, w: 0.24 }, { x: 0.1, y: 0.82, w: 0.22 }],
+  accessories: [{ x: 0.6, y: 0.3, w: 0.24 }, { x: 0.1, y: 0.8, w: 0.22 }],
 };
-const SPARE = [{ x: 0.58, y: 0.16, w: 0.3 }, { x: 0.06, y: 0.78, w: 0.28 }, { x: 0.36, y: 0.4, w: 0.28 }];
+const SPARE = [{ x: 0.58, y: 0.16, w: 0.3 }, { x: 0.06, y: 0.76, w: 0.28 }, { x: 0.36, y: 0.4, w: 0.28 }];
 export function autoLayout(ids: string[], items: { id: string; category: string }[]): Placed[] {
   const used = new Map<string, number>();
   let spare = 0;
@@ -55,9 +55,11 @@ export function StyleMe({ mine, anchor }: { mine: Item[]; anchor?: Item }) {
   const [looks, setLooks] = useState<Look[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [limit, setLimit] = useState(false);
   const [saving, setSaving] = useState<number | null>(null);
   const seen = useRef<string[]>([]);
-  const pool = mine.filter(i => i.image_url).slice(0, 160);
+  // Her newest pieces with photos, always including the piece she's styling.
+  const pool = [...(anchor ? [anchor] : []), ...mine.filter(i => i.image_url && i.id !== anchor?.id)].slice(0, 160);
   const pieces = pool.map(i => ({ id: i.id, brand: i.brand, store: i.store, name: i.name, image_url: i.image_url, category: i.category }));
   const enough = pool.length >= 3;
 
@@ -66,6 +68,7 @@ export function StyleMe({ mine, anchor }: { mine: Item[]; anchor?: Item }) {
     if (!more) { seen.current = []; setLooks(null); }
     const r = await styleLooks({ ids: pool.map(i => i.id), occasion: o ?? undefined, anchor: anchor?.id, avoid: seen.current });
     setBusy(false);
+    if (r === "limit") { setLimit(true); return; }
     if (!r) { setFailed(true); return; }
     seen.current.push(...r.map(l => l.name));
     setLooks(r);
@@ -103,12 +106,13 @@ export function StyleMe({ mine, anchor }: { mine: Item[]; anchor?: Item }) {
         </div>
       )}
       {busy && <div style={{ padding: "10px 20px 0", fontSize: 13, color: "var(--muted)" }}>Putting looks together…</div>}
-      {failed && <div style={{ padding: "12px 20px 0", fontSize: 14, color: "var(--muted)" }}>Couldn&apos;t put looks together just now. Try again in a moment.</div>}
+      {limit && <div style={{ padding: anchor ? "12px 0 0" : "12px 20px 0", fontSize: 14, color: "var(--muted)" }}>That&apos;s a lot of styling for one day. More looks tomorrow.</div>}
+      {failed && <div style={{ padding: anchor ? "12px 0 0" : "12px 20px 0", fontSize: 14, color: "var(--muted)" }}>Couldn&apos;t put looks together just now. <button type="button" onClick={() => run(occ)} style={{ border: 0, background: "none", padding: 0, font: "700 14px var(--font-sans), sans-serif", color: "var(--ink)", cursor: "pointer" }}>Try again</button></div>}
       {anchor && !enough && <div style={{ padding: "12px 0 0", fontSize: 14, color: "var(--muted)" }}>Add a few more pieces to your closet first.</div>}
       {!busy && looks && looks.length === 0 && <div style={{ padding: "12px 20px 0", fontSize: 14, color: "var(--muted)" }}>Not enough pieces for this one yet.</div>}
       {!busy && looks && looks.length > 0 && (
         <>
-          <div style={{ display: "flex", gap: 14, padding: anchor ? "12px 0 4px" : "16px 16px 4px", overflowX: "auto", scrollSnapType: "x mandatory" }}>
+          <div style={{ display: "flex", gap: 14, padding: anchor ? "12px 0 4px" : "16px 16px 4px", overflowX: "auto", scrollSnapType: "x mandatory", scrollPaddingLeft: anchor ? 0 : 16 }}>
             {looks.map((l, n) => (
               <div key={l.name + n} className="up" style={{ flex: "none", width: anchor ? 250 : 290, scrollSnapAlign: "start", animationDelay: `${n * 80}ms` }}>
                 <Collage layout={autoLayout(l.ids, pool)} pieces={pieces} radius={22} tags={false} />

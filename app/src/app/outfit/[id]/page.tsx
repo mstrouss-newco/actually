@@ -74,7 +74,7 @@ export default function OutfitPage({ params }: { params: Promise<{ id: string }>
             className="btn btn-ghost" style={{ height: 44, fontSize: 14, color: "#C9402F" }}>{sure ? "Tap again to delete" : "Delete outfit"}</button>
         </div>
       </div>
-      {share && <ShareSheet kind="look" id={o.id} title={o.name} onClose={() => setShare(false)} />}
+      {share && <ShareSheet kind="look" id={o.id} title={o.name} on={!!o.link_shared} onChange={on => setO({ ...o, link_shared: on })} onClose={() => setShare(false)} />}
       <TabBar />
     </main>
   );
