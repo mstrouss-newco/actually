@@ -72,14 +72,14 @@ export default function Closet() {
     setItems(list => list?.filter(x => x.id !== i.id) ?? null);
     setUndo(i);
     setTimeout(() => setUndo(u => (u?.id === i.id ? null : u)), 8000);
-    await hideItem(i.id);
+    await hideItem(i);
   };
   const restore = async () => {
     if (!undo) return;
     const i = undo;
     setUndo(null);
     setItems(list => (list ? [i, ...list].sort((a, b) => b.ordered_at.localeCompare(a.ordered_at)) : list));
-    await hideItem(i.id, false);
+    await hideItem(i, false);
   };
   const answer = async (i: Item, w: Who) => {
     const ids = new Set(await setWho(i, w, items ?? []));
@@ -102,7 +102,7 @@ export default function Closet() {
     const next = sel.pick === pick ? null : pick;
     setSel({ ...sel, pick: next });
     setItems(list => list?.map(i => (i.id === sel.id ? { ...i, pick: next } : i)) ?? null);
-    await setPick(sel.id, next);
+    await setPick(sel, next);
   };
 
   const everything = items ?? [];
@@ -116,7 +116,7 @@ export default function Closet() {
     const ids = everything.filter(i => review?.includes(i.id) && !i.for_whom).map(i => i.id);
     setItems(l => l?.map(x => (ids.includes(x.id) ? { ...x, for_whom: "me" as Who } : x)) ?? null);
     setReview(null);
-    await confirmMine(ids);
+    await confirmMine(ids, everything);
   };
   const shelves = CATS.map(([k, label]) => ({ k, label, items: list.filter(i => i.category === k) })).filter(s => s.items.length);
   const cur = shelves.find(s => s.k === cat);

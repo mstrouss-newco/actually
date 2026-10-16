@@ -47,7 +47,7 @@ export default function WorthItem({ params }: { params: Promise<{ id: string }> 
   const post = async () => {
     const all = [title, price && `$${price}`, body].filter(Boolean).join("\n\n");
     await copy(all, "post");
-    if (item.pick !== "sell") { setItem({ ...item, pick: "sell" }); await setPick(item.id, "sell"); }
+    if (item.pick !== "sell") { setItem({ ...item, pick: "sell" }); await setPick(item, "sell"); }
     window.open(s.url, "_blank", "noopener");
   };
   const field = { width: "100%", boxSizing: "border-box" as const, border: "1.5px solid var(--line)", borderRadius: 14, padding: "10px 12px", font: "15px var(--font-sans), sans-serif", background: "#fff", color: "var(--ink)" };
@@ -137,7 +137,7 @@ export default function WorthItem({ params }: { params: Promise<{ id: string }> 
         )}
 
         <div style={{ margin: "14px 16px 0" }}>
-          <button type="button" onClick={async () => { const next = item.pick === "sell" ? null : "sell"; setItem({ ...item, pick: next }); await setPick(item.id, next); }} className="btn btn-ghost" style={{ height: 44, fontSize: 14 }}>
+          <button type="button" onClick={async () => { const next = item.pick === "sell" ? null : "sell"; setItem({ ...item, pick: next }); await setPick(item, next); }} className="btn btn-ghost" style={{ height: 44, fontSize: 14 }}>
             {item.pick === "sell" ? "✓ On your sell list" : "Add to my sell list"}
           </button>
         </div>

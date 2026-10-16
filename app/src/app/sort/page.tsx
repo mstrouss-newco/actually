@@ -33,7 +33,7 @@ export default function Sort() {
     if (!card || d.fly) return;
     const [x, y] = DIR[p];
     setD({ x, y, drag: false, fly: true });
-    setPick(card.id, p);
+    setPick(card, p);
     setTimeout(() => { setHist(h => [...h, p]); setI(n => n + 1); setD({ x: 0, y: 0, drag: false, fly: false }); }, 260);
   };
   // Where "Keep all left private" started, so Undo puts the whole batch back.
@@ -43,12 +43,12 @@ export default function Sort() {
     if (batch.current !== null && i >= total) {
       const from = batch.current;
       batch.current = null;
-      setPicks(deck.slice(from).map(x => x.id), null);
+      setPicks(deck.slice(from).flatMap(x => x.ids ?? [x.id]), null);
       setHist(h => h.slice(0, from));
       setI(from);
       return;
     }
-    setPick(deck[i - 1].id, null);
+    setPick(deck[i - 1], null);
     setHist(h => h.slice(0, -1));
     setI(n => n - 1);
   };
@@ -72,7 +72,7 @@ export default function Sort() {
     if (!deck || d.fly) return;
     const rest = deck.slice(i);
     batch.current = i;
-    setPicks(rest.map(x => x.id), "private");
+    setPicks(rest.flatMap(x => x.ids ?? [x.id]), "private");
     setHist(h => [...h, ...rest.map(() => "private" as Pick)]);
     setI(total);
   };

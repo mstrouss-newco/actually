@@ -6,7 +6,7 @@ export type Item = {
   id: string; store: string; name: string; brand: string | null; size: string | null; color: string | null;
   price: number | null; image_url: string | null; product_url?: string | null; category: string; ordered_at: string; pick: "share" | "sell" | "private" | null;
   resale_low?: number | null; resale_high?: number | null; resale_note?: string | null;
-  for_whom?: Who | null; gmail_id?: string;
+  for_whom?: Who | null; gmail_id?: string; ids?: string[];
   // Its order hasn't arrived yet.
   arriving?: boolean;
   // Some pieces from its order went back, so this one is known to be kept.
@@ -54,8 +54,8 @@ export async function loadItems(): Promise<Item[]> {
     i.arriving = arriving.has(i.gmail_id ?? "");
     const list = best.get(pieceKey(i)) ?? [];
     const n = list.findIndex(c => sameColor(c, i));
-    if (n < 0) list.push(i);
-    else if (i.name.length > list[n].name.length || (i.for_whom && !list[n].for_whom)) list[n] = i;
+    if (n < 0) list.push({ ...i, ids: [i.id] });
+    else list[n] = merge(list[n], i, i.name.length > list[n].name.length || (!!i.for_whom && !list[n].for_whom));
     best.set(pieceKey(i), list);
   }
   // Same brand, size, color and month, and one name holds the other ("Lima" and "Lima shoe"): one piece.
@@ -63,7 +63,10 @@ export async function loadItems(): Promise<Item[]> {
   for (const i of [...best.values()].flat().sort((a, b) => b.name.length - a.name.length)) {
     const twin = out.find(o => sameRead(o, i));
     if (!twin) out.push(i);
-    else if ((i.for_whom && !twin.for_whom) || (!twin.image_url && i.image_url)) out[out.indexOf(twin)] = { ...i, name: twin.name.length >= i.name.length ? twin.name : i.name, image_url: twin.image_url || i.image_url };
+    else {
+      const m = merge(twin, i, (!!i.for_whom && !twin.for_whom) || (!twin.image_url && !!i.image_url));
+      out[out.indexOf(twin)] = { ...m, name: twin.name.length >= i.name.length ? twin.name : i.name, image_url: twin.image_url || i.image_url };
+    }
   }
   out.sort((a, b) => b.ordered_at.localeCompare(a.ordered_at));
   // Sub-lines file under the main brand ("TCK Krazisox" is TCK).
@@ -72,8 +75,10 @@ export async function loadItems(): Promise<Item[]> {
   return out.map(i => (i.brand ? { ...i, brand: main(i.brand) } : i));
 }
 
-export async function setPick(id: string, pick: Item["pick"]) {
-  await supabase().from("items").update({ pick }).eq("id", id);
+// Every saved copy of a piece (see merge), so an answer sticks whichever copy shows next time.
+const idsOf = (x: string | Item) => (typeof x === "string" ? [x] : x.ids ?? [x.id]);
+export async function setPick(x: string | Item, pick: Item["pick"]) {
+  await supabase().from("items").update({ pick }).in("id", idsOf(x));
 }
 
 // Same choice for many pieces at once ("Keep the other 12 private").
@@ -82,9 +87,17 @@ export async function setPicks(ids: string[], pick: Item["pick"]) {
 }
 
 // Removes a piece from her closet. It stays hidden after later imports; the order stays in Orders.
-export async function hideItem(id: string, hidden = true) {
-  await supabase().from("items").update(hidden ? { hidden, pick: null } : { hidden }).eq("id", id);
+export async function hideItem(x: string | Item, hidden = true) {
+  await supabase().from("items").update(hidden ? { hidden, pick: null } : { hidden }).in("id", idsOf(x));
 }
+
+// One piece can come from several emails (order, shipping). Keep every copy's id, and never lose
+// an answer she gave on any copy: who it's for and where she sorted it.
+function merge(a: Item, b: Item, preferB: boolean): Item {
+  const [main, other] = preferB ? [b, a] : [a, b];
+  return { ...main, ids: [...new Set([...(a.ids ?? [a.id]), ...(b.ids ?? [b.id])])], for_whom: main.for_whom ?? other.for_whom, pick: main.pick ?? other.pick };
+}
+const allIds = (list: Item[], ids: string[]) => [...new Set(list.filter(i => ids.includes(i.id)).flatMap(i => i.ids ?? [i.id]).concat(ids))];
 
 // ---------- who it's for ----------
 
@@ -135,13 +148,14 @@ export function likelyWho(i: Item, all: Item[]): Who | null {
 }
 
 // "All of these are mine": marks the pieces she checked and left alone.
-export async function confirmMine(ids: string[]) {
-  if (ids.length) await supabase().from("items").update({ for_whom: "me" }).in("id", ids);
+export async function confirmMine(ids: string[], all: Item[] = []) {
+  const every = allIds(all, ids);
+  if (every.length) await supabase().from("items").update({ for_whom: "me" }).in("id", every);
 }
 
 // Saves her answer for this piece and others of the same brand and size. Pieces for others stay private.
 export async function setWho(i: Item, who: Who, all: Item[]) {
-  const ids = all.filter(o => o === i || (!o.for_whom && sameAs(o, i))).map(o => o.id);
+  const ids = allIds(all, all.filter(o => o === i || (!o.for_whom && sameAs(o, i))).map(o => o.id));
   const patch = who === "me" ? { for_whom: who } : { for_whom: who, pick: "private" as const };
   await supabase().from("items").update(patch).in("id", ids);
   return ids;
