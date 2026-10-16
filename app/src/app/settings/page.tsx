@@ -119,6 +119,11 @@ export default function Settings() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
               </Link>
             )}
+            {head("Legal")}
+            <Link href="/legal" style={{ margin: "0 16px", display: "flex", alignItems: "center", background: "#FAF8F6", borderRadius: 16, padding: "14px 16px", textDecoration: "none", fontWeight: 700, fontSize: 15 }}>
+              <span style={{ flex: 1 }}>Privacy, terms and your data</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+            </Link>
             {head("Account")}
             <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
               {row("Sign out", "On this device.", async () => { await signOut(); router.replace("/"); })}

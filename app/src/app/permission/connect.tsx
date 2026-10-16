@@ -14,6 +14,7 @@ export function ConnectGmail() {
         Only shopping emails. Disconnect anytime.
       </div>
       <button className="btn" onClick={go} disabled={busy}>{busy ? "Opening Google" : "Continue with Gmail"}</button>
+      <div style={{ fontSize: 12, color: "var(--muted)", textAlign: "center", marginTop: 6 }}>By continuing you agree to our <a href="/terms" style={{ color: "inherit" }}>Terms</a> and <a href="/privacy" style={{ color: "inherit" }}>Privacy Policy</a>.</div>
       <div style={{ fontSize: 12, color: "var(--muted)", textAlign: "center", marginTop: 8 }}>On Google&apos;s screen, tick the box so we can find your orders.</div>
     </>
   );
