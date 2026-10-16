@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type Item, loadItems, whoFor } from "@/lib/items";
 import { OCCASIONS, type Outfit, type Placed, loadOutfit, saveOutfit } from "@/lib/outfits";
-import { CollageEditor } from "@/lib/collage";
+import { CollageEditor, cutOut } from "@/lib/collage";
 import { TypeTabs } from "@/lib/feed-ui";
 import { ItemImage } from "@/lib/tabs";
 
@@ -25,6 +25,8 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
   const [occasion, setOccasion] = useState<string | null>(null);
   const [shared, setShared] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [cutting, setCutting] = useState(false);
+  const [cutNote, setCutNote] = useState("");
 
   useEffect(() => {
     // Only her own pieces can go in a look; anything else is dropped from the board.
@@ -55,6 +57,19 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
   const toBack = () => sel && setLayout(l => [l.find(p => p.id === sel)!, ...l.filter(p => p.id !== sel)]);
   const size = (k: number) => nudge(p => { const w = Math.min(0.9, Math.max(0.12, p.w * k)); return { ...p, w, x: p.x - (w - p.w) / 2, y: p.y - ((w - p.w) * 1.15) / 2 }; });
 
+  // Cut out: remove the photo's background for the selected piece, or put the photo back.
+  const cur = layout.find(p => p.id === sel);
+  const toggleCut = async () => {
+    if (!cur) return;
+    setCutNote("");
+    if (cur.cut) { nudge(p => ({ ...p, cut: false })); return; }
+    setCutting(true);
+    const r = await cutOut(cur.id);
+    setCutting(false);
+    if (r === "ok") setLayout(l => l.map(p => (p.id === cur.id ? { ...p, cut: true } : p)));
+    else { setCutNote(r === "busy" ? "This photo has too much going on behind it, so we kept it as is." : "Couldn't cut this one out. Try again in a bit."); setTimeout(() => setCutNote(""), 4000); }
+  };
+
   const save = async () => {
     setSaving(true); setFailed(false);
     const ok = new Set(pieces.map(p => p.id));
@@ -81,6 +96,7 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
             <div style={{ position: "absolute", left: 0, right: 0, bottom: 10, display: "flex", justifyContent: "center", gap: 6, zIndex: 50, flexWrap: "wrap" }}>
               <button type="button" style={tool} onClick={() => size(1.15)} aria-label="Bigger">＋</button>
               <button type="button" style={tool} onClick={() => size(1 / 1.15)} aria-label="Smaller">－</button>
+              <button type="button" style={tool} disabled={cutting} onClick={toggleCut}>{cutting ? "Cutting out…" : cur?.cut ? "Show photo" : "Cut out"}</button>
               <button type="button" style={tool} onClick={toFront}>Front</button>
               <button type="button" style={tool} onClick={toBack}>Back</button>
               <button type="button" style={{ ...tool, color: "#C9402F" }} onClick={() => { setLayout(l => l.filter(p => p.id !== sel)); setSel(null); }}>Remove</button>
@@ -88,6 +104,7 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
           )}
         </div>
 
+        {cutNote && <div role="status" style={{ margin: "8px 20px 0", fontSize: 13, color: "var(--soft)" }}>{cutNote}</div>}
         {items && <TypeTabs items={items} value={type} onChange={setType} />}
         <div style={{ display: "flex", gap: 8, padding: "10px 16px 0", overflowX: "auto" }}>
           {items === null && <div style={{ fontSize: 14, color: "var(--muted)" }}>Loading your closet…</div>}

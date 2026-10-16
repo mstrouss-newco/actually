@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Outfits: white photo backgrounds now melt into the board (no more white boxes). New "Cut out" button on a selected piece removes the photo's background for real (new `cut-out` server function, saved once per piece in the `cutouts` bucket); "Show photo" puts it back. Photos with a busy background (someone wearing it, a street) are left as is, and she's told why. Removed wear tracking (Wore it today, Not worn yet) from outfits.
+
 - The app updates itself: when a new version is live, it quietly reloads the next time you open it (or within 5 minutes while open, never while typing). Works from the Home Screen too.
 
 - No emoji-style arrows; removed the "Shop" labels under look pieces and on Saved (tapping already shops). The shop tag on a look is centered so it never runs off the screen.

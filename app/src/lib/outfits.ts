@@ -2,7 +2,7 @@ import { supabase } from "./supabase";
 
 // One piece on an outfit board. x, y and w are shares of the board's width, so a look
 // lays out the same on any screen. r is a small tilt in degrees.
-export type Placed = { id: string; x: number; y: number; w: number; r?: number };
+export type Placed = { id: string; x: number; y: number; w: number; r?: number; cut?: boolean };
 export type PieceLite = { id: string; brand: string | null; store: string; name: string; image_url: string | null; category: string; product_url?: string | null };
 export type Outfit = { id: string; name: string; occasion: string | null; note: string | null; layout: Placed[]; shared: boolean; shared_at: string | null; worn: number; last_worn: string | null; updated_at: string };
 // A look someone shared: only their own pieces, photo, brand, name and store link.
@@ -26,7 +26,7 @@ export async function loadOutfit(id: string): Promise<Outfit | null> {
 export async function saveOutfit(o: { id?: string; name: string; occasion: string | null; note?: string | null; layout: Placed[]; shared: boolean; wasShared?: boolean }) {
   const row = {
     name: o.name.trim().slice(0, 60) || "New outfit", occasion: o.occasion, note: o.note?.trim().slice(0, 140) || null,
-    layout: o.layout.slice(0, 12).map(p => ({ id: p.id, x: +p.x.toFixed(4), y: +p.y.toFixed(4), w: +p.w.toFixed(4), r: Math.round(p.r ?? 0) })),
+    layout: o.layout.slice(0, 12).map(p => ({ id: p.id, x: +p.x.toFixed(4), y: +p.y.toFixed(4), w: +p.w.toFixed(4), r: Math.round(p.r ?? 0), ...(p.cut ? { cut: true } : {}) })),
     shared: o.shared, updated_at: new Date().toISOString(),
     ...(o.shared && !o.wasShared ? { shared_at: new Date().toISOString() } : {}),
   };

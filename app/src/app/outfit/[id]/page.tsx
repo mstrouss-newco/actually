@@ -4,12 +4,12 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type Item, loadItems } from "@/lib/items";
-import { type Outfit, deleteOutfit, loadOutfit, setShared, woreToday } from "@/lib/outfits";
+import { type Outfit, deleteOutfit, loadOutfit, setShared } from "@/lib/outfits";
 import { Collage } from "@/lib/collage";
 import { findIt } from "@/lib/social";
 import { ItemImage, TabBar } from "@/lib/tabs";
 
-// One saved outfit: the look, its pieces, wears, and sharing.
+// One saved outfit: the look, its pieces, and sharing.
 export default function OutfitPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
@@ -24,9 +24,6 @@ export default function OutfitPage({ params }: { params: Promise<{ id: string }>
   const byId = new Map(items.map(i => [i.id, i]));
   const pieces = o.layout.map(l => byId.get(l.id)).filter((i): i is Item => !!i);
   const lite = pieces.map(i => ({ id: i.id, brand: i.brand, store: i.store, name: i.name, image_url: i.image_url, category: i.category, product_url: i.product_url }));
-  const worn = o.worn ? `Worn ${o.worn === 1 ? "once" : `${o.worn} times`}` : "Not worn yet";
-  const last = o.last_worn ? `Last on ${new Date(o.last_worn + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : "Tap when you wear it";
-  const today = o.last_worn === new Date().toLocaleDateString("en-CA");
 
   return (
     <main className="tabscreen">
@@ -40,10 +37,6 @@ export default function OutfitPage({ params }: { params: Promise<{ id: string }>
 
         <div style={{ margin: "14px 16px 0" }}><Collage layout={o.layout} pieces={lite} /></div>
 
-        <div style={{ margin: "14px 16px 0", background: "#FAF8F6", borderRadius: 20, padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ flex: 1 }}><div style={{ fontWeight: 700, fontSize: 14 }}>{worn}</div><div style={{ fontSize: 12, color: "var(--muted)" }}>{last}</div></div>
-          <button type="button" disabled={today} onClick={async () => setO(await woreToday(o))} className="press" style={{ height: 38, padding: "0 16px", borderRadius: 999, border: 0, background: today ? "#DCEFDF" : "var(--ink)", color: today ? "var(--ink)" : "#fff", font: "700 13px var(--font-sans), sans-serif", cursor: "pointer" }}>{today ? "✓ Wore it today" : "Wore it today"}</button>
-        </div>
 
         <button type="button" onClick={async () => { const next = !o.shared; setO({ ...o, shared: next, shared_at: o.shared_at ?? (next ? new Date().toISOString() : null) }); await setShared(o, next); }} aria-pressed={o.shared}
           style={{ margin: "10px 16px 0", width: "calc(100% - 32px)", display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", border: 0, borderRadius: 20, padding: "12px 14px", textAlign: "left", font: "inherit", color: "var(--ink)", cursor: "pointer" }}>

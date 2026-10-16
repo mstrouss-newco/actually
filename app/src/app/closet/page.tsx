@@ -251,7 +251,7 @@ export default function Closet() {
                 <Link key={o.id} href={`/outfit/${o.id}`} className="up press" style={{ ...delay(n, 50), textDecoration: "none", color: "var(--ink)", minWidth: 0 }}>
                   <div style={{ pointerEvents: "none" }}><Collage layout={o.layout} pieces={(items ?? []).map(i => ({ id: i.id, brand: i.brand, store: i.store, name: i.name, image_url: i.image_url, category: i.category }))} radius={20} tags={false} /></div>
                   <div style={{ fontWeight: 700, fontSize: 14, marginTop: 8 }}>{o.name}</div>
-                  <div style={{ fontSize: 12, color: "var(--muted)" }}>{[o.occasion, o.worn ? `Worn ${o.worn === 1 ? "once" : `${o.worn} times`}` : "Not worn yet", o.shared ? "Shared" : null].filter(Boolean).join(" · ")}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)" }}>{[o.occasion, o.shared ? "Shared" : "Only you"].filter(Boolean).join(" · ")}</div>
                 </Link>
               ))}
             </div>

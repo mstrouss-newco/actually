@@ -4,22 +4,37 @@ import { useRef, useState } from "react";
 import { BOARD_H, type PieceLite, type Placed } from "./outfits";
 import { findIt } from "./social";
 import { ItemImage } from "./tabs";
+import { SUPABASE_URL, supabase } from "./supabase";
+
+// A piece with its background removed (made once by the cut-out function).
+export const cutoutUrl = (id: string) => `${SUPABASE_URL}/storage/v1/object/public/cutouts/${id}.png`;
+export async function cutOut(id: string): Promise<"ok" | "busy" | "failed"> {
+  const { data, error } = await supabase().functions.invoke("cut-out", { body: { item_id: id } });
+  if (!error && (data as { url?: string })?.url) return "ok";
+  try { const body = await (error as { context?: Response })?.context?.json(); if (body?.error === "busy background") return "busy"; } catch {}
+  return "failed";
+}
 
 const BG = "#F7F3EE";
 const PIECE_H = 1.15; // each piece's box is a little taller than wide
 
-function PieceArt({ p }: { p: PieceLite }) {
+function PieceArt({ p, cut }: { p: PieceLite; cut?: boolean }) {
   const [bad, setBad] = useState(false);
+  const [cutBad, setCutBad] = useState(false);
+  // eslint-disable-next-line @next/next/no-img-element
+  if (cut && !cutBad) return <img src={cutoutUrl(p.id)} alt={p.name} draggable={false} onError={() => setCutBad(true)} style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none", userSelect: "none" }} />;
   if (!p.image_url || bad) return <ItemImage src={null} store={p.store} name={p.name} w="100%" h="100%" radius={16} size={36} />;
   let src = p.image_url;
   if (/media-amazon\.com/.test(src)) src = src.replace(/\._[^/]*_\.(jpg|jpeg|png)$/i, "._SL600_.$1");
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={p.name} referrerPolicy="no-referrer" draggable={false} onError={() => setBad(true)} style={{ width: "100%", height: "100%", objectFit: "contain", mixBlendMode: "multiply", pointerEvents: "none", userSelect: "none" }} />;
+  return <img src={src} alt={p.name} referrerPolicy="no-referrer" draggable={false} onError={() => setBad(true)} style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none", userSelect: "none" }} />;
 }
 
 const box = (l: Placed) => ({
   position: "absolute" as const, left: `${l.x * 100}%`, top: `${(l.y / BOARD_H) * 100}%`,
   width: `${l.w * 100}%`, height: `${((l.w * PIECE_H) / BOARD_H) * 100}%`, transform: `rotate(${l.r ?? 0}deg)`,
+  // White photo backgrounds melt into the board. Set on the tilted box itself so the blend reaches the board.
+  mixBlendMode: (l.cut ? "normal" : "multiply") as React.CSSProperties["mixBlendMode"],
 });
 
 // A finished look. Tap any piece to see what it is and shop it.
@@ -31,12 +46,12 @@ export function Collage({ layout, pieces, radius = 28, tags = true }: { layout: 
   const tp = tag ? byId.get(tag.id)! : null;
   return (
     <div onClick={() => setOpen(null)} style={{ position: "relative", width: "100%", aspectRatio: `1 / ${BOARD_H}`, background: BG, borderRadius: radius, overflow: "hidden" }}>
-      {!tags && shown.map((l, z) => <div key={l.id} style={{ ...box(l), zIndex: z + 1 }}><PieceArt p={byId.get(l.id)!} /></div>)}
+      {!tags && shown.map((l, z) => <div key={l.id} style={{ ...box(l), zIndex: z + 1 }}><PieceArt p={byId.get(l.id)!} cut={l.cut} /></div>)}
       {tags && shown.map((l, z) => (
         <button key={l.id} type="button" aria-label={byId.get(l.id)!.name} disabled={!tags}
           onClick={e => { e.stopPropagation(); setOpen(o => (o === l.id ? null : l.id)); }}
           style={{ ...box(l), zIndex: z + 1, border: 0, padding: 0, background: "none", cursor: tags ? "pointer" : "default" }}>
-          <PieceArt p={byId.get(l.id)!} />
+          <PieceArt p={byId.get(l.id)!} cut={l.cut} />
         </button>
       ))}
       {tag && tp && (
@@ -104,7 +119,7 @@ export function CollageEditor({ layout, pieces, onChange, selected, onSelect, on
       {layout.filter(l => byId.has(l.id)).map((l, z) => (
         <div key={l.id} onPointerDown={e => down(e, l.id)}
           style={{ ...box(l), zIndex: z + 1, cursor: "grab", outline: selected === l.id ? "2px dashed var(--ink)" : "none", outlineOffset: 3, borderRadius: 14 }}>
-          <PieceArt p={byId.get(l.id)!} />
+          <PieceArt p={byId.get(l.id)!} cut={l.cut} />
           {selected === l.id && (
             <button type="button" aria-label="Take off the board" onPointerDown={e => { e.stopPropagation(); onRemove(l.id); }}
               style={{ position: "absolute", right: -10, top: -10, width: 30, height: 30, borderRadius: "50%", border: "2px solid #fff", background: "var(--ink)", color: "#fff", fontSize: 14, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transform: `rotate(${-(l.r ?? 0)}deg)` }}>✕</button>
