@@ -32,6 +32,21 @@ export default function Feed() {
   // Unloving a piece on Saved takes it off the list.
   const loves = useLovesStore(true, (id, on) => { if (!on) setSaved(s => s?.filter(i => i.id !== id) ?? s); else loadSaved().then(setSaved); });
   const { load } = loves;
+  const pick = (k: Tab) => { setTab(k); history.replaceState(history.state, "", `?tab=${k}`); };
+  // Filters stay put when she opens a piece or a person and comes back.
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    try {
+      const f = JSON.parse(sessionStorage.getItem("feed-filters") ?? "{}");
+      if (f.type) setType(f.type); if (f.mineType) setMineType(f.mineType); if (f.savedType) setSavedType(f.savedType);
+      if (f.order) setOrder(f.order); if (f.friendOrder) setFriendOrder(f.friendOrder); if (f.who !== undefined) setWho(f.who);
+    } catch {}
+    setRestored(true);
+  }, []);
+  useEffect(() => {
+    if (!restored) return;
+    try { sessionStorage.setItem("feed-filters", JSON.stringify({ type, mineType, savedType, order, friendOrder, who })); } catch {}
+  }, [restored, type, mineType, savedType, order, friendOrder, who]);
 
   useEffect(() => {
     const t = new URLSearchParams(location.search).get("tab");
@@ -66,12 +81,19 @@ export default function Feed() {
     <Loves store={loves}>
     <main className="tabscreen">
       <div className="scroll">
-        <div style={{ display: "flex", alignItems: "baseline", gap: 14, padding: "0 20px", whiteSpace: "nowrap", overflowX: "auto" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 16 }}>
+        <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "baseline", gap: 14, padding: "0 4px 0 20px", whiteSpace: "nowrap", overflowX: "auto" }}>
           {(feed?.length ? ["friends", "match", "mine", "saved"] as Tab[] : ["mine", "friends", "match", "saved"] as Tab[]).map(k => [k, LABEL[k]] as const).map(([k, label]) => (
-            <button key={k} onClick={() => { setTab(k); history.replaceState(history.state, "", `?tab=${k}`); }} className="serif" style={{ border: 0, borderBottom: `2px solid ${tab === k ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 22, whiteSpace: "nowrap", color: tab === k ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
+            <button key={k} onClick={() => pick(k)} className="serif" style={{ border: 0, borderBottom: `2px solid ${tab === k ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 22, whiteSpace: "nowrap", color: tab === k ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
               {label}
             </button>
           ))}
+        </div>
+        {handle && (
+          <Link href="/people" aria-label="Find people" style={{ flex: "none", width: 38, height: 38, borderRadius: "50%", background: "var(--chip)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink)" }}>
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="8" r="3.5" /><path d="M3.5 20a6.5 6.5 0 0 1 13 0" /><path d="M19 8v6M16 11h6" /></svg>
+          </Link>
+        )}
         </div>
 
         {handle === null && (
@@ -94,7 +116,7 @@ export default function Feed() {
               </div>
             )}
             {!who && !!matches?.length && (
-              <button onClick={() => setTab("match")} style={{ margin: "14px 16px 0", width: "calc(100% - 32px)", display: "flex", alignItems: "center", gap: 12, border: 0, borderRadius: 20, background: "#DCEFDF", padding: "14px 16px", textAlign: "left", font: "inherit", color: "var(--ink)", cursor: "pointer" }}>
+              <button onClick={() => pick("match")} style={{ margin: "14px 16px 0", width: "calc(100% - 32px)", display: "flex", alignItems: "center", gap: 12, border: 0, borderRadius: 20, background: "#DCEFDF", padding: "14px 16px", textAlign: "left", font: "inherit", color: "var(--ink)", cursor: "pointer" }}>
                 <span style={{ flex: 1 }}>
                   <span style={{ display: "block", fontWeight: 700, fontSize: 15 }}>See your Taste Matches</span>
                   <span style={{ display: "block", fontSize: 13, color: "#3F5F4A", marginTop: 2 }}>{matches.length} {matches.length === 1 ? "person shops" : "people shop"} the brands you do</span>

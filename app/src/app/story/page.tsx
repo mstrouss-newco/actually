@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useGoBack } from "@/lib/nav";
 import { HUE_SWATCH, type Item, brandOf, hueRank, loadItems, monthPieces, whoFor } from "@/lib/items";
 import { type OrderGroup, loadOrders, returnDaysLeft } from "@/lib/orders";
 import { closetWorth, money, worth } from "@/lib/earn";
@@ -13,7 +13,7 @@ export default function Story() {
   const [items, setItems] = useState<Item[] | null>(null);
   const [groups, setGroups] = useState<OrderGroup[] | null>(null);
   const [i, setI] = useState(0);
-  const router = useRouter();
+  const leave = useGoBack("/today");
   useEffect(() => { loadItems().then(setItems); loadOrders().then(setGroups); }, []);
 
   const all = items ?? [];
@@ -56,15 +56,20 @@ export default function Story() {
   return (
     <main style={{ position: "relative", width: "100%", height: "100%", background: "#141210", color: "#fff", fontFamily: "var(--font-sans), sans-serif", overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, padding: "18px 18px 26px", boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", gap: 5 }}>
-          {cards.map((c, k) => <div key={c} className="seg"><i key={`${c}${i}`} className={k === i ? "segrun" : ""} style={{ width: k < i ? "100%" : k === i ? undefined : 0 }} /></div>)}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ flex: 1, display: "flex", gap: 5 }}>
+                    {cards.map((c, k) => <div key={c} className="seg"><i key={`${c}${i}`} className={k === i ? "segrun" : ""} style={{ width: k < i ? "100%" : k === i ? undefined : 0 }} /></div>)}
+          </div>
+          <button type="button" onClick={leave} aria-label="Close" style={{ flex: "none", width: 34, height: 34, borderRadius: "50%", border: 0, background: "rgba(255,255,255,.14)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14 }}>
           <div className="logo" style={{ color: "#fff" }}>Actually</div>
           <div style={{ fontSize: 12, fontWeight: 700, opacity: .7 }}>{label}</div>
         </div>
 
-        <button type="button" onClick={() => (i + 1 < n ? setI(i + 1) : router.push("/today"))} aria-label={i + 1 < n ? "Next card" : "Close"} style={{ flex: 1, border: 0, background: "transparent", color: "#fff", cursor: "pointer", padding: 0, textAlign: "left", font: "inherit", display: "flex", flexDirection: "column", minHeight: 0 }}>
+        <button type="button" onClick={e => { const r = e.currentTarget.getBoundingClientRect(); if (e.clientX - r.left < r.width / 3 && i > 0) setI(i - 1); else if (i + 1 < n) setI(i + 1); else leave(); }} aria-label={i + 1 < n ? "Next card" : "Close"} style={{ flex: 1, border: 0, background: "transparent", color: "#fff", cursor: "pointer", padding: 0, textAlign: "left", font: "inherit", display: "flex", flexDirection: "column", minHeight: 0 }}>
           {items === null ? <div style={{ marginTop: 60, opacity: .7 }}>Putting your month together…</div>
           : pieces.length === 0 ? <>{kick(label)}{big("Nothing new yet.")}<div style={{ fontSize: 16, opacity: .8, marginTop: 10 }}>Your story fills in as orders come in.</div></>
           : card === "new" ? (
@@ -105,7 +110,7 @@ export default function Story() {
 
         <div style={{ display: "flex", gap: 8 }}>
           <Link href="/sort" className="press" style={{ flex: 1, height: 52, borderRadius: 999, background: "#fff", color: "var(--ink)", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>Share pieces to my feed</Link>
-          <Link href="/today" className="press" style={{ height: 52, padding: "0 20px", borderRadius: 999, border: "1.5px solid rgba(255,255,255,.45)", color: "#fff", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", textDecoration: "none" }}>Close</Link>
+          <Link href="/today" onClick={e => { e.preventDefault(); leave(); }} className="press" style={{ height: 52, padding: "0 20px", borderRadius: 999, border: "1.5px solid rgba(255,255,255,.45)", color: "#fff", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", textDecoration: "none" }}>Close</Link>
         </div>
         <div style={{ textAlign: "center", fontSize: 12, opacity: .6, marginTop: 10 }}>{i + 1 < n ? "Tap for the next card" : "Tap to finish"}</div>
       </div>

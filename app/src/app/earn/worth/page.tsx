@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { BackLink } from "@/lib/nav";
 import { type Skip, closetWorth, money, worth } from "@/lib/earn";
 import { loadOrders } from "@/lib/orders";
 import { type Item, loadItems, whoFor } from "@/lib/items";
@@ -34,7 +35,7 @@ export default function Worth() {
     <main className="tabscreen">
       <div className="scroll">
         <div style={{ padding: "0 20px" }}>
-          <Link href="/earn" className="back">← Earn</Link>
+          <BackLink fallback="/earn" />
           <h1 className="serif" style={{ fontWeight: 400, fontSize: 36, lineHeight: 1, letterSpacing: "-0.02em", margin: "18px 0 0" }}>What your closet is worth</h1>
         </div>
         <div style={{ margin: "18px 16px 0", background: "#EBE3FF", borderRadius: 26, padding: "20px 18px" }}>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { PhotoPicker } from "@/lib/feed-ui";
 import Link from "next/link";
+import { BackLink } from "@/lib/nav";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { DOMAIN } from "@/lib/profile";
@@ -65,7 +66,7 @@ export default function Settings() {
     <main className="tabscreen">
       <div className="scroll">
         <div style={{ padding: "0 20px" }}>
-          <Link href="/today" className="back">← Today</Link>
+          <BackLink fallback="/today" />
           <h1 className="serif" style={{ fontWeight: 400, fontSize: 36, lineHeight: 1, letterSpacing: "-0.02em", margin: "18px 0 0" }}>Settings</h1>
           {me?.handle && (
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16 }}>
@@ -80,14 +81,14 @@ export default function Settings() {
 
         <div id="brands" style={{ margin: "18px 16px 0", background: "#FAF8F6", borderRadius: 22, padding: "14px 16px" }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}>Brands you follow</div>
-          {follows !== null && follows.length === 0 && <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>None yet. <Link href="/follow" style={{ fontWeight: 700 }}>Pick your brands</Link></div>}
+          {follows !== null && follows.length === 0 && <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>None yet. <Link href="/follow?from=settings" style={{ fontWeight: 700 }}>Pick your brands</Link></div>}
           {follows?.map(f => (
             <div key={f.brand} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderTop: "1px solid var(--line)", marginTop: 6 }}>
               <Link href={`/brand/${encodeURIComponent(f.brand)}`} style={{ flex: 1, fontSize: 14, fontWeight: 700, textDecoration: "none" }}>{f.brand}</Link>
               <button type="button" onClick={async () => { setFollows(l => (l ?? []).filter(x => x.brand !== f.brand)); await unfollowBrand(f.brand); }} style={{ border: 0, background: "none", font: "700 13px var(--font-sans), sans-serif", color: "var(--muted)", cursor: "pointer" }}>Unfollow</button>
             </div>
           ))}
-          {!!follows?.length && <Link href="/follow" style={{ display: "inline-block", marginTop: 8, fontSize: 13, fontWeight: 700 }}>Follow more brands</Link>}
+          {!!follows?.length && <Link href="/follow?from=settings" style={{ display: "inline-block", marginTop: 8, fontSize: 13, fontWeight: 700 }}>Follow more brands</Link>}
         </div>
 
         {ask ? (

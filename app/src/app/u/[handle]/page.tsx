@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
+import { BackLink } from "@/lib/nav";
 import { type Profile, loadProfilePage } from "@/lib/social";
 import { supabase } from "@/lib/supabase";
 import { Avatar, FollowButton, ItemGrid, Loves, OutfitPost, PhotoPicker, type Order, OrderButton, ShareLink, TypeTabs, displayName, sortBy, useLovesStore } from "@/lib/feed-ui";
@@ -29,7 +30,7 @@ export default function PublicFeed({ params }: { params: Promise<{ handle: strin
     <main className="tabscreen">
       <div className="scroll" style={{ paddingBottom: signedIn ? 110 : 40 }}>
         <div style={{ padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          {signedIn ? <Link href="/feed" className="back">← Feed</Link> : <Link href="/" className="logo" style={{ textDecoration: "none" }}>Actually</Link>}
+          {signedIn ? <BackLink fallback="/feed" /> : <Link href="/" className="logo" style={{ textDecoration: "none" }}>Actually</Link>}
         </div>
 
         {p === null && <p className="lead" style={{ padding: "0 20px" }}>No one goes by {handle} here.</p>}

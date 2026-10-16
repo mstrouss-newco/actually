@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import Link from "next/link";
+import { BackLink } from "@/lib/nav";
 import { CONDITIONS, type Condition, SITES, askPrice, buildListing, money } from "@/lib/earn";
 import { type Item, loadItems, setPick } from "@/lib/items";
 import { ItemImage, TabBar, tint } from "@/lib/tabs";
@@ -34,7 +34,7 @@ export default function WorthItem({ params }: { params: Promise<{ id: string }> 
   if (item === null) {
     return (
       <main className="tabscreen">
-        <div className="scroll" style={{ padding: "22px 20px 110px" }}><Link href="/earn/worth" className="back">← Worth</Link><p className="lead">We couldn&apos;t find that piece.</p></div>
+        <div className="scroll" style={{ padding: "22px 20px 110px" }}><BackLink fallback="/earn/worth" /><p className="lead">We couldn&apos;t find that piece.</p></div>
         <TabBar />
       </main>
     );
@@ -57,7 +57,7 @@ export default function WorthItem({ params }: { params: Promise<{ id: string }> 
     <main className="tabscreen">
       <div className="scroll" style={{ paddingTop: 0 }}>
         <div style={{ background: tint(item.store), padding: "20px 20px 24px", borderRadius: "0 0 36px 36px" }}>
-          <Link href="/earn/worth" style={{ display: "inline-flex", alignItems: "center", height: 40, padding: "0 14px", borderRadius: 999, background: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none" }}>← Worth</Link>
+          <BackLink fallback="/earn/worth" style={{ height: 40, padding: "0 14px 0 8px", background: "#fff", fontSize: 14 }} />
           <div style={{ display: "flex", gap: 16, alignItems: "flex-end", marginTop: 18 }}>
             <div className="float" style={{ boxShadow: "0 10px 24px rgba(20,18,16,.12)", borderRadius: 22 }}>
               <ItemImage cutId={item.id} src={item.image_url} store={item.store} name={item.name} w={104} h={128} radius={22} />

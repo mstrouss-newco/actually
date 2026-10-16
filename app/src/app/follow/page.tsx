@@ -12,6 +12,9 @@ type Row = { brand: string; pieces: number; photo: Item };
 // "Your brands": shown once after her closet fills in. Every brand starts checked.
 export default function FollowBrands() {
   const router = useRouter();
+  // From Settings she is adding brands, not finishing sign-up: different heading, and back to Settings after.
+  const [fromSettings, setFromSettings] = useState(false);
+  useEffect(() => { setFromSettings(new URLSearchParams(location.search).get("from") === "settings"); }, []);
   const [rows, setRows] = useState<Row[] | null>(null);
   const [off, setOff] = useState<Set<string>>(new Set());
   const [all, setAll] = useState(false);
@@ -39,12 +42,12 @@ export default function FollowBrands() {
     setBusy(true);
     if (follow) await followBrands(picked.map(r => r.brand));
     await markBrandsAsked();
-    router.replace("/today");
+    router.replace(fromSettings ? "/settings" : "/today");
   };
 
   return (
     <main className="screen">
-      <div className="kicker">Your closet is ready</div>
+      <div className="kicker">{fromSettings ? "Brands you love" : "Your closet is ready"}</div>
       <h1 className="h1" style={{ fontSize: 34, marginTop: 8 }}>Your <em>brands.</em></h1>
       <p className="lead" style={{ marginTop: 8 }}>Love a brand? Keep it checked and we&apos;ll show you its sales and price drops.</p>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, background: "#DCEFDF", color: "#2F5C3E", borderRadius: 14, padding: "9px 12px", fontSize: 13, fontWeight: 700 }}>

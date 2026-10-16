@@ -1,7 +1,7 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
-import Link from "next/link";
+import { use, useEffect, useRef, useState } from "react";
+import { BackLink, useSheetHistory } from "@/lib/nav";
 import { useRouter } from "next/navigation";
 import { type Item, loadItems, whoFor } from "@/lib/items";
 import { OCCASIONS, type Outfit, type Placed, loadOutfit, saveOutfit } from "@/lib/outfits";
@@ -28,6 +28,10 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
   const [failed, setFailed] = useState(false);
   const [cutting, setCutting] = useState(false);
   const [cutNote, setCutNote] = useState("");
+  // What the board looked like when it opened, so leaving can ask before throwing changes away.
+  const startLayout = useRef("[]");
+  const changed = () => JSON.stringify(layout) !== startLayout.current;
+  useSheetHistory(sheet, () => setSheet(false));
 
   useEffect(() => {
     // Only her own pieces can go in a look; anything else is dropped from the board.
@@ -35,10 +39,10 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
       const mine = all.filter(i => whoFor(i, all) === "me");
       const ok = new Set(mine.map(i => i.id));
       setItems(mine);
-      if (o) { setOrig(o); setLayout(o.layout.filter(l => ok.has(l.id))); ensureCutouts(o.layout.map(l => l.id), true); setName(o.name); setOccasion(o.occasion); setShared(o.shared); }
+      if (o) { setOrig(o); const l0 = o.layout.filter(l => ok.has(l.id)); startLayout.current = JSON.stringify(l0); setLayout(l0); ensureCutouts(o.layout.map(l => l.id), true); setName(o.name); setOccasion(o.occasion); setShared(o.shared); }
       // "Make an outfit with this" from a closet piece starts the board with it.
       const start = new URLSearchParams(location.search).get("with");
-      if (isNew && start && ok.has(start)) setLayout([{ id: start, x: 0.3, y: 0.25, w: 0.42, r: 0 }]);
+      if (isNew && start && ok.has(start)) { const l0 = [{ id: start, x: 0.3, y: 0.25, w: 0.42, r: 0 }]; startLayout.current = JSON.stringify(l0); setLayout(l0); }
     });
   }, [id, isNew]);
 
@@ -90,7 +94,7 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
     <main className="tabscreen" style={{ paddingBottom: 0 }}>
       <div className="scroll" style={{ paddingBottom: 40 }}>
         <div style={{ padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href={orig ? `/outfit/${orig.id}` : "/closet?view=outfits"} className="back">← {orig ? "Back" : "Closet"}</Link>
+          <BackLink fallback={orig ? `/outfit/${orig.id}` : "/closet?view=outfits"} confirm={() => !changed() || window.confirm(orig ? "Leave without saving your changes?" : "Discard this outfit?")} />
           <button type="button" disabled={!layout.length} onClick={() => setSheet(true)} style={{ border: 0, background: "none", font: "700 15px var(--font-sans), sans-serif", color: layout.length ? "var(--ink)" : "var(--muted)", cursor: "pointer" }}>Done</button>
         </div>
         <h1 className="serif" style={{ fontWeight: 400, fontSize: 30, margin: "10px 20px 0", letterSpacing: "-0.02em" }}>{orig ? "Edit outfit" : "New outfit"}</h1>
@@ -103,7 +107,7 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
               <button type="button" style={tool} onClick={() => size(1 / 1.15)} aria-label="Smaller">－</button>
               <button type="button" style={tool} disabled={cutting} onClick={toggleCut}>{cutting ? "Cutting out…" : showingCut ? "Show photo" : "Cut out"}</button>
               <button type="button" style={tool} onClick={toFront}>Front</button>
-              <button type="button" style={tool} onClick={toBack}>Back</button>
+              <button type="button" style={tool} onClick={toBack}>Behind</button>
             </div>
           )}
         </div>

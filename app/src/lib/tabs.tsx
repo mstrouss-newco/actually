@@ -7,6 +7,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { type ImportState, importState, onImport } from "./importer";
+import { tabHref } from "./nav";
 
 const TABS = [
   { href: "/today", label: "Today", icon: <path d="M3 10.5 12 3l9 7.5V21H3z" /> },
@@ -56,12 +57,17 @@ function useScrollAway() {
 export function TabBar() {
   const path = usePathname();
   const away = useScrollAway();
+  // Each tab opens the view she last used there (e.g. Closet > Brands). Read after mount so the server and phone agree.
+  const [hrefs, setHrefs] = useState<Record<string, string>>({});
+  useEffect(() => { setHrefs(Object.fromEntries(TABS.map(t => [t.href, tabHref(t.href)]))); }, [path]);
+  const on = (h: string) => path.startsWith(h) || (h === "/orders" && path.startsWith("/order/")) || (h === "/closet" && /^\/(brand|outfit)\//.test(path))
+    || (h === "/feed" && /^\/(people|u\/)/.test(path)) || (h === "/today" && path.startsWith("/settings"));
   return (
     <>
     <ImportStrip />
     <nav className={away ? "tabbar away" : "tabbar"}>
       {TABS.map(t => (
-        <Link key={t.href} href={t.href} className={path.startsWith(t.href) || (t.href === "/orders" && path.startsWith("/order/")) || (t.href === "/closet" && path.startsWith("/brand/")) || (t.href === "/feed" && /^\/(people|u\/)/.test(path)) ? "on" : ""}>
+        <Link key={t.href} href={on(t.href) && path === t.href ? t.href : (hrefs[t.href] ?? t.href)} className={on(t.href) ? "on" : ""}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{t.icon}</svg>
           {t.label}
         </Link>
