@@ -80,23 +80,33 @@ const Links = z.object({
 });
 
 // Follows a store's tracking redirect to the real product page, then drops anything personal after the "?".
-const TRACK = /(click|track|links?|email|mail|e\.|sendgrid|klaviyo|braze|bnc|ct\.|r\.)/i;
+// Tracking and email-service hosts: never saved as a product page.
+const TRACK_HOST = /(^|\.)(klclick\d?\.com|klaviyo\.com|sendgrid\.net|list-manage\.com|mailchimp\.com|mcsv\.net|braze\.com|bnc\.lt|app\.link|exacttarget\.com|rsys\d*\.net|emarsys\.net|attn\.tv|attentivemobile\.com|narvar\.com|linksynergy\.com|awin1\.com|shareasale\.com|sailthru\.com|cordial\.io|iterable\.com|bluecore\.com|cmail\d*\.com|ct\.sendgrid\.net|urldefense\.com|safelinks\.protection\.outlook\.com)$/i;
+const TRACK_SUB = /^(click|clicks|links?|email|em|e|t|r|trk|ctrk|track|tracking|go|mail|url\d*|s|l)\./i;
+const NOT_PRODUCT = /\/(unsubscribe|account|my-account|orders?|order-status|login|signin|sign-in|track\w*|preferences|cart|checkouts?|returns?|tools|recurring|subscriptions?|wishlist|reviews?|survey)(\/|$)/i;
+// Only public https sites: no raw IP addresses, no local or internal names.
+const safeHost = (h: string) => h.includes(".") && !/^[\d.]+$/.test(h) && !h.includes(":") && !/(^|\.)(localhost|local|internal|lan|home|corp|arpa)$/i.test(h);
 async function productPage(url: string | null | undefined, text: string): Promise<string | null> {
-  const u = url?.trim() ?? "";
-  if (!u.startsWith("https://") || !text.includes(u)) return null;
-  let end = u;
+  let end = url?.trim() ?? "";
+  if (!end.startsWith("https://") || !text.includes(end)) return null;
+  // Follow at most 5 hops ourselves, checking each one.
   try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 6000);
-    const res = await fetch(u, { redirect: "follow", signal: ctrl.signal, headers: { "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1" } });
-    clearTimeout(t);
-    end = res.url || u;
-    res.body?.cancel().catch(() => null);
-  } catch { /* keep the link as written */ }
+    for (let hop = 0; hop < 5; hop++) {
+      const h = new URL(end);
+      if (h.protocol !== "https:" || !safeHost(h.hostname)) return null;
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 5000);
+      const res = await fetch(end, { redirect: "manual", signal: ctrl.signal, headers: { "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1" } }).finally(() => clearTimeout(t));
+      res.body?.cancel().catch(() => null);
+      const next = res.status >= 300 && res.status < 400 ? res.headers.get("location") : null;
+      if (!next) break;
+      end = new URL(next, end).toString();
+    }
+  } catch { /* keep the last good address */ }
   try {
     const x = new URL(end);
-    if (x.protocol !== "https:" || x.pathname.length < 4) return null;
-    if (TRACK.test(x.hostname.split(".")[0]) || /\/(unsubscribe|account|orders?|login|signin|track\w*|preferences|cart)(\/|$)/i.test(x.pathname)) return null;
+    if (x.protocol !== "https:" || !safeHost(x.hostname) || x.pathname.length < 4) return null;
+    if (TRACK_HOST.test(x.hostname) || TRACK_SUB.test(x.hostname) || NOT_PRODUCT.test(x.pathname)) return null;
     // Amazon: keep just the product id.
     const asin = x.hostname.includes("amazon.") ? x.pathname.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})/) : null;
     if (asin) return `https://www.amazon.com/dp/${asin[1]}`;

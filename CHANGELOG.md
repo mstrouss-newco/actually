@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- QA fixes: product links can only be set by our server and must be on the store's own site; safer link following; a newly hearted piece shows on Saved right away; photo upload says when it fails; names and counts tidied on the feed; Settings explains what "Delete" clears.
+
 - Profile photos: tap your circle on My feed, your page or Settings to add one. Friends see it everywhere your initial used to be.
 - Today no longer shows how much you spent this month.
 

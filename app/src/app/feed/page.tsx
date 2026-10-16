@@ -161,7 +161,7 @@ export default function Feed() {
               <PhotoPicker handle={handle} size={56} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="serif" style={{ fontSize: 24, lineHeight: 1, overflowWrap: "anywhere" }}>{displayName(handle)}</div>
-                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{mine ? `${mine.followers} ${mine.followers === 1 ? "follower" : "followers"} · ${myLoves ? `${myLoves} ${myLoves === 1 ? "love" : "loves"}` : `${mine.following} following`}` : "Loading…"}</div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{mine ? `${mine.followers} ${mine.followers === 1 ? "follower" : "followers"} · ${mine.following} following${myLoves ? ` · ${myLoves} ${myLoves === 1 ? "love" : "loves"}` : ""}` : "Loading…"}</div>
               </div>
               <ShareLink handle={handle} label="Share" small />
             </div>
