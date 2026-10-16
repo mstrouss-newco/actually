@@ -2,6 +2,10 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-16: One deck at /brief
+
+- The one sheet and the features tour are merged into one slide deck at `/brief/deck` (same password): cover, connect, organize, earn, discover, money, go to market, roadmap, what we need, appendix. Arrow keys, space or the corner buttons move a slide; phones keep moving. The old one-sheet HTML is gone.
+
 ## 2026-10-16: Key features tour
 
 - New `/brief/features` (same password as `/brief`): connect Gmail, organize, earn and discover, each shown as a moving phone built from the lander's screens plus new ones (Gmail import, brand page, Style me, cash back, earn from sharing, resale, her page, Taste Match, saved). Each card says Live or when it's coming.
