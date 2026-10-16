@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-16
 
+- "Taste Match" capitalized on the feed.
+
 - Cut-outs for looks and pieces already shared: anyone who sees a friend's shared piece or look asks for its cut-out, and `cut-out` now allows pieces that are shared (on their own or in a shared look), not just her own. Failed tries are retried on a later visit.
 
 - Lander on phones: the Gmail button sits right under the moving app screen.

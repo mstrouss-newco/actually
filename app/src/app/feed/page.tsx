@@ -9,7 +9,7 @@ import { type SharedOutfit, friendsOutfits } from "@/lib/outfits";
 import { ItemImage, TabBar } from "@/lib/tabs";
 
 type Tab = "friends" | "match" | "mine" | "saved";
-const LABEL: Record<Tab, string> = { friends: "Friends", match: "Taste match", mine: "My feed", saved: "Saved" };
+const LABEL: Record<Tab, string> = { friends: "Friends", match: "Taste Match", mine: "My feed", saved: "Saved" };
 type Match = { handle: string; brands: string[]; picks: Profile["items"] };
 
 const both = (b: string[]) => (b.length > 1 ? `${b.slice(0, -1).join(", ")} and ${b.at(-1)}` : b[0]);
@@ -96,7 +96,7 @@ export default function Feed() {
             {!who && !!matches?.length && (
               <button onClick={() => setTab("match")} style={{ margin: "14px 16px 0", width: "calc(100% - 32px)", display: "flex", alignItems: "center", gap: 12, border: 0, borderRadius: 20, background: "#DCEFDF", padding: "14px 16px", textAlign: "left", font: "inherit", color: "var(--ink)", cursor: "pointer" }}>
                 <span style={{ flex: 1 }}>
-                  <span style={{ display: "block", fontWeight: 700, fontSize: 15 }}>See your taste matches</span>
+                  <span style={{ display: "block", fontWeight: 700, fontSize: 15 }}>See your Taste Matches</span>
                   <span style={{ display: "block", fontSize: 13, color: "#3F5F4A", marginTop: 2 }}>{matches.length} {matches.length === 1 ? "person shops" : "people shop"} the brands you do</span>
                 </span>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
