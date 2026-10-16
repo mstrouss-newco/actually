@@ -2,6 +2,10 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-16: Deck stack cards stay visible
+
+- Stack slide cards borrowed the lander's looping pop, which ends invisible after 9 seconds. They now fade in once and stay.
+
 ## 2026-10-16: Deck Chirp cohort
 
 - The earning test uses a cohort of Chirp users, not all 50,000.
