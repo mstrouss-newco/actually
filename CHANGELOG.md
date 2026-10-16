@@ -2,6 +2,10 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-16: Deck Chirp cohort
+
+- The earning test uses a cohort of Chirp users, not all 50,000.
+
 ## 2026-10-16: Deck stack title
 
 - Tech stack slide title is now just "Our stack".
