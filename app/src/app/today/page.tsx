@@ -172,11 +172,11 @@ export default function Today() {
               onPointerDown={e => { startX.current = e.clientX; hold(); }}
               onPointerUp={e => { const s = startX.current; startX.current = null; release(); if (s != null && Math.abs(e.clientX - s) > 40) { e.preventDefault(); go(e.clientX < s ? 1 : -1); } }}
               onPointerCancel={() => { startX.current = null; release(); }}>
-              <Link key={slide.key} href={slide.href} className="heroIn press" draggable={false} style={{ background: slide.bg, borderRadius: 28, padding: "20px 18px", display: "flex", gap: 14, position: "relative", textDecoration: "none", height: 196, boxSizing: "border-box" }}>
+              <Link key={slide.key} href={slide.href} className="heroIn press" draggable={false} style={{ background: slide.bg, borderRadius: 28, padding: "20px 18px", display: "flex", gap: 14, position: "relative", textDecoration: "none", minHeight: 196, boxSizing: "border-box" }}>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
                   <div className="kicker" style={{ color: slide.kc }}>{slide.kicker}</div>
                   <div className="serif" style={{ fontSize: 22, lineHeight: 1.1, letterSpacing: "-0.02em", overflowWrap: "break-word" }}>{slide.title}</div>
-                  <div style={{ fontSize: 13, color: "#5E5852", lineHeight: 1.35 }}>{slide.sub}</div>
+                  <div style={{ fontSize: 13, color: "#5E5852", lineHeight: 1.35, overflowWrap: "break-word" }}>{slide.sub}</div>
                 </div>
                 <div className="float" style={{ flex: "none", alignSelf: "center", transform: "rotate(4deg)", borderRadius: 20, boxShadow: "0 12px 26px rgba(20,18,16,.14)" }}>{slide.img}</div>
                 <div style={{ position: "absolute", top: -10, right: 14, minWidth: 58, height: 58, padding: "0 6px", boxSizing: "border-box", borderRadius: 999, background: "var(--ink)", color: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transform: "rotate(8deg)", boxShadow: "0 6px 14px rgba(0,0,0,.14)" }}>{slide.badge}</div>

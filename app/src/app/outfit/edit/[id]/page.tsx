@@ -99,7 +99,6 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
               <button type="button" style={tool} disabled={cutting} onClick={toggleCut}>{cutting ? "Cutting out…" : cur?.cut ? "Show photo" : "Cut out"}</button>
               <button type="button" style={tool} onClick={toFront}>Front</button>
               <button type="button" style={tool} onClick={toBack}>Back</button>
-              <button type="button" style={{ ...tool, color: "#C9402F" }} onClick={() => { setLayout(l => l.filter(p => p.id !== sel)); setSel(null); }}>Remove</button>
             </div>
           )}
         </div>

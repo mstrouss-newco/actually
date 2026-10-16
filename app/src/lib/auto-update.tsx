@@ -20,7 +20,7 @@ export function AutoUpdate() {
         // Reload once per new version, so a stale copy can never loop.
         let tried = "";
         try { tried = sessionStorage.getItem("reloaded-for") ?? ""; } catch {}
-        if (v && v !== MINE && v !== tried && !typing()) {
+        if (v && v !== MINE && v !== tried && !typing() && !/^\/(outfit\/edit|sort)/.test(location.pathname)) {
           try { sessionStorage.setItem("reloaded-for", v); } catch {}
           location.reload();
         }

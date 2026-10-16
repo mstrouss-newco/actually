@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Blind QA fixes: a shared piece is shared on one copy only (no doubles on friends' feeds); store-site search only for well-known stores with an exact name match (no way to point a friend's tap elsewhere); shared looks no longer carry ids of kids', partner's, hidden or returned pieces; deleting data or an account also deletes her cut-out photos; Today's top card grows to fit instead of spilling; the outfit toolbar fits on one row (✕ on the piece removes it); the app won't auto-reload while she's building an outfit or sorting.
+
 - Links work more often: (1) when we don't have the exact product page, tapping opens the store's own site search for that piece (new `items.store_site` from the order's sender, `item_sites` for feeds); (2) the server now reads the real address many tracking links carry inside them; (3) older pieces get checked faster (80 orders per visit, and every piece gets a fresh try).
 
 - Photos with a plain gray or colored background no longer sit in a visible box: the tile takes the photo's background color (read from its corners when the store allows). White backgrounds already blend in.
