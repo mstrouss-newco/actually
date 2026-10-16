@@ -134,7 +134,7 @@ export default async function Deck() {
         ]} />
       </Slide>
 
-      <Slide kick="Tech stack" title={<>Built on tools <em>tech teams already know.</em></>} line="Standard, hosted and low cost: about $0.50 of AI per new user, then pennies a month.">
+      <Slide kick="Tech stack" title="Our stack" line="Standard, hosted and low cost: about $0.50 of AI per new user, then pennies a month.">
         <div className="st-grid">
           {STACK.map(([d, name, what, why]) => (
             <div key={name} className="st-card">
