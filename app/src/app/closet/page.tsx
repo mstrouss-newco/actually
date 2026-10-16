@@ -1,6 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { StyleMe } from "@/lib/style";
+import { ShareSheet } from "@/lib/share";
 import Link from "next/link";
 import { findIt, siteOf, siteSearch, storeLink } from "@/lib/social";
 import { type Outfit, loadOutfits } from "@/lib/outfits";
@@ -23,6 +26,11 @@ const isNew = (i: Item) => Date.now() - Date.parse(i.ordered_at) < 14 * 86400000
 const chip = (on: boolean): React.CSSProperties => ({ border: "1.5px solid var(--ink)", background: on ? "var(--ink)" : "#fff", color: on ? "#fff" : "var(--ink)", borderRadius: 999, padding: "7px 12px", font: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" });
 
 export default function Closet() {
+  return <Suspense><ClosetPage /></Suspense>;
+}
+
+function ClosetPage() {
+  const router = useRouter();
   const [items, setItems] = useState<Item[] | null>(null);
   const [view, setView] = useState<"pieces" | "brands" | "outfits">("pieces");
   const [outfits, setOutfits] = useState<Outfit[] | null>(null);
@@ -38,10 +46,12 @@ export default function Closet() {
   // The brand sort she picked stays when she comes back from a brand page.
   const setBsort = (k: string) => { setBsortState(k); try { sessionStorage.setItem("brand-sort", k); } catch {} };
   useEffect(() => { try { const k = sessionStorage.getItem("brand-sort"); if (k) setBsortState(k); } catch {} }, []);
-  // Coming back from a brand page opens the Brands tab.
-  useEffect(() => { const v = new URLSearchParams(location.search).get("view"); if (v === "brands" || v === "outfits") setView(v); }, []);
+  // Keep the tab in step with the address, including when she comes back from a look or a brand.
+  const params = useSearchParams();
+  const urlView = params.get("view");
+  useEffect(() => { setView(urlView === "brands" || urlView === "outfits" ? urlView : "pieces"); }, [urlView]);
   // Remember the tab in the address, so Back from a brand page lands on Brands.
-  const pickView = (v: "pieces" | "brands" | "outfits") => { setView(v); history.replaceState(history.state, "", v !== "pieces" ? `?view=${v}` : location.pathname); };
+  const pickView = (v: "pieces" | "brands" | "outfits") => { setView(v); router.replace(v !== "pieces" ? `/closet?view=${v}` : "/closet", { scroll: false }); };
   useEffect(() => { loadOrders().then(g => g && setRets(returnsByEmail(g))); }, []);
   const [cat, setCatState] = useState<string | null>(null);
   // Opening a shelf adds a step to the browser history, so Back returns to the closet.
@@ -57,6 +67,8 @@ export default function Closet() {
     return () => removeEventListener("popstate", pop);
   }, []);
   const [sel, setSel] = useState<Item | null>(null);
+  const [styleFor, setStyleFor] = useState<Item | null>(null);
+  const [shareFor, setShareFor] = useState<Item | null>(null);
   const [who, setWhoView] = useState<Who>("me");
   const [undo, setUndo] = useState<Item | null>(null);
   // The pieces shown in "Is all of this yours?", fixed when it opens so answers don't reshuffle it.
@@ -240,6 +252,7 @@ export default function Closet() {
 
         {!cur && view === "outfits" && (
           <>
+            {items !== null && <StyleMe mine={mine} />}
             <div style={{ padding: "16px 16px 0" }}>
               <Link href="/outfit/edit/new" className="btn press" style={{ marginTop: 0, height: 50, fontSize: 15 }}>+ New outfit</Link>
             </div>
@@ -408,6 +421,12 @@ export default function Closet() {
                   {sel.pick === k ? "✓ " : ""}{label}
                 </button>
               ))}
+              {whoFor(sel, everything) === "me" && (
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => { setStyleFor(sel); setSel(null); }} className="btn btn-ghost" style={{ flex: 1, marginTop: 0, height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>Style this piece</button>
+                  <button onClick={() => { setShareFor(sel); setSel(null); }} className="btn btn-ghost" style={{ flex: 1, marginTop: 0, height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>Share</button>
+                </div>
+              )}
               {whoFor(sel, everything) === "me" && <Link href={`/outfit/edit/new?with=${sel.id}`} className="btn btn-ghost" style={{ height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>Make an outfit with this</Link>}
               {sel.pick === "sell" && <Link href={`/earn/worth/${sel.id}`} className="btn press" style={{ height: 48, fontSize: 15, background: "#FF6159", color: "var(--ink)" }}>Make a resale post →</Link>}
               <a href={findIt(sel)} target="_blank" rel="noreferrer" className="btn btn-ghost" style={{ height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>{storeLink(sel) ? `See it on ${siteOf(storeLink(sel)!)}` : siteSearch(sel) ? `Find it on ${siteOf(siteSearch(sel)!).replace(/^www\./, "")}` : "Find it online"}</a>
@@ -416,6 +435,20 @@ export default function Closet() {
           </div>
         </div>
       )}
+      {styleFor && (
+        <div onClick={() => setStyleFor(null)} style={{ position: "absolute", inset: 0, zIndex: 20, background: "rgba(20,18,16,.35)", display: "flex", alignItems: "flex-end" }}>
+          <div onClick={e => e.stopPropagation()} className="popIn" style={{ width: "100%", maxHeight: "88%", overflowY: "auto", background: "#fff", borderRadius: "30px 30px 0 0", padding: "14px 16px 28px" }}>
+            <div style={{ width: 40, height: 5, borderRadius: 3, background: "#E5E0DA", margin: "0 auto 14px" }} />
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <ItemImage cutId={styleFor.id} src={styleFor.image_url} store={styleFor.store} name={styleFor.name} w={56} h={68} radius={14} size={24} />
+              <div style={{ minWidth: 0 }}><div className="kicker">{styleFor.brand || styleFor.store}</div><div className="serif" style={{ fontSize: 20, lineHeight: 1.1 }}>{styleFor.name}</div></div>
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 15, marginTop: 16 }}>3 ways to wear it</div>
+            <StyleMe mine={mine} anchor={styleFor} />
+          </div>
+        </div>
+      )}
+      {shareFor && <ShareSheet kind="piece" id={shareFor.id} title={shareFor.name} onClose={() => setShareFor(null)} />}
       {review && (
         <div style={{ position: "absolute", inset: 0, zIndex: 25, background: "#fff", display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "22px 20px 8px" }}>

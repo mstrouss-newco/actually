@@ -209,3 +209,7 @@ a { color: var(--ink); }
   .adm-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .adm-two, .adm-wide { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Loading placeholder that gently shines. */
+.shimmer { background: linear-gradient(90deg, #F3F0EB 0%, #FAF8F6 50%, #F3F0EB 100%) !important; background-size: 200% 100% !important; animation: shimmer 1.4s linear infinite; }
+@keyframes shimmer { to { background-position: -200% 0 } }

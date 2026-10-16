@@ -10,6 +10,7 @@ import { type Outfit, deleteOutfit, loadOutfit, setShared } from "@/lib/outfits"
 import { Collage } from "@/lib/collage";
 import { findIt } from "@/lib/social";
 import { ItemImage, TabBar } from "@/lib/tabs";
+import { ShareSheet } from "@/lib/share";
 
 // One saved outfit: the look, its pieces, and sharing.
 export default function OutfitPage({ params }: { params: Promise<{ id: string }> }) {
@@ -18,6 +19,7 @@ export default function OutfitPage({ params }: { params: Promise<{ id: string }>
   const [o, setO] = useState<Outfit | null | undefined>(undefined);
   const [items, setItems] = useState<Item[]>([]);
   const [sure, setSure] = useState(false);
+  const [share, setShare] = useState(false);
   useEffect(() => { loadOutfit(id).then(o => { setO(o); if (o) ensureCutouts(o.layout.map(l => l.id), true); }); loadItems().then(setItems); }, [id]);
 
   if (o === undefined) return <main className="tabscreen"><TabBar /></main>;
@@ -32,7 +34,12 @@ export default function OutfitPage({ params }: { params: Promise<{ id: string }>
       <div className="scroll">
         <div style={{ padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/closet?view=outfits" className="back">← Outfits</Link>
-          <Link href={`/outfit/edit/${o.id}`} style={{ fontWeight: 700, fontSize: 15, textDecoration: "none" }}>Edit</Link>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <Link href={`/outfit/edit/${o.id}`} style={{ fontWeight: 700, fontSize: 15, textDecoration: "none" }}>Edit</Link>
+            <button type="button" onClick={() => setShare(true)} className="press" style={{ height: 38, padding: "0 14px", borderRadius: 999, border: 0, background: "var(--ink)", color: "#fff", display: "flex", alignItems: "center", gap: 6, font: "700 14px var(--font-sans), sans-serif", cursor: "pointer" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5" /><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" /></svg>Share
+            </button>
+          </div>
         </div>
         <h1 className="serif" style={{ fontWeight: 400, fontSize: 30, margin: "10px 20px 0", letterSpacing: "-0.02em" }}>{o.name}</h1>
         {o.occasion && <div style={{ padding: "8px 20px 0" }}><span style={{ display: "inline-flex", height: 28, alignItems: "center", padding: "0 11px", borderRadius: 999, background: "#DCEFDF", fontSize: 12, fontWeight: 700 }}>{o.occasion}</span></div>}
@@ -67,6 +74,7 @@ export default function OutfitPage({ params }: { params: Promise<{ id: string }>
             className="btn btn-ghost" style={{ height: 44, fontSize: 14, color: "#C9402F" }}>{sure ? "Tap again to delete" : "Delete outfit"}</button>
         </div>
       </div>
+      {share && <ShareSheet kind="look" id={o.id} title={o.name} onClose={() => setShare(false)} />}
       <TabBar />
     </main>
   );

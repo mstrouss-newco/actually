@@ -35,6 +35,8 @@ export const DOCS: Record<string, Doc> = {
       ["Who we share it with", [
         "Service providers that run Actually for us, under contracts that limit how they use your data: database and storage hosting [Supabase], app hosting and visit counts [Vercel], AI that reads order emails [Anthropic], and email forwarding for your shopping address [Resend]. [Counsel: confirm each provider's data processing terms, including that the AI provider does not train on our data.]",
         "Friends and anyone with your profile link see only what you choose to share.",
+        "Links you share: when you share a look or a piece by link, anyone with the link can see its photo, brand, name, your note and your first name. Never prices, sizes or order details. You can turn a link off any time.",
+        "Styling: to suggest outfits, we send the type, brand, name and color of your pieces to our AI provider. Never your emails.",
         "Stores you tap through to may receive that visit. When cash back is live, a shopping partner may learn that a purchase came from Actually.",
         "If the law requires it, or to protect people's safety, or as part of a sale or merger of our business, with notice where required.",
       ]],

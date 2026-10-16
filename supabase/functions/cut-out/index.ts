@@ -34,11 +34,11 @@ Deno.serve(async req => {
   const { item_id } = await req.json().catch(() => ({}));
   if (typeof item_id !== "string") return json({ error: "bad request" }, 400);
 
-  const { data: item } = await admin.from("items").select("id, image_url, user_id, pick").eq("id", item_id).maybeSingle();
+  const { data: item } = await admin.from("items").select("id, image_url, user_id, pick, link_shared").eq("id", item_id).maybeSingle();
   if (!item?.image_url) return json({ error: "no photo" }, 404);
-  // Her own pieces, or pieces someone already shares with friends (on its own or in a shared look).
-  if (item.user_id !== auth.user.id && item.pick !== "share") {
-    const { data: look } = await admin.from("outfits").select("id").eq("user_id", item.user_id).eq("shared", true).contains("layout", [{ id: item.id }]).limit(1);
+  // Her own pieces, or pieces someone already shares (on its own, by link, or in a shared look).
+  if (item.user_id !== auth.user.id && item.pick !== "share" && !item.link_shared) {
+    const { data: look } = await admin.from("outfits").select("id").eq("user_id", item.user_id).or("shared.eq.true,link_shared.eq.true").contains("layout", [{ id: item.id }]).limit(1);
     if (!look?.length) return json({ error: "no photo" }, 404);
   }
   const path = `${item.id}.png`;
