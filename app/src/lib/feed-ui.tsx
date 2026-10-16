@@ -272,7 +272,6 @@ export function FriendGrid({ items, who = true, saved = false }: { items: FeedIt
           <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.25 }}>{i.name}</div>
           {i.note && !saved && <div style={{ fontSize: 12, color: "var(--soft)", fontStyle: "italic", marginTop: 2, lineHeight: 1.3 }}>&ldquo;{i.note}&rdquo;</div>}
           {saved && face(i.handle)}
-          {saved && <div style={{ marginTop: 8, height: 34, borderRadius: 999, border: "1.5px solid var(--ink)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700 }}>Shop it ↗</div>}
         </a>
       ))}
     </div>
@@ -337,7 +336,6 @@ export function OutfitPost({ o, handle }: { o: SharedOutfit; handle?: string }) 
           <a key={p.id} href={findIt(p)} target="_blank" rel="noreferrer" style={{ flex: "none", width: 92, textDecoration: "none" }}>
             <ItemImage src={p.image_url} store={p.store} name={p.name} w={92} h={96} radius={16} size={30} />
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginTop: 5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.brand || p.store}</div>
-            <div style={{ fontSize: 12, fontWeight: 700 }}>Shop ↗</div>
           </a>
         ))}
       </div>
