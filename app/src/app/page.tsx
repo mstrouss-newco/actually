@@ -1,5 +1,5 @@
 import { Track } from "@/lib/track";
-import Link from "next/link";
+import { GmailStart } from "./permission/connect";
 import { Art } from "@/lib/ui";
 import { SkipIfSignedIn } from "@/lib/signed-in";
 
@@ -17,8 +17,8 @@ const ITEMS = [
 ];
 const ALERTS = [
   ["tops-overshirt-rose", "Return the Zara overshirt by Friday", "2 days left", "#C9402F"],
-  ["shoes-runner-sky", "Your Nike Pegasus is out for delivery", "Today", "#3E5C8E"],
-  ["beauty-lip-oil-rose", "$20 in Sephora points expire Oct 31", "Use them", "#8A6D1E"],
+  ["tops-turtleneck-butter", "Alex loved your Aritzia sweater", "Just now", "#C9402F"],
+  ["tops-overshirt-rose", "Your Zara overshirt resells for $40", "Sell it", "#2F7A4F"],
 ];
 
 export default function Welcome() {
@@ -27,9 +27,9 @@ export default function Welcome() {
       <SkipIfSignedIn />
       <Track name="welcome" />
       <div className="logo">Actually</div>
-      <h1 className="h1" style={{ marginTop: 26 }}>Your order emails, <em>sorted out.</em></h1>
+      <h1 className="h1" style={{ marginTop: 20, fontSize: 42 }}>Your order emails, <em>sorted out.</em></h1>
       <p className="lead" style={{ marginTop: 14, color: "var(--soft)" }}>
-        Get a free shopping email for checkout. Every order becomes your closet, by brand and size. Plus returns, deliveries and points, handled.
+        Connect Gmail and every order becomes your closet. Plus returns, points, resale and friends&apos; finds, handled.
       </p>
 
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 22 }}>
@@ -51,7 +51,7 @@ export default function Welcome() {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
         {ALERTS.map(([img, text, when, color], i) => (
-          <div key={img} className={`drop${i ? ` d${i + 1}` : ""}`} style={{ display: "flex", alignItems: "center", gap: 10, background: "#fff", border: "1px solid var(--line)", borderRadius: 18, padding: "8px 12px 8px 8px", boxShadow: "0 8px 20px rgba(20,18,16,.08)" }}>
+          <div key={text} className={`drop${i ? ` d${i + 1}` : ""}`} style={{ display: "flex", alignItems: "center", gap: 10, background: "#fff", border: "1px solid var(--line)", borderRadius: 18, padding: "8px 12px 8px 8px", boxShadow: "0 8px 20px rgba(20,18,16,.08)" }}>
             <Art src={img} w={40} h={48} radius={10} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, fontWeight: 700, color: "var(--muted)" }}>
@@ -59,19 +59,13 @@ export default function Welcome() {
               </div>
               <div style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.25, marginTop: 2 }}>{text}</div>
             </div>
-            <div style={{ fontSize: 11, fontWeight: 700, color, whiteSpace: "nowrap" }}>{when}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4 }}>{when === "Just now" && <svg width="12" height="12" viewBox="0 0 24 24" fill="#FF6159" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>}{when}</div>
           </div>
         ))}
       </div>
 
       <div className="spacer" />
-      <Link href="/claim" className="btn">Get my free shopping email</Link>
-      <Link href="/login" className="btn btn-ghost">Sign in</Link>
-      <div style={{ display: "flex", justifyContent: "center", gap: 14, fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
-        <Link href="/privacy" style={{ color: "inherit" }}>Privacy</Link>
-        <Link href="/terms" style={{ color: "inherit" }}>Terms</Link>
-        <Link href="/legal" style={{ color: "inherit" }}>Legal</Link>
-      </div>
+      <GmailStart />
     </main>
   );
 }

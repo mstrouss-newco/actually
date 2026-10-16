@@ -21,6 +21,7 @@ export const DOCS: Record<string, Doc> = {
         "Your shopping email: mail sent to your Actually shopping address is forwarded to your inbox. We screen it the same way and keep only the order details above.",
         "Things you add: your profile photo, notes on pieces, outfits, hearts, who you follow, brands you follow, points you type in, and your choices about who each piece is for.",
         "Usage: which sign-up steps you completed and when you open the app, and basic page visit counts from our hosting provider's analytics, which does not use cookies.",
+        "Errors: if something breaks, the error message, the screen it happened on and your device type, so we can fix it. Never the contents of your emails.",
       ]],
       ["How we use it", [
         "To run Actually for you: build your closet and order list, track deliveries and return windows, find points, estimate resale value and show your feed.",

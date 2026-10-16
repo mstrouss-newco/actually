@@ -31,14 +31,19 @@ export default function Admin() {
   const [sure, setSure] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [exp, setExp] = useState({ vendor: "", amount: "", monthly: true });
+  const [errs, setErrs] = useState<{ id: number; created_at: string; page: string | null; message: string }[]>([]);
 
   const load = useCallback(async () => {
     const sb = supabase();
     const { data: admin } = await sb.rpc("is_admin");
     setOk(!!admin);
     if (!admin) return;
-    const { data } = await sb.rpc("admin_stats");
+    const [{ data }, { data: e }] = await Promise.all([
+      sb.rpc("admin_stats"),
+      sb.from("app_errors").select("id, created_at, page, message").order("created_at", { ascending: false }).limit(20),
+    ]);
     setS(data as Stats);
+    setErrs(e ?? []);
   }, []);
   const find = useCallback(async (text: string) => {
     const { data } = await supabase().rpc("admin_users", { q: text.trim() });
@@ -61,6 +66,7 @@ export default function Admin() {
     setExp({ vendor: "", amount: "", monthly: true });
     load();
   };
+  const clearErrors = async () => { await supabase().from("app_errors").delete().gte("id", 0); load(); };
   const dropExpense = async (id: string) => { await supabase().from("expenses").delete().eq("id", id); load(); };
 
   if (ok === null) return <main className="tabscreen"><div className="scroll" style={{ padding: "0 20px" }}><p className="lead">Loading…</p></div></main>;
@@ -111,14 +117,14 @@ export default function Admin() {
                 return (
                   <div key={f.step}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 700 }}>
-                      <span>{f.step}</span>
+                      <span>{f.step === "Picked a name" ? "Tapped Gmail" : f.step}</span>
                       <span>{f.n}{n > 0 && prev > 0 ? <span style={{ color: "var(--muted)", fontWeight: 500 }}> · {Math.round((f.n / prev) * 100)}%</span> : null}</span>
                     </div>
                     <div style={{ height: 8, borderRadius: 4, background: "#EAE6E1", marginTop: 4 }}><div style={{ width: `${(f.n / top) * 100}%`, height: "100%", borderRadius: 4, background: "var(--ink)" }} /></div>
                   </div>
                 );
               })}
-              <div style={{ fontSize: 12, color: "var(--muted)" }}>The first two steps started counting on Oct 16.</div>
+              <div style={{ fontSize: 12, color: "var(--muted)" }}>The first two steps started counting on Oct 16. Tapped Gmail counts from the new sign-up.</div>
             </div>
 
             <Head t="Feed activity" />
@@ -195,6 +201,18 @@ export default function Admin() {
                 ))}
                 {!people.length && <div style={{ fontSize: 14, color: "var(--muted)" }}>No one matches.</div>}
               </div>
+            </div>
+
+            <Head t="Errors" />
+            <div style={{ padding: "0 20px", display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
+              {!errs.length && <div style={{ color: "var(--muted)" }}>No errors. You get an email (at most one an hour) when someone hits one.</div>}
+              {errs.map(e => (
+                <div key={e.id} style={{ background: "#FAF8F6", borderRadius: 14, padding: "8px 12px" }}>
+                  <div style={{ fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.message}</div>
+                  <div style={{ color: "var(--muted)", fontSize: 12 }}>{day(e.created_at)} · {e.page ?? "unknown page"}</div>
+                </div>
+              ))}
+              {errs.length > 0 && <button type="button" onClick={clearErrors} style={{ alignSelf: "flex-start", border: 0, background: "none", padding: 0, font: "700 13px var(--font-sans), sans-serif", color: "var(--muted)", cursor: "pointer" }}>Clear all</button>}
             </div>
 
             {s.log.length > 0 && (

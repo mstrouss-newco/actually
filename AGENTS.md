@@ -75,10 +75,12 @@ design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPAB
 
 ## How data flows
 
-1. **Sign-up:** Welcome → Claim (pick a name, saved on device) → Goal → Live (email ready
-   plus the Gmail button; `/permission` is the same button for later entry points). Google is asked once: "Continue with Gmail" (with `gmail.readonly`) or
-   "Not now" (sign-in only). `/auth` finishes sign-in and saves the profile.
-   Returning users use `/login`.
+1. **Sign-up (Gmail first):** Welcome has "Continue with Gmail" right away (`GmailStart` in
+   `permission/connect.tsx`; "Not now" signs in without Gmail). Google is asked once. `/auth` gives new
+   accounts a name from their Google first name (`autoHandle()` in `lib/profile.ts`, adds digits if taken),
+   then goes to `/import`, where she can keep or change the name (`changeHandle()`; it is also her
+   shopping email). The shopping email is a card on Today, not a step. `/claim`, `/goal`, `/live` just
+   send people to the welcome. `/permission` is the Gmail button for later entry points. Returning users use `/login`.
 2. **Gmail import** (`lib/importer.ts`, runs in the browser as a shared background job):
    list matching emails → read headers → `parse()` in `lib/gmail.ts` drops non-orders,
    blocked senders and sensitive mail → each batch goes to `screen-emails` (AI) →
@@ -111,6 +113,7 @@ design; safety comes from row level security). Env overrides: `NEXT_PUBLIC_SUPAB
 | `gmail-token` | Own check (GET is public, says only ready or not) | Saves Google's refresh token, hands out fresh Gmail passes, forgets on disconnect. |
 | `cut-out` | Yes (own pieces only) | Removes an even photo background from one of her pieces for outfit boards; saves `cutouts/<item_id>.png` (public bucket, server writes only). Says "busy background" when the photo isn't a plain studio shot. |
 | `admin-delete` | Owners only (`admins` table) | Deletes someone's account like Settings does (photo, cut-outs, user) and writes `admin_log`. Can't delete yourself. |
+| `report-error` | No (capped: 300 an hour) | Saves app errors to `app_errors` and emails owners at most once an hour (Resend, from alerts@ the shopping domain). The app sends only the error, page and device type. |
 | `delete-account` | Yes | `data`: deletes orders, items, rewards, blocked stores, brand follows, loves, outfits (keeps account). `account`: deletes the user, her photo and her cut-outs; every table cascades. Both modes remove her cut-outs. |
 
 All AI calls use `claude-haiku-5-5` with structured output, chosen for cost (about
@@ -138,6 +141,7 @@ leave the database only through the `profile_page`, `following_feed` (old), `fri
 Outfits: table `outfits` (owner-only; `layout` is a list of {id, x, y, w, r, cut}, shares of the board width, max 12 pieces; `cut` means show the cut-out photo). Built at `/outfit/edit/[id]` (`new` to start, `?with=<item>` to start from a piece) with `CollageEditor` in `lib/collage.tsx`; shown at `/outfit/[id]` and in Closet > Outfits. Shared looks reach others only through `friends_outfits` and `profile_page` (via `outfit_public`), which drop pieces marked for kids, partner or someone else, hidden or sent back, and return photo, brand, name and store link only; the layout they return is filtered to those same pieces. On feeds, the "Outfits" type tab and the Friends "All" stream show them; each piece in a look is tappable to shop it.
 The "Is this yours?" closet prompt is one line. `likelyWho()` guesses only on a real sign (a men's piece in a women's closet or the reverse means partner); otherwise it asks "Is this one yours?" with Mine, or Change (a small menu). Each non-cut piece sits on a patch of board color with its photo multiplied onto it, so white backgrounds vanish but overlapping photos stay solid; "Cut out" is her choice per piece. No wear tracking is shown. New outfits are private until she turns sharing on; saving a look marks its pieces as hers.
 
+Error alerts: `ErrorReporter` (`lib/errors.tsx`, in the layout) and `app/error.tsx` send crashes to `report-error`, at most 5 per page load, skipping network and browser-extension noise. Owners see the last 20 on `/admin` and can clear them.
 Owner dashboard: `/admin` (linked from Settings when `is_admin()`), owners listed in `admins` (no policies, server only). `admin_stats()` and `admin_users(q)` refuse non-owners. Funnel uses `events` (step names only: welcome, claimed, goal, app_open; logged by `track()` in `lib/track.tsx`, once per device, app_open once a day). `expenses` and `admin_log` are owner-only. AI cost is an estimate (per-email constants in the page). Traffic is Vercel Analytics (`<Analytics />` in the layout).
 
 Legal pages: DRAFTS in `lib/legal.tsx` (one data object per document), shown at `/legal`, `/legal/[doc]`, `/privacy`, `/terms`. They describe what the app actually does; when you change data collection, sharing, storage or providers, update them in the same change. [Brackets] are for counsel. Remove the draft banner only after legal review.

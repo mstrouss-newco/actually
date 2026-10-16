@@ -7,7 +7,7 @@ import { type BrandFollow, brandsAsked, loadFollows } from "@/lib/brands";
 import { useRouter } from "next/navigation";
 import { type OrderGroup, SOON, cleanupOnce, dayLabel, etaText, isArriving, loadOrders, orderTitle, refreshArriving, returnBy, returnDaysLeft, shortTitle, fmtDate, trackStep, justArrived } from "@/lib/orders";
 import { gmailToken } from "@/lib/supabase";
-import { loadProfile } from "@/lib/profile";
+import { DOMAIN, loadProfile } from "@/lib/profile";
 import { type Reward, daysUntil, fmtDay, loadRewards, money, programName } from "@/lib/earn";
 import { type Item, brandOf, loadItems, monthPieces, whoFor } from "@/lib/items";
 import { ItemImage, StoreTile, TabBar, tint } from "@/lib/tabs";
@@ -15,6 +15,30 @@ import { TrackBar, delay } from "@/lib/motion";
 
 type Slide = { key: string; href: string; bg: string; kc: string; kicker: string; title: string; sub: string; img: React.ReactNode; badge: React.ReactNode };
 const MONTH = () => new Date().toLocaleDateString("en-US", { month: "long" });
+
+// The shopping email used to be a sign-up step. Now it's a small card she can copy or close.
+function ShopEmailCard({ handle }: { handle: string }) {
+  const [hide, setHide] = useState(true);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => { try { setHide(!!localStorage.getItem("shop-email-card")); } catch { setHide(false); } }, []);
+  if (!handle || hide) return null;
+  const email = `${handle}@${DOMAIN}`;
+  const close = () => { try { localStorage.setItem("shop-email-card", "1"); } catch {} setHide(true); };
+  const copy = async () => { try { await navigator.clipboard.writeText(email); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch {} };
+  return (
+    <div className="drop" style={{ margin: "14px 16px 0", border: "1.5px dashed #E2DDD7", borderRadius: 22, padding: "12px 12px 12px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 700, fontSize: 15 }}>Your shopping email</div>
+        <div style={{ fontSize: 13, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{email}</div>
+        <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Use it at checkout and new orders show up here.</div>
+      </div>
+      <button type="button" onClick={copy} className="press" style={{ height: 36, padding: "0 14px", borderRadius: 999, border: 0, background: "var(--ink)", color: "#fff", font: "700 13px var(--font-sans), sans-serif", cursor: "pointer", flex: "none" }}>{copied ? "Copied" : "Copy"}</button>
+      <button type="button" onClick={close} aria-label="Close" style={{ width: 30, height: 30, border: 0, background: "none", cursor: "pointer", flex: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7A746D" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+    </div>
+  );
+}
 
 export default function Today() {
   const [orders, setOrders] = useState<OrderGroup[] | null | undefined>(undefined);
@@ -145,6 +169,7 @@ export default function Today() {
         </div>
 
         <HomeScreenTip />
+        {orders && orders.length > 0 && <ShopEmailCard handle={name} />}
 
         {(orders === null || orders?.length === 0) && (
           <div style={{ margin: "18px 16px 0", background: "var(--chip)", borderRadius: 28, padding: "22px 18px" }}>

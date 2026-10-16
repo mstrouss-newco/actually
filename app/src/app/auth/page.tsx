@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveGmailRefresh, supabase } from "@/lib/supabase";
-import { saveProfile, syncProfile } from "@/lib/profile";
+import { autoHandle, saveProfile } from "@/lib/profile";
 
 // Google sends her back here after sign-in.
 export default function Auth() {
@@ -12,7 +12,7 @@ export default function Auth() {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const next = params.get("next") || "/goal";
+    const next = params.get("next") || "/import";
     const code = params.get("code");
     (async () => {
       const sb = supabase();
@@ -20,7 +20,7 @@ export default function Auth() {
       const { data } = await sb.auth.getSession();
       if (!data.session) {
         setMsg("Sign-in didn't finish. Try again.");
-        setTimeout(() => router.replace("/claim"), 1600);
+        setTimeout(() => router.replace("/"), 1600);
         return;
       }
       await saveGmailRefresh();
@@ -32,18 +32,8 @@ export default function Auth() {
         router.replace(next);
         return;
       }
-      const res = await syncProfile();
-      if (res === "taken") {
-        saveProfile({ handle: "" });
-        router.replace("/claim?taken=1");
-        return;
-      }
-      const { data: me } = await sb.from("profiles").select("handle").eq("id", data.session.user.id).maybeSingle();
-      if (!me?.handle) {
-        router.replace("/claim");
-        return;
-      }
-      saveProfile({ handle: me.handle });
+      // New here: name her from Google. No extra sign-up step.
+      await autoHandle();
       router.replace(next);
     })();
   }, [router]);
