@@ -9,6 +9,8 @@ export type Item = {
   for_whom?: Who | null; gmail_id?: string;
   // Its order hasn't arrived yet.
   arriving?: boolean;
+  // Some pieces from its order went back, so this one is known to be kept.
+  kept?: boolean;
 };
 export type Who = "me" | "kids" | "partner" | "other";
 
@@ -33,14 +35,20 @@ function sameRead(a: Item, b: Item) {
 export async function loadItems(): Promise<Item[]> {
   // Pieces from cancelled orders never arrived, so they stay out of the closet.
   // Every piece uses its order's date, so one purchase shows one date everywhere.
-  const { cancelled, arriving, ordered } = await orderInfo();
-  const { data } = await supabase().from("items").select("id, store, name, brand, size, color, price, image_url, category, ordered_at, pick, resale_low, resale_high, resale_note, for_whom, gmail_id").in("category", WEAR).eq("hidden", false).order("ordered_at", { ascending: false }).limit(3000);
+  const { cancelled, arriving, ordered, returned } = await orderInfo();
+  const { data } = await supabase().from("items").select("id, store, name, brand, size, color, price, image_url, category, ordered_at, pick, resale_low, resale_high, resale_note, for_whom, gmail_id, returned_at").in("category", WEAR).eq("hidden", false).order("ordered_at", { ascending: false }).limit(3000);
   // Keep the more specific name ("Women's Lima" over "Lima"): it tells us who it's for.
   // Two colors of one piece (a tee in Black and White) stay separate; a missing color matches any.
   const best = new Map<string, Item[]>();
   const sameColor = (a: Item, b: Item) => !a.color || !b.color || a.color.toLowerCase() === b.color.toLowerCase();
-  for (const i of (data ?? []) as Item[]) {
-    if (NOT_WEAR.test(i.name) || cancelled.has(i.gmail_id ?? "")) continue;
+  // Pieces she sent back leave the closet. Orders where some went back: the rest were kept.
+  const rows = (data ?? []) as (Item & { returned_at: string | null })[];
+  const partial = new Set(rows.filter(i => i.returned_at).map(i => i.gmail_id ?? ""));
+  for (const i of rows) {
+    if (NOT_WEAR.test(i.name) || cancelled.has(i.gmail_id ?? "") || i.returned_at) continue;
+    // A whole order sent back (and no email saying which pieces): leave it out too.
+    if (returned.has(i.gmail_id ?? "") && !partial.has(i.gmail_id ?? "")) continue;
+    i.kept = partial.has(i.gmail_id ?? "");
     const when = ordered.get(i.gmail_id ?? "");
     if (when) i.ordered_at = when;
     i.arriving = arriving.has(i.gmail_id ?? "");
@@ -244,6 +252,31 @@ export async function readReturnRules(token: string) {
       try {
         const text = await readFullText(r.gmail_id, token);
         await sb.functions.invoke("read-order", { body: { gmail_id: r.gmail_id, text, mode: "rules" } });
+      } catch (err) { if ((err as Error).message === "expired") throw err; }
+    }));
+  }
+}
+
+// Reads each return and refund email once to learn which pieces went back (handles partial
+// returns and return emails with no order number). Newest first, a batch per import.
+export async function readReturns(token: string) {
+  const sb = supabase();
+  const { data } = await sb.from("orders").select("gmail_id, store, store_domain, order_no, subject").eq("items_read", false)
+    .in("kind", ["return", "refund"]).order("sent_at", { ascending: false }).limit(400);
+  const seen = new Set<string>();
+  const pick = ((data ?? []) as { gmail_id: string; store: string; store_domain: string | null; order_no: string | null; subject: string | null }[]).filter(r => {
+    // Three emails about one return (#782611580) only need one read.
+    const ref = r.order_no ?? r.subject?.match(/#\s?(\d{6,})/)?.[1];
+    const key = ref ? `${r.store_domain ?? r.store}|${ref}` : r.gmail_id;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 120);
+  for (let n = 0; n < pick.length; n += 4) {
+    await Promise.all(pick.slice(n, n + 4).map(async r => {
+      try {
+        const text = await readFullText(r.gmail_id, token);
+        await sb.functions.invoke("read-order", { body: { gmail_id: r.gmail_id, text: `${r.subject ?? ""}\n\n${text}`, mode: "returns" } });
       } catch (err) { if ((err as Error).message === "expired") throw err; }
     }));
   }

@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- Returns leave the closet: each return and refund email is read once (`read-order` mode "returns", `readReturns()` in the import) to learn which pieces went back, matched by store and product name, so partial returns and return emails with no order number (Bloomingdale's, Amazon, Loop, Narvar) now work. Returned pieces (`items.returned_at`) are hidden from Closet, Sort, Worth and the feed; whole-order returns with no item list are hidden too. Migration items_returned.
+
 - Sort: a clear "Show my feed" button while swiping; pieces not swiped stay unsorted and wait for next time (no need to mark them private to leave).
 
 - Follow brands: a one-time "Your brands" screen (`/follow`) after the closet fills in, every brand pre-checked, one tap to follow; Today shows "Brands you follow"; brand pages have Follow / Following, switches for sales, new arrivals and price drops, and "You might also like" (brands at least 3 of its followers also follow, counts only); Settings lists followed brands with Unfollow. New table `brand_follows`, `profiles.brands_asked_at`, function `brand_suggestions` (migration brand_follows). Delete-my-data clears follows. Sales and price drop alerts need the Wildfire deal feed and a price source; not built yet.
