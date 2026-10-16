@@ -71,12 +71,14 @@ export function FeedCard({ item }: { item: FeedItem }) {
           <div style={{ fontSize: 12, color: "var(--muted)" }}>Added {ago(item.shared_at)}</div>
         </div>
       </Link>
-      <ItemImage src={item.image_url} store={item.store} name={item.name} w="100%" h={300} radius={28} size={80} />
+      <a href={findIt(item)} target="_blank" rel="noreferrer" style={{ display: "block" }}>
+        <ItemImage src={item.image_url} store={item.store} name={item.name} w="100%" h={300} radius={28} size={80} />
+      </a>
       <ActionRow item={item} />
-      <div style={{ padding: "8px 4px 0" }}>
+      <a href={findIt(item)} target="_blank" rel="noreferrer" style={{ display: "block", padding: "8px 4px 0", textDecoration: "none", color: "inherit" }}>
         <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)" }}>{item.brand || item.store}</div>
         <div className="serif" style={{ fontSize: 22, marginTop: 2 }}>{item.name}</div>
-      </div>
+      </a>
     </div>
   );
 }
