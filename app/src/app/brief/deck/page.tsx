@@ -1,0 +1,170 @@
+import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { Phone, TodayScreen, ClosetScreen, MakerScreen, FeedScreen } from "../../lander";
+import { GmailScreen, BrandScreen, StyleScreen, CashScreen, ShareEarnScreen, WorthScreen, MyPageScreen, MatchScreen, SavedScreen } from "../features/screens";
+import { BRIEF_COOKIE, BRIEF_OK } from "../pass";
+import { DeckNav } from "./nav";
+import "../features/tour.css";
+import "./deck.css";
+
+// The Actually deck for ownership and the tech team, behind the /brief password.
+// One page of full-screen slides: what it is, the features (moving phones), money, go to market, roadmap, asks.
+export const metadata: Metadata = { title: "Actually", robots: { index: false, follow: false } };
+export const dynamic = "force-dynamic";
+
+const LIVE = "Live";
+type Card = { name: string; line: string; when: string; screen: React.ReactNode };
+
+function Cards({ cards }: { cards: Card[] }) {
+  return (
+    <div className="dk-cards">
+      {cards.map(c => (
+        <div key={c.name} className="dk-card">
+          <div className="dk-ph"><Phone>{c.screen}</Phone></div>
+          <div className="dk-cap">
+            <div className="dk-capt"><b>{c.name}</b><span className={`tr-when${c.when === LIVE || c.when.startsWith("Value") ? " live" : ""}`}>{c.when}</span></div>
+            <p>{c.line}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Slide({ kick, title, line, tone = "", children }: { kick: string; title: React.ReactNode; line?: string; tone?: string; children: React.ReactNode }) {
+  return (
+    <section className={`dk-s ${tone}`}>
+      <div className="dk-in">
+        <div className="ld-kick">{kick}</div>
+        <h2>{title}</h2>
+        {line && <p className="dk-line">{line}</p>}
+        {children}
+      </div>
+    </section>
+  );
+}
+
+const MONEY: [string, string, string, string, string, string][] = [
+  ["Shopping links", "Store pays a fee when she buys through us; we share some as cash back", "$5 to $15", "30 to 50%", "$2 to $7", "Launch"],
+  ["Friends' purchases", "A friend buys what she shared; we split the fee with her", "$1 to $5", "25 to 40%", "$0.25 to $2", "5,000 users"],
+  ["Resale", "Referral fee from sites like ThredUp and eBay", "$1 to $3", "about 90%", "$1 to $3", "5,000 users"],
+  ["Brand offers", "Brands pay per new buyer", "$10 to $25", "30 to 50%", "$3 to $12", "25,000 users"],
+  ["Trend reports", "Anonymous buying trends, never from Gmail data", "$2 to $5", "about 80%", "$2 to $4", "250,000 users"],
+];
+
+const ROAD: { when: string; name: string; main?: boolean; cols: [string, string[]][]; gate?: string }[] = [
+  { when: "By Thanksgiving", name: "Test, add partners, finish product", main: true, gate: "Needs Google to approve Gmail access",
+    cols: [["1. Feedback and prework", ["Oddbytes employees try it (US only, up to 100 people)", "Get their feedback and fix what they find", "Legal review of policies"]],
+      ["2. If they'd keep using it", ["Google approval for Gmail", "Security review (2 to 6 weeks)", "Partner approvals (Wildfire and others)", "New domain: actually.shop", "Ready to launch"]]] },
+  { when: "December", name: "Launch", gate: "Needs cash back to be earning",
+    cols: [["", ["Public launch, with an earning test on 50,000 Chirp users", "Cash back links live", "Syncs with the app closed"]], ["", ["Return deadline alerts", "Outlook inbox", "Pinterest sharing"]]] },
+  { when: "Q1 2027", name: "Grow", cols: [["", ["App Store app"]], ["", ["Resale partners"]]] },
+  { when: "Rest of 2027", name: "Scale", cols: [["", ["Brand offers (at about 25,000 users)", "Trend reports"]], ["", ["Yahoo inbox (needs Yahoo to approve us)"]]] },
+];
+
+export default async function Deck() {
+  if ((await cookies()).get(BRIEF_COOKIE)?.value !== BRIEF_OK) redirect("/brief");
+  return (
+    <div className="ld tr dk" id="deck" tabIndex={-1}>
+      <section className="dk-s dk-cover">
+        <div className="ld-blob ld-blob1" /><div className="ld-blob ld-blob2" />
+        <div className="dk-in dk-split">
+          <div className="dk-ct">
+            <div className="logo ld-brand">Actually</div>
+            <h1>Your order emails, <em>sorted out.</em></h1>
+            <p>A free app that turns a shopper&apos;s order emails into one organized place: what she owns, what&apos;s due back, what she can earn, and what her friends love.</p>
+            <div className="dk-goal">If testing goes well, public launch in December</div>
+            <div className="dk-note">In private testing today at actually-app.vercel.app</div>
+          </div>
+          <div className="dk-cp"><Phone className="ld-float"><TodayScreen /></Phone></div>
+        </div>
+      </section>
+
+      <Slide kick="1 · Connect" title="One tap with Gmail" line="Her past orders become her closet in minutes. Read-only: we can never send, delete or change her mail.">
+        <Cards cards={[
+          { name: "Connect Gmail", line: "AI finds her orders and skips everything else, including health and banking mail.", when: LIVE, screen: <GmailScreen /> },
+          { name: "Sorted for her", line: "Returns due, deliveries on the way and points about to expire, on one screen.", when: LIVE, screen: <TodayScreen /> },
+        ]} />
+      </Slide>
+
+      <Slide kick="2 · Organize" tone="soft" title="Everything she owns, in one place" line="No uploading, no typing.">
+        <Cards cards={[
+          { name: "Closet", line: "Every piece she bought, with photo and brand.", when: LIVE, screen: <ClosetScreen /> },
+          { name: "Brands", line: "Her size, her pieces and the return rule.", when: LIVE, screen: <BrandScreen /> },
+          { name: "Make an outfit", line: "Tap pieces onto a board. Save or share.", when: LIVE, screen: <MakerScreen /> },
+          { name: "AI outfits", line: "3 looks from her own closet, for any occasion.", when: LIVE, screen: <StyleScreen /> },
+        ]} />
+      </Slide>
+
+      <Slide kick="3 · Earn" title="Money she'd otherwise miss">
+        <Cards cards={[
+          { name: "Cash back", line: "Buy through Actually at stores she already shops.", when: "Coming December", screen: <CashScreen /> },
+          { name: "Earn from sharing", line: "A friend buys what she shared; she gets a cut.", when: "Coming 2027", screen: <ShareEarnScreen /> },
+          { name: "Resale", line: "What her closet could sell for today.", when: "Value live, partners Q1 2027", screen: <WorthScreen /> },
+        ]} />
+      </Slide>
+
+      <Slide kick="4 · Discover" tone="dark" title="Style from people she knows">
+        <Cards cards={[
+          { name: "Your feed", line: "Pieces and looks she chooses to share. Never prices or sizes.", when: LIVE, screen: <MyPageScreen /> },
+          { name: "Friends' feeds", line: "What friends own and love. Tap to find it.", when: LIVE, screen: <FeedScreen /> },
+          { name: "Taste Match", line: "How close her taste is to a friend's.", when: LIVE, screen: <MatchScreen /> },
+          { name: "Saved", line: "Looks and pieces she hearted.", when: LIVE, screen: <SavedScreen /> },
+        ]} />
+      </Slide>
+
+      <Slide kick="How it makes money" title={<>$20 to $50 a user a year. <em>$8 to $28 net.</em></>} line="Our estimates, based on similar apps (Rakuten, Ibotta, Fetch, LTK), once everything is running. Running cost is under $1 per user a year.">
+        <div className="dk-tw"><table className="dk-t">
+          <thead><tr><th>Stream</th><th>How</th><th>Revenue</th><th>Margin</th><th>Net</th><th>Starts at</th></tr></thead>
+          <tbody>
+            {MONEY.map(r => <tr key={r[0]}>{r.map((c, i) => <td key={i}>{i === 0 ? <b>{c}</b> : c}</td>)}</tr>)}
+            <tr className="dk-tot"><td><b>Total</b></td><td /><td><b>$20 to $50</b></td><td><b>40 to 55%</b></td><td><b>$8 to $28</b></td><td /></tr>
+          </tbody>
+        </table></div>
+        <p className="dk-small">Per user, per year. Ad tests cost $3 to $7 per sign-up. Watch-outs: Amazon pays low fees, and links only pay if she buys through us, which we still need to prove.</p>
+      </Slide>
+
+      <Slide kick="Go to market" tone="soft" title="Lead with earning and organizing">
+        <div className="dk-grid">
+          <div className="dk-box" style={{ background: "#FFF0BF" }}><b>Two messages</b><p>Earning (unused points, missed returns, cash back) already brings our cheapest sign-ups. Organizing is everything she bought, in one place. We back whichever keeps more people.</p></div>
+          <div className="dk-box" style={{ background: "#DCEFDF" }}><b>50,000 Chirp users</b><p>Already acquired. They signed up to make money, so they test the earning message at almost no cost.</p></div>
+          <div className="dk-box" style={{ background: "#DCEBFF" }}><b>Employees first</b><p>Up to 100 Oddbytes employees in the US test it before launch (Google&apos;s limit until it approves us).</p></div>
+          <div className="dk-box" style={{ background: "#FFE1DC" }}><b>Holiday timing</b><p>December is when returns pile up and tracking matters most. Sharing brings friends in for free.</p></div>
+        </div>
+      </Slide>
+
+      <Slide kick="Roadmap" title="If testing goes well, launch in December" line="Nothing is spent until employees say they'd keep using it.">
+        <div className="dk-road">
+          {ROAD.map(r => (
+            <div key={r.when}>
+              <div className={`dk-row${r.main ? " main" : ""}`}>
+                <div className="dk-rl"><div className="ld-kick">{r.when}</div><b>{r.name}</b></div>
+                {r.cols.map(([h, items], i) => (
+                  <div key={i} className="dk-rc">{h && <div className="ld-kick">{h}</div>}<ul>{items.map(t => <li key={t}>{t}</li>)}</ul></div>
+                ))}
+              </div>
+              {r.gate && <div className="dk-gate">{r.gate}</div>}
+            </div>
+          ))}
+        </div>
+      </Slide>
+
+      <Slide kick="What we need" tone="dark" title="A green light to test">
+        <div className="dk-grid dk-two">
+          <div className="dk-box"><b>From ownership</b><p>A green light for employee testing. If testing goes well: $500 for actually.shop and $1,000 to $5,000 for Google&apos;s security review.</p></div>
+          <div className="dk-box"><b>From the tech team</b><p>About an hour a week to look over what ships, an owner for the security review, and a view on when we need an App Store app.</p></div>
+        </div>
+      </Slide>
+
+      <Slide kick="Appendix" title="Under the hood">
+        <div className="dk-grid dk-three">
+          <div className="dk-box"><b>How it&apos;s built</b><ul><li>AI agents write, design, test and release; one person directs and approves every change.</li><li>A separate AI tester checks each batch as a first-time user.</li><li>Every change is reviewed and logged; the code has a full guide for engineers.</li></ul></div>
+          <div className="dk-box"><b>Tech stack</b><ul><li>Next.js web app that installs to the iPhone home screen</li><li>Vercel hosting, Supabase data and sign-in</li><li>Anthropic Claude (Haiku) for AI, capped at $25 a month</li><li>Gmail read-only, Resend for email, GitHub for code</li></ul></div>
+          <div className="dk-box"><b>Privacy</b><ul><li>Health, banking, insurance, legal and adult mail is dropped before anything is read.</li><li>Each person can only read her own data.</li><li>Shared items never show price, size or order details.</li></ul></div>
+        </div>
+      </Slide>
+      <DeckNav />
+    </div>
+  );
+}
