@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-16
 
+- Draft legal pages (marked pending legal review): Privacy Policy, Terms of Service, Cookie Policy, Google Data Use (Limited Use statement), Delete Your Data, Community Guidelines, Affiliate Disclosure. At /legal, /privacy and /terms; linked from the welcome screen, under the Gmail button and in Settings. Placeholders in [brackets] for counsel.
+
 - Owner dashboard at /admin (link in Settings, owners only): users, sign-up funnel, feed activity, last 8 weeks, AI cost estimate, expenses you can add, revenue (waiting on Wildfire), people search with delete, and an owner log. New tables `admins`, `events` (sign-up step names only), `expenses`, `admin_log`; functions `is_admin`, `admin_stats`, `admin_users`; edge function `admin-delete`. Vercel Analytics added for traffic.
 
 ## 2026-10-15

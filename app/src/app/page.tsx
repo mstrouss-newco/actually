@@ -67,6 +67,11 @@ export default function Welcome() {
       <div className="spacer" />
       <Link href="/claim" className="btn">Get my free shopping email</Link>
       <Link href="/login" className="btn btn-ghost">Sign in</Link>
+      <div style={{ display: "flex", justifyContent: "center", gap: 14, fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
+        <Link href="/privacy" style={{ color: "inherit" }}>Privacy</Link>
+        <Link href="/terms" style={{ color: "inherit" }}>Terms</Link>
+        <Link href="/legal" style={{ color: "inherit" }}>Legal</Link>
+      </div>
     </main>
   );
 }

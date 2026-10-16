@@ -140,6 +140,8 @@ The "Is this yours?" closet prompt is one line. `likelyWho()` guesses only on a 
 
 Owner dashboard: `/admin` (linked from Settings when `is_admin()`), owners listed in `admins` (no policies, server only). `admin_stats()` and `admin_users(q)` refuse non-owners. Funnel uses `events` (step names only: welcome, claimed, goal, app_open; logged by `track()` in `lib/track.tsx`, once per device, app_open once a day). `expenses` and `admin_log` are owner-only. AI cost is an estimate (per-email constants in the page). Traffic is Vercel Analytics (`<Analytics />` in the layout).
 
+Legal pages: DRAFTS in `lib/legal.tsx` (one data object per document), shown at `/legal`, `/legal/[doc]`, `/privacy`, `/terms`. They describe what the app actually does; when you change data collection, sharing, storage or providers, update them in the same change. [Brackets] are for counsel. Remove the draft banner only after legal review.
+
 Profile photos: public Storage bucket `avatars`, one file per person at `<handle>.jpg` (shrunk to 320px on the phone by `PhotoPicker` in `lib/feed-ui.tsx`); only the owner can write hers. `Avatar` shows the photo when there is one, else the colored initial.
 Auto-update: each deploy bakes its version into the app (`NEXT_PUBLIC_BUILD_ID` from `next.config.ts`); `AutoUpdate` in `lib/auto-update.tsx` checks `/api/version` when the app comes back to the screen and every 5 minutes, and reloads once per new version (not while she's typing).
 Today shows no spending totals (people don't enjoy seeing them); prices stay on orders and brand pages.
@@ -190,6 +192,6 @@ SQL to `supabase/migrations/<version>_<name>.sql`. Run the security advisor afte
 - Shopping email uses `shop.myocto.co` for testing. Real domain (e.g. actually.shop)
   not bought yet.
 - Google app is in Testing: each tester's Gmail must be added in Google Cloud. Going
-  past 100 users needs Google's review plus privacy policy, terms and delete-account.
+  past 100 users needs Google's review; draft privacy policy, terms and delete-your-data pages exist (`/legal`) and need counsel review.
 - Restaurants, tickets, groceries and digital purchases are skipped on purpose.
 - Return windows use each store's rule when its emails state one (`orders.return_days`, `return_note`, read by `read-order`); otherwise the usual 30 days, and the order page says so.
