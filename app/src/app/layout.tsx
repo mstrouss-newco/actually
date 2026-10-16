@@ -1,3 +1,4 @@
+import { AutoUpdate } from "@/lib/auto-update";
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${sans.variable} ${serif.variable}`}>
         <div className="stage">
           <div className="phone">{children}</div>
+          <AutoUpdate />
         </div>
       </body>
     </html>

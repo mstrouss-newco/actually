@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-15
 
+- The app updates itself: when a new version is live, it quietly reloads the next time you open it (or within 5 minutes while open, never while typing). Works from the Home Screen too.
+
 - No emoji-style arrows; removed the "Shop" labels under look pieces and on Saved (tapping already shops). The shop tag on a look is centered so it never runs off the screen.
 
 - Fixes: "Is this yours?" no longer guesses partner without a real sign (size-only cases now ask "Is this one yours?" with Mine / Change); a ✕ on the selected piece takes it off the outfit board; new looks are private until she turns sharing on; only her own pieces can go in a look (and saving marks them hers); second finger always pinches the held piece; shop tags stay on the board; Wore it today uses her local date; a friend with only looks opens on Outfits; friends who only shared looks show in the faces row; Orders photo view shows every recent order.
