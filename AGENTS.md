@@ -25,6 +25,19 @@ Mike (mstrouss@gmail.com) is not a coder. When talking to him:
   give him a short prompt he can paste into a Claude chat that has Chrome.
 - Never ask him to paste keys or secrets into chat.
 
+## Mike's product rules (from his feedback; keep them)
+
+- No letter tiles for brands or products, ever. A brand's name written out is enough; products get a drawing.
+- No spending totals that make people feel bad (no "you spent $X this month").
+- It should feel like an app, not a website: no sideways drift, bounce or zoom on iPhone; tab bar respects the Safari bar.
+- Keep it calm and compact: one line beats two rows of pills; short headers; no extra explainer lines.
+- Copy is about pleasure, never spam. Don't promise emails or say "inside the app".
+- Owners see counts (loves), never who. Never prices, sizes or order details on anything shared.
+- Products link to their real store page when we have it; otherwise a shopping search.
+- Show only what she has: type tabs, rows and filters appear only when there's something in them.
+- Mock first on the design board for anything new, then build what he picks. Design board: claude.ai artifact "Actually" Design (HpSXVJtLvkRLiXjAchBbdw).
+- After a batch of changes, run a blind QA pass (a separate agent that didn't build it), fix what it finds, then log it here and in CHANGELOG.md.
+
 ## Repo layout
 
 | Path | What it is |
@@ -120,7 +133,7 @@ leave the database only through the `profile_page`, `following_feed` (old), `fri
 `similar_people` and `my_people` functions, which return photo, brand and name only (plus the note she wrote, `items.note`, on `profile_page`, and `items.product_url`, the cleaned store page link with nothing after the "?"). `read-order` finds product links from the photo links in order emails (and `fillLinks()` in `lib/items.ts` for older pieces), following tracking redirects server side (manual hops, https only, no IP or internal hosts). Only the server can write `product_url` (trigger `keep_product_url`), and `findIt()` uses it only when the link's site matches the store or brand name; otherwise a Google Shopping search.
 
 Outfits: table `outfits` (owner-only; `layout` is a list of {id, x, y, w, r}, shares of the board width, max 12 pieces). Built at `/outfit/edit/[id]` (`new` to start, `?with=<item>` to start from a piece) with `CollageEditor` in `lib/collage.tsx`; shown at `/outfit/[id]` and in Closet > Outfits. Shared looks reach others only through `friends_outfits` and `profile_page` (via `outfit_public`), which drop pieces marked for kids, partner or someone else, hidden or sent back, and return photo, brand, name and store link only. On feeds, the "Outfits" type tab and the Friends "All" stream show them; each piece in a look is tappable to shop it.
-The "Is this yours?" closet prompt shows our guess (`likelyWho()`): Right, or Change (a small menu).
+The "Is this yours?" closet prompt is one line. `likelyWho()` guesses only on a real sign (a men's piece in a women's closet or the reverse means partner); otherwise it asks "Is this one yours?" with Mine, or Change (a small menu). New outfits are private until she turns sharing on; saving a look marks its pieces as hers.
 
 Profile photos: public Storage bucket `avatars`, one file per person at `<handle>.jpg` (shrunk to 320px on the phone by `PhotoPicker` in `lib/feed-ui.tsx`); only the owner can write hers. `Avatar` shows the photo when there is one, else the colored initial.
 Today shows no spending totals (people don't enjoy seeing them); prices stay on orders and brand pages.

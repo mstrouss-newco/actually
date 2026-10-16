@@ -43,7 +43,7 @@ export default function Feed() {
       loadFeed().then(f => { setFeed(f); setTab(x => x ?? (f.length ? "friends" : "mine")); load(f.map(i => i.id)); });
       loadProfilePage(h).then(p => { setMine(p); if (p) load(p.items.map(i => i.id)); });
       loadSaved().then(s => { setSaved(s); load(s.map(i => i.id)); });
-      friendsOutfits().then(setLooks);
+      friendsOutfits().then(l => { setLooks(l); if (l.length) setTab(x => (x === "mine" && !new URLSearchParams(location.search).get("tab") ? "friends" : x)); });
       loadItems().then(all => setToGo(toSort(all).length));
       // Each match shows three pieces from their feed.
       similarPeople().then(async list => {
@@ -54,7 +54,7 @@ export default function Feed() {
   }, [load]);
 
   // People she follows, most recent posters first.
-  const friends = [...new Set((feed ?? []).map(i => i.handle))];
+  const friends = [...new Set([...(feed ?? []).map(i => i.handle), ...looks.map(o => o.handle!).filter(Boolean)])];
   const shown = (feed ?? []).filter(i => !who || i.handle === who);
   const shownLooks = looks.filter(o => !who || o.handle === who);
   // Pieces and looks together, newest first.

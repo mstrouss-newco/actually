@@ -19,7 +19,8 @@ export default function PublicFeed({ params }: { params: Promise<{ handle: strin
   useEffect(() => {
     (async () => {
       const [page, { data }] = await Promise.all([loadProfilePage(handle), supabase().auth.getSession()]);
-      setP(page); setSignedIn(!!data.session);
+      setP(page);
+      if (page && !page.items.length && page.outfits?.length) setType("looks"); setSignedIn(!!data.session);
       if (page && data.session) load(page.items.map(i => i.id));
     })();
   }, [handle, load]);
@@ -39,7 +40,7 @@ export default function PublicFeed({ params }: { params: Promise<{ handle: strin
               {p.is_me ? <PhotoPicker handle={p.handle} size={64} /> : <Avatar handle={p.handle} size={64} />}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="serif" style={{ fontSize: 30, lineHeight: 1 }}>{displayName(p.handle)}</div>
-                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 6 }}>{p.items.length} shared · {p.followers} {p.followers === 1 ? "follower" : "followers"} · {p.following} following</div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 6 }}>{p.items.length + (p.outfits?.length ?? 0)} shared · {p.followers} {p.followers === 1 ? "follower" : "followers"} · {p.following} following</div>
               </div>
             </div>
             <div style={{ padding: "16px 20px 0" }}>

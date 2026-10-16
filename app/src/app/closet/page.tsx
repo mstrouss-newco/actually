@@ -109,6 +109,7 @@ export default function Closet() {
   const people = WHO.filter(([k]) => k === "me" || everything.some(i => whoFor(i, everything) === k));
   const list = everything.filter(i => whoFor(i, everything) === who);
   const toAsk = who === "me" ? list.filter(i => needsAsk(i, everything)) : [];
+  const guess = toAsk[0] ? likelyWho(toAsk[0], everything) : null;
   // Pieces in "Mine" she hasn't confirmed yet.
   const unchecked = who === "me" ? list.filter(i => !i.for_whom) : [];
   const finishReview = async () => {
@@ -176,11 +177,11 @@ export default function Closet() {
               <div style={{ margin: "16px 16px 0", background: "#FAF8F6", borderRadius: 22, padding: 14, display: "flex", gap: 12, alignItems: "center" }}>
                 <ItemImage src={toAsk[0].image_url} store={toAsk[0].store} name={toAsk[0].name} w={56} h={70} radius={14} size={22} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 14 }}>Looks like it&apos;s for {likelyWho(toAsk[0], everything) === "kids" ? "your kids" : "your partner"}</div>
-                  <div style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{toAsk[0].brand || toAsk[0].store} {toAsk[0].name}{toAsk[0].size ? ` · Size ${toAsk[0].size}` : ""}</div>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>{guess ? "Looks like it's for your partner" : "Is this one yours?"}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{guess ? `${toAsk[0].brand || toAsk[0].store} ${toAsk[0].name}` : `Size ${toAsk[0].size} isn't your usual at ${toAsk[0].brand || toAsk[0].store}`}</div>
                 </div>
-                <button onClick={() => answer(toAsk[0], likelyWho(toAsk[0], everything))} className="press" style={{ flex: "none", height: 34, padding: "0 14px", borderRadius: 999, border: 0, background: "var(--ink)", color: "#fff", font: "700 13px var(--font-sans), sans-serif", cursor: "pointer" }}>Right</button>
-                <label style={{ flex: "none", position: "relative", fontSize: 13, fontWeight: 700, color: "var(--muted)", padding: "0 2px", cursor: "pointer" }}>
+                <button onClick={() => answer(toAsk[0], guess ?? "me")} className="press" style={{ flex: "none", height: 34, padding: "0 14px", borderRadius: 999, border: 0, background: "var(--ink)", color: "#fff", font: "700 13px var(--font-sans), sans-serif", cursor: "pointer" }}>{guess ? "Right" : "Mine"}</button>
+                <label style={{ flex: "none", position: "relative", fontSize: 13, fontWeight: 700, color: "var(--muted)", padding: "0 6px", minHeight: 44, display: "flex", alignItems: "center", cursor: "pointer" }}>
                   Change
                   <select aria-label="Who is this for?" value="" onChange={e => e.target.value && answer(toAsk[0], e.target.value as Who)} style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}>
                     <option value="" disabled>Who is it for?</option>

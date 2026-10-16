@@ -103,7 +103,7 @@ export default function Orders() {
   const wear = withPieces.filter(g => cat === "all" || g.pieces.some(p => p.cat === cat));
   const pArriving = wear.filter(isArriving);
   const pReturn = wear.filter(g => returnDaysLeft(g) != null).sort((a, b) => returnDaysLeft(a)! - returnDaysLeft(b)!);
-  const pRecent = wear.filter(g => !isArriving(g) && returnDaysLeft(g) == null).slice(0, 12);
+  const pRecent = wear.filter(g => !isArriving(g) && returnDaysLeft(g) == null);
   const other = all.filter(g => !g.pieces.length && g.stage !== "cancelled").length;
   const photos = view === "photos" && !query;
 
