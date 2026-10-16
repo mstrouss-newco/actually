@@ -4,6 +4,8 @@ Newest first. One line per change, in plain words. Link the PR.
 
 ## 2026-10-16
 
+- Lander on phones: the Gmail button sits right under the moving app screen.
+
 - Lander and dashboard QA fixes: dashboard search and expense boxes keep focus while typing; money shows cents properly and big numbers get commas; phone-width dashboard header tidied. Lander phones fit on smaller laptops (901 to 1240 wide); Gmail buttons never squash; the hidden app welcome no longer sits under the lander; copy says "We only save your shopping emails"; counters count once; page description updated.
 
 - New lander for browser visitors at "/" (`app/lander.tsx`, `lander.css`): moving phone screens (Today with store alerts, Closet filling in, the outfit maker, a scrolling friends feed), a strip of real store logos, money cards and Gmail buttons. Opened from the Home Screen, "/" is still the app's welcome (`app/welcome.tsx`). Phone and computer layouts.
