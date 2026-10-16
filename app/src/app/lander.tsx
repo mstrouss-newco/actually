@@ -110,10 +110,10 @@ function MakerScreen() {
   );
 }
 
-type Post = { who: string; av: string; k?: string; d: string; brand: string; name: string; heart: number; look?: boolean };
+type Post = { who: string; av: string; k?: string; d?: string; brand: string; name: string; heart: number; look?: boolean };
 const POSTS: Post[] = [
   { who: "Jess", av: "#FFF0BF", k: "dresses-slip-apricot", d: "thereformation.com", brand: "Reformation", name: "Juliette slip dress", heart: 1 },
-  { who: "Alex", av: "#DCEFDF", d: "huckberry.com", brand: "Easy Saturday", name: "A look, 5 pieces", heart: 3, look: true },
+  { who: "Alex", av: "#DCEFDF", brand: "Weekend", name: "Easy Saturday", heart: 3, look: true },
   { who: "Maya", av: "#EBE3FF", k: "shoes-runner-sky", d: "nike.com", brand: "Nike", name: "Pegasus 41", heart: 5 },
   { who: "Jess", av: "#FFF0BF", k: "tops-cashmere-lilac", d: "naadam.co", brand: "Naadam", name: "Cashmere crew", heart: 2 },
   { who: "Sam", av: "#DCEBFF", k: "acc-tote-tan", d: "jcrew.com", brand: "J.Crew", name: "Leather tote", heart: 4 },
@@ -138,7 +138,7 @@ function FeedScreen() {
                 ))}</div>
               ) : <Pic k={p.k!} h={250} r={20} />}
               <div className="ld-row" style={{ marginTop: 8 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}><Logo d={p.d} s={18} /><div><div className="ld-kick" style={{ fontSize: 10 }}>{p.brand}</div><div className="ld-pname">{p.name}</div></div></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>{p.d && <Logo d={p.d} s={18} />}<div><div className="ld-kick" style={{ fontSize: 10 }}>{p.brand}</div><div className="ld-pname">{p.name}</div></div></div>
                 <Heart d={p.heart} />
               </div>
             </div>
@@ -174,13 +174,13 @@ export function Lander() {
           <h1>Your order emails, <em>sorted out.</em></h1>
           <p>Connect Gmail and every order becomes your closet. Returns, points and resale, handled. Plus what your friends love.</p>
           <div style={{ marginTop: 32 }}><LanderGmail /></div>
-          <div className="ld-note">Free. We only read shopping emails.</div>
+          <div className="ld-note">Free. We only save your shopping emails.</div>
         </div>
         <div className="ld-hero-p"><Phone className="ld-float"><TodayScreen /></Phone></div>
       </header>
 
       <div className="ld-marq">
-        <div className="ld-marq-h">Works with the stores you already shop</div>
+        <div className="ld-marq-h">Finds orders from the stores you already shop</div>
         <div className="ld-mq">{[...STORES, ...STORES].map(([d, n], i) => <span key={i}><Logo d={d} s={30} />{n}</span>)}</div>
       </div>
 
@@ -193,7 +193,7 @@ export function Lander() {
         <div className="ld-cards">
           <div className="ld-card" style={{ background: "#FFE1DC" }}><div className="ld-kick" style={{ color: "#C9402F" }}><Logo d="madewell.com" s={20} />Return due</div><div className="ld-big">Madewell tote, back by <em>Friday</em></div><div className="ld-track" style={{ height: 5 }}><div className="ld-tb" /></div></div>
           <div className="ld-card" style={{ background: "#FFF0BF" }}><div className="ld-kick" style={{ color: "#8A6D1E" }}><Logo d="sephora.com" s={20} />Expiring soon</div><div className="ld-big">$<span className="ld-cnt" style={{ ["--to" as string]: 20 }} /> in Sephora points</div><div className="ld-small">Gone after Oct 31.</div></div>
-          <div className="ld-card" style={{ background: "#DCEFDF" }}><div className="ld-kick" style={{ color: "#2F7A4F" }}>Resale value</div><div className="ld-big">Your closet is worth about $<span className="ld-cnt" style={{ ["--to" as string]: 1400 }} /></div><div className="ld-small">What similar pieces sell for.</div></div>
+          <div className="ld-card" style={{ background: "#DCEFDF" }}><div className="ld-kick" style={{ color: "#2F7A4F" }}>Resale value</div><div className="ld-big">Your closet is worth about $1,400</div><div className="ld-small">What similar pieces sell for.</div></div>
         </div>
       </section>
 

@@ -5,7 +5,7 @@ import { Lander } from "./lander";
 export default function Home() {
   return (
     <>
-      <AppWelcome />
+      <div className="only-app"><AppWelcome /></div>
       <Lander />
     </>
   );

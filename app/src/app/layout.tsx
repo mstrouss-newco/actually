@@ -10,7 +10,7 @@ const serif = Fraunces({ variable: "--font-serif", subsets: ["latin"], weight: [
 
 export const metadata: Metadata = {
   title: "Actually",
-  description: "All your orders in one place.",
+  description: "Your order emails, sorted out. Connect Gmail and every order becomes your closet, with returns, points, resale and what your friends love.",
   // Opened from the Home Screen, it runs full screen without Safari's bars.
   appleWebApp: { capable: true, title: "Actually", statusBarStyle: "default" },
 };

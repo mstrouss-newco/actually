@@ -21,8 +21,32 @@ type Person = { id: string; email: string; handle: string | null; joined: string
 // Rough AI cost per email, from the model's prices and our prompt sizes. Good enough to watch the trend.
 const COST_SCREEN = 0.0004, COST_READ = 0.004;
 const AI_CAP = 25;
-const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: n < 10 && n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
+const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
 const day = (s: string | null) => (s ? new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "never");
+
+// Pieces of the page. Kept outside the page so typing in a box never resets it.
+const Kpi = ({ label, value, sub, warn }: { label: string; value: string | number; sub?: string; warn?: boolean }) => (
+  <div className="adm-card" style={{ padding: "16px 18px" }}>
+    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>{label}</div>
+    <div className="serif" style={{ fontSize: 42, lineHeight: 1, marginTop: 8, color: warn ? "#C9402F" : "var(--ink)" }}>{typeof value === "number" ? value.toLocaleString("en-US") : value}</div>
+    {sub && <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 6 }}>{sub}</div>}
+  </div>
+);
+
+const Mini = ({ label, value, sub }: { label: string; value: string | number; sub?: string }) => (
+  <div style={{ background: "#FAF8F6", borderRadius: 16, padding: "12px 14px", minWidth: 0 }}>
+    <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>{label}</div>
+    <div className="serif" style={{ fontSize: 28, lineHeight: 1.1, marginTop: 4 }}>{typeof value === "number" ? value.toLocaleString("en-US") : value}</div>
+    {sub && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{sub}</div>}
+  </div>
+);
+
+const Card = ({ id, t, children, right }: { id?: string; t: string; children: React.ReactNode; right?: React.ReactNode }) => (
+  <section id={id} className="adm-card" style={{ padding: "20px 22px", minWidth: 0 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}><div className="serif" style={{ fontSize: 24 }}>{t}</div>{right}</div>
+    {children}
+  </section>
+);
 
 export default function Admin() {
   const [ok, setOk] = useState<boolean | null>(null);
@@ -89,26 +113,6 @@ export default function Admin() {
 
 
   const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)}%` : "0%");
-  const Kpi = ({ label, value, sub, warn }: { label: string; value: string | number; sub?: string; warn?: boolean }) => (
-    <div className="adm-card" style={{ padding: "16px 18px" }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>{label}</div>
-      <div className="serif" style={{ fontSize: 42, lineHeight: 1, marginTop: 8, color: warn ? "#C9402F" : "var(--ink)" }}>{value}</div>
-      {sub && <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 6 }}>{sub}</div>}
-    </div>
-  );
-  const Mini = ({ label, value, sub }: { label: string; value: string | number; sub?: string }) => (
-    <div style={{ background: "#FAF8F6", borderRadius: 16, padding: "12px 14px", minWidth: 0 }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>{label}</div>
-      <div className="serif" style={{ fontSize: 28, lineHeight: 1.1, marginTop: 4 }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{sub}</div>}
-    </div>
-  );
-  const Card = ({ id, t, children, right }: { id?: string; t: string; children: React.ReactNode; right?: React.ReactNode }) => (
-    <section id={id} className="adm-card" style={{ padding: "20px 22px", minWidth: 0 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}><div className="serif" style={{ fontSize: 24 }}>{t}</div>{right}</div>
-      {children}
-    </section>
-  );
   const field = { height: 40, borderRadius: 12, border: "1.5px solid var(--line)", padding: "0 12px", font: "14px var(--font-sans), sans-serif", minWidth: 0, boxSizing: "border-box" as const };
   const NAV = [["#overview", "Overview"], ["#people", "People"], ["#feed", "Feed activity"], ["#money", "Money"], ["#errors", "Errors"], ["#log", "Owner log"]];
 
