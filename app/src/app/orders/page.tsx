@@ -133,7 +133,7 @@ export default function Orders() {
           } />
         ) : (
           <div style={{ display: "flex", padding: "12px 16px 0" }}>
-            <button type="button" onClick={() => setView("photos")} style={{ border: 0, background: "none", padding: 0, font: "700 13px var(--font-sans), sans-serif", color: "var(--ink)", cursor: "pointer" }}>← Photos</button>
+            <button type="button" onClick={() => setView("photos")} style={{ border: 0, background: "none", padding: 0, font: "700 13px var(--font-sans), sans-serif", color: "var(--ink)", cursor: "pointer", display: "flex", alignItems: "center", gap: 2 }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>Photos</button>
           </div>
         ))}
 

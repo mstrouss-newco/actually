@@ -1,14 +1,3 @@
-import Link from "next/link";
-
-export function Back({ href }: { href: string }) {
-  return (
-    <Link href={href} className="back">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>
-      Back
-    </Link>
-  );
-}
-
 export function Art({ src, w, h, radius = 12, style }: { src: string; w: number; h: number; radius?: number; style?: React.CSSProperties }) {
   return (
     <div className="art" style={{ width: w, height: h, borderRadius: radius, ...style }}>

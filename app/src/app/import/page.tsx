@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useGoBack } from "@/lib/nav";
 import { type ImportState, importState, onImport, startImport } from "@/lib/importer";
 import { StoreTile } from "@/lib/tabs";
 import { supabase } from "@/lib/supabase";
@@ -56,6 +57,10 @@ const TAGS: Record<string, [string, string]> = {
 
 export default function Import() {
   const [s, setS] = useState<ImportState>(importState());
+  // Opened from Settings: every way out goes back to Settings.
+  const [from, setFrom] = useState<"settings" | "signup" | null>(null);
+  useEffect(() => { setFrom(new URLSearchParams(location.search).get("from") === "settings" ? "settings" : "signup"); }, []);
+  const toSettings = useGoBack("/settings");
   useEffect(() => {
     const off = onImport(setS);
     // Start a scan unless one is already running.
@@ -72,7 +77,7 @@ export default function Import() {
           : "We need a quick okay from Google to find your orders."}</p>
         <div className="spacer" />
         <Link href="/permission" className="btn">Connect Gmail</Link>
-        <Link href="/today" className="btn btn-ghost">Not now</Link>
+        {from === "settings" ? <button type="button" className="btn btn-ghost" onClick={toSettings}>Not now</button> : <Link href="/today" className="btn btn-ghost">Not now</Link>}
       </main>
     );
   }
@@ -117,7 +122,14 @@ export default function Import() {
       <NameCard />
       {s.skipped > 0 && s.stage === "done" && <p style={{ margin: "0 0 10px", fontSize: 13, color: "var(--muted)", lineHeight: 1.45 }}>{s.skipped} emails couldn&apos;t be checked. Run this again later to pick them up.</p>}
       {s.stage !== "done" && <p style={{ margin: "0 0 12px", fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>Takes about a minute. Keep the app open while it runs.</p>}
-      <Link href="/today" className="btn">{s.stage === "done" ? "See my orders" : "Look around while this runs"}</Link>
+      {from && <Finish done={s.stage === "done"} fromSettings={from === "settings"} />}
     </main>
   );
+}
+
+// From Settings, she goes back to Settings; at sign-up, on to Today.
+function Finish({ done, fromSettings }: { done: boolean; fromSettings: boolean }) {
+  const back = useGoBack("/settings");
+  if (fromSettings) return <button type="button" className="btn" onClick={back}>{done ? "Back to Settings" : "Back to Settings while this runs"}</button>;
+  return <Link href="/today" className="btn">{done ? "See my orders" : "Look around while this runs"}</Link>;
 }

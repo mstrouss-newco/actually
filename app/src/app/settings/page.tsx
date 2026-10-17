@@ -105,7 +105,7 @@ export default function Settings() {
             {head("Gmail")}
             <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
               {gmail === false && row("Connect Gmail", "Lets Actually keep finding orders and points without asking again.", () => signIn("/settings", true))}
-              {row("Look for new orders", "Checks your Gmail for anything new.", () => router.push("/import"))}
+              {row("Look for new orders", "Checks your Gmail for anything new.", () => router.push("/import?from=settings"))}
               {gmail && row("Disconnect Gmail", "Connected. Tap to stop Actually from reading your email.", () => setAsk("gmail"))}
             </div>
             {head("Your data")}

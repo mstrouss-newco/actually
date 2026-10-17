@@ -182,11 +182,11 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
             <div className="section"><div>Your {name} pieces</div><Link href="/closet">In closet</Link></div>
             <div style={{ display: "flex", gap: 12, overflowX: "auto", padding: "12px 20px 4px" }}>
               {mine.slice(0, 20).map((i, n) => (
-                <div key={i.id} className="up" style={{ ...delay(n, 60), flex: "none", width: 132, display: "flex", flexDirection: "column", gap: 6 }}>
+                <Link key={i.id} href={`/closet?piece=${i.id}`} className="up press" style={{ ...delay(n, 60), flex: "none", width: 132, display: "flex", flexDirection: "column", gap: 6, color: "inherit", textDecoration: "none" }}>
                   <ItemImage cutId={i.id} src={i.image_url} store={i.store} name={i.name} label="" w={132} h={164} radius={22} size={44} />
                   <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{i.name}</div>
                   <div style={{ fontSize: 12, color: "var(--muted)" }}>{[mine.some(o => o !== i && o.name === i.name) && i.color, i.size && `Size ${i.size}`, month(i.ordered_at)].filter(Boolean).join(" · ")}</div>
-                </div>
+                </Link>
               ))}
             </div>
           </>

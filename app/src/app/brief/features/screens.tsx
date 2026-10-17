@@ -164,3 +164,69 @@ export function SavedScreen() {
     </>
   );
 }
+
+// Share a look: the story picture slides up, then the share buttons.
+const STORY_LOOK: [string, number, number, number, number][] = [["tops-overshirt-rose", 12, 16, 100, -3], ["tops-crew-tee-sky", 108, 24, 80, 3], ["bottoms-jeans-midwash", 30, 132, 62, 0], ["acc-crossbody-blush", 112, 140, 70, 4], ["shoes-sneaker-black-gum", 96, 214, 76, -6]];
+export function ShareScreen() {
+  return (
+    <div className="ld-pad" style={{ paddingTop: 22 }}>
+      <div style={{ width: 40, height: 5, borderRadius: 3, background: "#E5E0DA", margin: "0 auto 14px" }} />
+      <div className="ld-title" style={{ fontSize: 22 }}>Share your look</div>
+      <div className="tr-story">
+        {STORY_LOOK.map(([k, x, y, w, r]) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={k} src={art(k)} alt="" style={{ position: "absolute", left: x, top: y, width: w, transform: `rotate(${r}deg)` }} />
+        ))}
+        <div className="tr-story-cap"><span className="ld-mlogo" style={{ fontSize: 15 }}>Actually</span><span>Claire&apos;s Easy Saturday</span></div>
+      </div>
+      <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 10 }}>{["#fff", "#FFE1DC", "#141210"].map((c, i) => <span key={c} style={{ width: 22, height: 22, borderRadius: "50%", background: c, border: i === 1 ? "2px solid #141210" : "1.5px solid #E2DDD7" }} />)}</div>
+      <div className="tr-ig"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" /></svg>Share to Instagram</div>
+      <div style={{ display: "flex", gap: 8, marginTop: 8 }}><span className="tr-ghost">Send link</span><span className="tr-ghost">Save picture</span></div>
+      <div className="tr-note" style={{ background: "#F3F0EB", color: "#5E5852", textAlign: "center" }}>Link copied for your story sticker</div>
+    </div>
+  );
+}
+
+// What a friend sees from the link: the look, each piece tappable to the store.
+export function PubLookScreen() {
+  return (
+    <div className="ld-pad">
+      <div className="ld-row"><div className="ld-mlogo">Actually</div><span className="tr-follow">Get Actually</span></div>
+      <div className="ld-row" style={{ justifyContent: "flex-start", gap: 8, marginTop: 14 }}><span className="ld-av">C</span><div><div style={{ fontWeight: 700, fontSize: 12.5 }}>Claire</div><div style={{ fontSize: 11, color: "#7A746D" }}>Shared a look</div></div></div>
+      <div className="tr-look" style={{ height: 230, marginTop: 10 }}>
+        {STORY_LOOK.map(([k, x, y, w, r]) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={k} src={art(k)} alt="" style={{ position: "absolute", left: x * 0.95, top: y * 0.68, width: w * 0.86, transform: `rotate(${r}deg)` }} />
+        ))}
+      </div>
+      <div style={{ fontWeight: 700, fontSize: 14, marginTop: 14 }}>Shop the look</div>
+      <div style={{ display: "flex", gap: 8, marginTop: 8, overflow: "hidden" }}>
+        {STORY_LOOK.map(([k], i) => (
+          <div key={k} className="tr-shop" style={{ animationDelay: `${0.6 + i * 0.25}s` }}><Pic k={k} h={74} r={14} /></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Resale: a ready-made post for the site she picks, or donate it.
+export function ResaleScreen() {
+  const sites: [string, string][] = [["Poshmark", "List at $85"], ["Depop", "List at $75"], ["eBay", "List at $75"], ["ThredUp", "Free bag"]];
+  return (
+    <div className="ld-pad">
+      <div style={{ display: "flex", gap: 12, alignItems: "flex-end" }}>
+        <div style={{ width: 70, flex: "none" }}><Pic k="dresses-slip-apricot" h={86} r={16} /></div>
+        <div><div className="ld-kick" style={{ fontSize: 9.5 }}>Reformation · size 4</div><div className="ld-pname" style={{ fontSize: 18 }}>Juliette slip dress</div></div>
+      </div>
+      <div className="tr-earned" style={{ background: "#FFF6F3", marginTop: 12 }}><div style={{ fontSize: 11, fontWeight: 700, color: "#8A3A2F" }}>Worth about</div><div className="ld-big" style={{ fontSize: 28 }}>$70–$95</div></div>
+      {sites.map(([n, p], i) => (
+        <div key={n} className="tr-site" style={{ animationDelay: `${0.3 + i * 0.25}s`, borderColor: i === 0 ? "#141210" : "transparent", background: i === 0 ? "#fff" : "#FAF8F6" }}><b>{n}</b><span>{p}</span></div>
+      ))}
+      <div className="tr-copy">Copy and open Poshmark</div>
+      <div className="tr-donate">
+        <b>Or donate it</b>
+        <div style={{ display: "flex", gap: 6, marginTop: 8 }}><span className="tr-dbtn">Find a drop-off</span><span className="tr-dbtn light">I donated it</span></div>
+      </div>
+    </div>
+  );
+}

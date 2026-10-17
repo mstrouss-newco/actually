@@ -2,6 +2,14 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-16: Resale donate, navigation polish, deck additions
+
+- Resale piece page: "Or donate it" with Find a drop-off (Goodwill locator) and "I donated it", which asks first, then takes every copy of the piece out of her closet (and says so if the save fails). Copy title / description buttons fit on small phones.
+- Brand page pieces open in the closet. /reveal goes to Today. Every back control uses the same drawn back button. Profiles don't flicker while loading.
+- Shared look and piece pages: people already signed in see "Open Actually" and "Open my closet" instead of the sign-up pitch.
+- Look for new orders from Settings returns to Settings, including Not now.
+- Deck: new slides "Style and share" (AI outfit maker, Share to Instagram, Friends tap to shop) and "Resale" (what it's worth, ready-made post with donate). Repeated cards removed. Blind QA found 12 issues; all fixed.
+
 ## 2026-10-16: Getting around
 
 - Back goes where she came from (and to a sensible page on a fresh load or shared link), on orders, brands, people, profiles, resale, points, Sort, the outfit editor and pages, Settings and legal.

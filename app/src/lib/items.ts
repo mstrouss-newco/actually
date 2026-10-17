@@ -93,8 +93,10 @@ export async function setPicks(ids: string[], pick: Item["pick"]) {
 }
 
 // Removes a piece from her closet. It stays hidden after later imports; the order stays in Orders.
+/** Returns false if the save failed. */
 export async function hideItem(x: string | Item, hidden = true) {
-  await supabase().from("items").update(hidden ? { hidden, pick: null } : { hidden }).in("id", idsOf(x));
+  const { error } = await supabase().from("items").update(hidden ? { hidden, pick: null } : { hidden }).in("id", idsOf(x));
+  return !error;
 }
 
 // One piece can come from several emails (order, shipping). Keep every copy's id, and never lose

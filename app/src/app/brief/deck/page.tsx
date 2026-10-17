@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Phone, TodayScreen, ClosetScreen, MakerScreen, FeedScreen } from "../../lander";
-import { GmailScreen, BrandScreen, StyleScreen, CashScreen, ShareEarnScreen, WorthScreen, MyPageScreen, MatchScreen, SavedScreen } from "../features/screens";
+import { GmailScreen, BrandScreen, StyleScreen, CashScreen, ShareEarnScreen, WorthScreen, MyPageScreen, MatchScreen, SavedScreen, ShareScreen, PubLookScreen, ResaleScreen } from "../features/screens";
 import { BRIEF_COOKIE, BRIEF_OK } from "../pass";
 import { DeckNav } from "./nav";
 import "../features/tour.css";
@@ -113,7 +113,14 @@ export default async function Deck() {
           { name: "Closet", line: "Every piece she bought, with photo and brand.", when: LIVE, screen: <ClosetScreen /> },
           { name: "Brands", line: "Her size, her pieces and the return rule.", when: LIVE, screen: <BrandScreen /> },
           { name: "Make an outfit", line: "Tap pieces onto a board. Save or share.", when: LIVE, screen: <MakerScreen /> },
-          { name: "AI outfits", line: "3 looks from her own closet, for any occasion.", when: LIVE, screen: <StyleScreen /> },
+        ]} />
+      </Slide>
+
+      <Slide kick="New · Style and share" tone="dark" title={<>AI outfits, <em>straight to Instagram.</em></>} line="She picks an occasion, AI builds looks from her own closet, and any look or piece goes to her story with a link back to the app.">
+        <Cards cards={[
+          { name: "AI outfit maker", line: "3 looks for any occasion, or 3 ways to wear one piece. Save or tweak.", when: LIVE, screen: <StyleScreen /> },
+          { name: "Share to Instagram", line: "A ready-made story picture in 3 styles, with the link copied for the sticker.", when: LIVE, screen: <ShareScreen /> },
+          { name: "Friends tap to shop", line: "The link opens her look on the web, each piece one tap from the store. Never prices or sizes.", when: LIVE, screen: <PubLookScreen /> },
         ]} />
       </Slide>
 
@@ -121,7 +128,13 @@ export default async function Deck() {
         <Cards cards={[
           { name: "Cash back", line: "Buy through Actually at stores she already shops.", when: "Coming December", screen: <CashScreen /> },
           { name: "Earn from sharing", line: "A friend buys what she shared; she gets a cut.", when: "Coming 2027", screen: <ShareEarnScreen /> },
-          { name: "Resale", line: "What her closet could sell for today.", when: "Value live, partners Q1 2027", screen: <WorthScreen /> },
+        ]} />
+      </Slide>
+
+      <Slide kick="New · Resale" tone="soft" title={<>Sell it, <em>or give it away.</em></>} line="What each piece is worth, a ready-made post for the right site, and a one-tap way to donate what isn't worth listing.">
+        <Cards cards={[
+          { name: "What it's worth", line: "AI estimates a resale range for every piece in her closet. Resale partners come in Q1 2027.", when: LIVE, screen: <WorthScreen /> },
+          { name: "Ready-made post", line: "Title, price and description written for Poshmark, Depop, eBay or Mercari. Copy, open, paste.", when: LIVE, screen: <ResaleScreen /> },
         ]} />
       </Slide>
 
