@@ -49,7 +49,7 @@ const chip = (on: boolean, dark: boolean) => ({
 });
 
 // "Style me" (pick an occasion) or, with an anchor, "3 ways to wear it".
-export function StyleMe({ mine, anchor }: { mine: Item[]; anchor?: Item }) {
+export function StyleMe({ mine, anchor, start }: { mine: Item[]; anchor?: Item; start?: string | null }) {
   const router = useRouter();
   const [occ, setOcc] = useState<string | null>(null);
   const [looks, setLooks] = useState<Look[] | null>(null);
@@ -75,6 +75,8 @@ export function StyleMe({ mine, anchor }: { mine: Item[]; anchor?: Item }) {
     ensureCutouts(r.flatMap(l => l.ids), true);
   };
   useEffect(() => { if (anchor && enough) run(null); }, [anchor?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Opened from Today's "Style me for the weekend": start that run right away.
+  useEffect(() => { if (!anchor && start && enough && !occ) { setOcc(start); run(start); } }, [start, enough]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const keep = async (l: Look, n: number, tweak: boolean) => {
     setSaving(n);

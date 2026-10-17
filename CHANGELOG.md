@@ -2,6 +2,16 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-16: First-run pass (blind new-user test)
+
+- Lander on phones: a Gmail button stays pinned at the bottom when the page's own buttons are off screen; Sign in is plain text; a clear note says Google will ask to read email, to tick the box, and that we look only at order emails. Same privacy line on the permission screen.
+- Import: when done, shows her pieces ("11 pieces, 7 brands") and Open my closet instead of email subject lines; waits for the pieces before showing the button; the name card reads "Your name for friends".
+- Today: one setup card at a time, after the big card; brands are asked only after she has seen her closet; the big card's order isn't repeated below; a "Style me for the weekend" card that starts the looks right away.
+- Closet: one prompt at a time; men's pieces get asked about; changing who a piece is for works after the first answer; "For your partner" wording.
+- Empty Orders, Closet and Feed have one helpful message each; no zero tabs or empty filters. Feed: "Bring your friends" card, one nudge at a time.
+- Copy: cash back "Coming soon", points "check the store's site or app", "Keep this page open".
+- Two blind QA passes; the second found 10 issues, all fixed.
+
 ## 2026-10-16: Resale donate, navigation polish, deck additions
 
 - Resale piece page: "Or donate it" with Find a drop-off (Goodwill locator) and "I donated it", which asks first, then takes every copy of the piece out of her closet (and says so if the save fails). Copy title / description buttons fit on small phones.

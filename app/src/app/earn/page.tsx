@@ -115,7 +115,7 @@ export default function Earn() {
         <div className="section"><div>Cash back</div></div>
         <div style={{ margin: "12px 16px 0", border: "1.5px dashed #D9D3CC", borderRadius: 24, padding: "18px" }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}>Coming soon</div>
-          <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 6, lineHeight: 1.45 }}>Shop your favorite brands through Actually and get cash back on every order. We&apos;ll let you know when it&apos;s on.</div>
+          <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 6, lineHeight: 1.45 }}>Shop your favorite brands through Actually and get cash back on every order.</div>
         </div>
       </div>
       <TabBar />

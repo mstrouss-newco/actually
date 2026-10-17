@@ -130,12 +130,20 @@
   .ld-end h2 { font-size: 46px; }
 }
 
+/* Phones: a Gmail button pinned to the bottom whenever the page's own buttons are off screen. */
+.ld-sticky { display: none; }
+.ld-note a { text-decoration: underline !important; }
+
 /* Phones and small screens: one column, same story. */
 @media (max-width: 900px) {
   .ld-nav { padding: 18px 20px; }
   .ld-brand { font-size: 24px; }
   .ld-links a:not(.ld-signin) { display: none; }
-  .ld-signin { height: 38px; padding: 0 16px; font-size: 14px; }
+  .ld-signin { height: 38px; padding: 0 4px; font-size: 14px; background: none !important; color: var(--ink, #141210) !important; }
+  .ld-sticky { display: flex; justify-content: center; position: fixed; left: 0; right: 0; bottom: 0; z-index: 95; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: linear-gradient(to top, #fff 70%, rgba(255,255,255,0)); transform: translateY(110%); transition: transform .25s ease; pointer-events: none; }
+  .ld-sticky.on { transform: none; pointer-events: auto; }
+  .ld-sticky .ld-gbtn { width: 100%; justify-content: center; }
+  .ld-note { line-height: 1.45; font-size: 13px; }
   .ld-hero { flex-direction: column; align-items: stretch; gap: 26px; padding: 6px 20px 40px; }
   .ld-hero h1 { font-size: 48px; }
   .ld-hero p { font-size: 16px; margin-top: 14px; }

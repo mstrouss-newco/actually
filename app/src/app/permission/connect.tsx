@@ -19,7 +19,7 @@ export function ConnectGmail({ next = "/import", count = false }: { next?: strin
         <span style={{ width: 28, height: 28, borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>{G}</span>
         {busy ? "Opening Google" : "Continue with Gmail"}
       </button>
-      <div style={{ fontSize: 12.5, color: "var(--muted)", textAlign: "center", marginTop: 8, lineHeight: 1.4 }}>We only read shopping emails. Never health, banking or personal mail.</div>
+      <div style={{ fontSize: 12.5, color: "var(--muted)", textAlign: "center", marginTop: 8, lineHeight: 1.4 }}>We look only at order emails and keep only those. Never health, banking or personal mail.</div>
       <div style={{ fontSize: 12, color: "var(--muted)", textAlign: "center", marginTop: 6 }}>On Google&apos;s screen, tick the box so we can find your orders.</div>
     </>
   );

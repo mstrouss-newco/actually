@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "@/lib/signin";
 import { track } from "@/lib/track";
 
@@ -16,4 +16,22 @@ export function LanderGmail({ small }: { small?: boolean }) {
       <span className="ld-g">{G}</span>{busy ? "Opening Google" : "Continue with Gmail"}
     </button>
   );
+}
+
+// On phones the big button sits below the moving phone. This bar keeps one in reach whenever
+// neither the hero button nor the end button is on screen.
+export function LanderSticky() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const targets = [...document.querySelectorAll(".ld-hero-cta, .ld-end")];
+    if (!targets.length || !("IntersectionObserver" in window)) return;
+    const seen = new Set<Element>();
+    const io = new IntersectionObserver(es => {
+      for (const e of es) { if (e.isIntersecting) seen.add(e.target); else seen.delete(e.target); }
+      setShow(seen.size === 0);
+    });
+    targets.forEach(t => io.observe(t));
+    return () => io.disconnect();
+  }, []);
+  return <div className={`ld-sticky${show ? " on" : ""}`}><LanderGmail small /></div>;
 }
