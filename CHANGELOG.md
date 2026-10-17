@@ -2,6 +2,10 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-17: Earning copy note
+
+- AGENTS.md: earning copy stays in on purpose (testing, Wildfire before launch).
+
 ## 2026-10-16: First-run pass (blind new-user test)
 
 - Lander on phones: a Gmail button stays pinned at the bottom when the page's own buttons are off screen; Sign in is plain text; a clear note says Google will ask to read email, to tick the box, and that we look only at order emails. Same privacy line on the permission screen.
