@@ -177,7 +177,7 @@ export default function Orders() {
             </div>
           )}
           {orders && orders.length > 0 && rows.length === 0 && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}>{query ? "No orders match that." : tab === "canreturn" ? "Nothing to return right now. New orders show up here once they arrive." : "Nothing here right now."}</div>}
-          {tab === "canreturn" && !query && rows.length > 0 && <div style={{ fontSize: 13, color: "var(--muted)", padding: "0 4px", lineHeight: 1.45 }}>Return windows start on delivery day. We use each store&apos;s rules when its emails say them.</div>}
+          {tab === "canreturn" && !query && rows.length > 0 && <div style={{ fontSize: 13, color: "var(--muted)", padding: "0 4px", lineHeight: 1.45 }}>Return windows start on delivery day.</div>}
           {soon.length > 0 && <div className="kicker" style={{ color: "#C9402F", padding: "6px 4px 0" }}>Closing soon</div>}
           {!(photos && orders) && rows.slice(0, 200).map((g, n) => {
             const later = tab === "canreturn" && !query && soon.length > 0 && n === soon.length;

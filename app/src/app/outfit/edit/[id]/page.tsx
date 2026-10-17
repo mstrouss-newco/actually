@@ -139,7 +139,7 @@ export default function OutfitBuilder({ params }: { params: Promise<{ id: string
             <button type="button" onClick={() => setShared(s => !s)} aria-pressed={shared} style={{ marginTop: 14, width: "100%", display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", border: 0, borderRadius: 16, padding: "12px 14px", textAlign: "left", font: "inherit", color: "var(--ink)", cursor: "pointer" }}>
               <span style={{ flex: 1 }}>
                 <span style={{ display: "block", fontWeight: 700, fontSize: 14 }}>Share to my feed</span>
-                <span style={{ display: "block", fontSize: 12, color: "var(--muted)" }}>Friends can tap each piece to shop it. Never prices or sizes.</span>
+                <span style={{ display: "block", fontSize: 12, color: "var(--muted)" }}>Friends can tap each piece to shop it.</span>
               </span>
               <span style={{ width: 46, height: 28, borderRadius: 999, background: shared ? "var(--ink)" : "#D8D2CB", position: "relative", flex: "none", transition: "background .15s" }}>
                 <span style={{ position: "absolute", top: 3, left: shared ? 21 : 3, width: 22, height: 22, borderRadius: "50%", background: "#fff", transition: "left .15s" }} />

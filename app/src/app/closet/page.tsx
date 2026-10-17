@@ -225,7 +225,7 @@ function ClosetPage() {
               <div style={{ fontSize: 14, color: "var(--soft)", lineHeight: 1.45 }}>When an order email for clothes, shoes or bags comes in, the pieces show up here with a photo and your size.</div>
             </> : <>
               <div className="serif" style={{ fontSize: 26, lineHeight: 1.05 }}>Fill your closet from your <em>orders.</em></div>
-              <div style={{ fontSize: 14, color: "var(--soft)", lineHeight: 1.45 }}>We read each order email once to find what you bought, the size and a photo. Takes a minute or two.</div>
+              <div style={{ fontSize: 14, color: "var(--soft)", lineHeight: 1.45 }}>Finding what you bought. Takes a minute or two.</div>
               <ReadItems onDone={load} />
             </>}
           </div>

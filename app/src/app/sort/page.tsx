@@ -121,7 +121,7 @@ export default function Sort() {
               <span key={`p${count("private")}`} className={last === "private" ? "bump" : ""} style={{ background: "var(--chip)", borderRadius: 999, padding: "6px 10px", fontSize: 12, fontWeight: 700 }}>{count("private")} private</span>
             </div>
           </div>
-          <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>Your feed is the page friends follow. It shows the photo, brand and name only.</div>
+          <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>Your feed is the page friends follow.</div>
 
           <div style={{ position: "relative", flex: 1, minHeight: 280, marginTop: 16 }}>
             {deck[i + 2] && <div style={{ position: "absolute", inset: "26px 26px 0", borderRadius: 32, background: "#E4DED6", transform: "scale(.9) translateY(24px)" }} />}
