@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { HomeScreenTip } from "@/lib/home-tip";
+import { HomeScreenTip, homeTipWanted } from "@/lib/home-tip";
 import { type BrandFollow, brandsAsked, loadFollows } from "@/lib/brands";
 import { useRouter } from "next/navigation";
 import { type OrderGroup, SOON, cleanupOnce, clearOrdersCache, dayLabel, etaText, isArriving, loadOrders, orderTitle, refreshArriving, returnBy, returnDaysLeft, shortTitle, fmtDate, trackStep, justArrived } from "@/lib/orders";
@@ -31,7 +31,7 @@ function ShopEmailCard({ handle }: { handle: string }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 700, fontSize: 15 }}>Your shopping email</div>
         <div style={{ fontSize: 13, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{email}</div>
-        <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Use it at checkout and new orders show up here.</div>
+        <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2, lineHeight: 1.4 }}>Use it at checkout. Every email goes straight on to your Gmail, and the order shows up here on its own.</div>
       </div>
       <button type="button" onClick={copy} className="press" style={{ height: 36, padding: "0 14px", borderRadius: 999, border: 0, background: "var(--ink)", color: "#fff", font: "700 13px var(--font-sans), sans-serif", cursor: "pointer", flex: "none" }}>{copied ? "Copied" : "Copy"}</button>
       <button type="button" onClick={close} aria-label="Close" style={{ width: 30, height: 30, border: 0, background: "none", cursor: "pointer", flex: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -55,6 +55,16 @@ export default function Today() {
   const startX = useRef<number | null>(null);
   const router = useRouter();
   const [follows, setFollows] = useState<BrandFollow[]>([]);
+  // One setup card at a time: the shopping email first, the Home Screen tip from her second day on.
+  const [setup, setSetup] = useState<"tip" | "email" | null>(null);
+  useEffect(() => {
+    const today = new Date().toDateString();
+    let firstDay = today;
+    try { firstDay = localStorage.getItem("first-day") ?? today; localStorage.setItem("first-day", firstDay); } catch {}
+    let emailDone = false;
+    try { emailDone = !!localStorage.getItem("shop-email-card"); } catch {}
+    setSetup(firstDay !== today && homeTipWanted() ? "tip" : !emailDone ? "email" : homeTipWanted() ? "tip" : null);
+  }, []);
   useEffect(() => {
     setName(loadProfile().handle);
     // Greet her by her real first name (from Google). Also fill in her name if this device lost it.
@@ -80,7 +90,9 @@ export default function Today() {
         const [asked, f] = await Promise.all([brandsAsked(), loadFollows()]);
         setFollows(f);
         // Once her closet has pieces, ask her which brands she loves (one time only).
-        if (!asked && all.some(i => whoFor(i, all) === "me")) router.replace("/follow");
+        let seen = false;
+        try { seen = !!localStorage.getItem("seen-closet"); } catch {}
+        if (!asked && seen && all.some(i => whoFor(i, all) === "me")) router.replace("/follow");
       });
       // Look up delivery dates for orders on the way that don't have one yet.
       if (list.some(g => isArriving(g) && !g.eta)) {
@@ -171,6 +183,8 @@ export default function Today() {
     arriving.length && `${arriving.length} ${arriving.length === 1 ? "order" : "orders"} on the way`,
   ].filter(Boolean).join(". ");
   const recent = all.filter(g => !isArriving(g) && g.stage !== "cancelled").slice(0, 4);
+  // The order in the big card isn't repeated in the list under it.
+  const onWay = arriving.filter(g => g !== nextIn);
 
   return (
     <main className="tabscreen">
@@ -194,8 +208,6 @@ export default function Today() {
           </div>
         </div>
 
-        <HomeScreenTip />
-        {orders && <ShopEmailCard handle={name} />}
 
         {(orders === null || (orders?.length === 0 && !gmailOn)) && (
           <div style={{ margin: "18px 16px 0", background: "var(--chip)", borderRadius: 28, padding: "22px 18px" }}>
@@ -245,11 +257,14 @@ export default function Today() {
           </>
         )}
 
-        {arriving.length > 0 && (
+        {setup === "tip" && <HomeScreenTip />}
+        {setup === "email" && orders && <ShopEmailCard handle={name} />}
+
+        {onWay.length > 0 && (
           <>
             <div className="section"><div>On the way</div><Link href="/orders?tab=arriving">All orders</Link></div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "12px 16px 0" }}>
-              {arriving.slice(0, 3).map((g, i) => (
+              {onWay.slice(0, 3).map((g, i) => (
                 <Link key={g.key} href={`/order/${encodeURIComponent(g.key)}`} className="press up" style={{ ...delay(i, 90), display: "flex", gap: 14, alignItems: "center", background: "#FAF8F6", borderRadius: 24, padding: "12px 16px 12px 12px", textDecoration: "none" }}>
                   <ItemImage src={g.photo} store={g.store} name={g.items[0] ?? g.what ?? undefined} w={72} h={88} radius={16} size={28} />
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -277,6 +292,16 @@ export default function Today() {
               ))}
             </div>
           </>
+        )}
+
+        {mine.length >= 6 && (
+          <Link href="/closet?view=outfits" className="press up" style={{ margin: "22px 16px 0", display: "flex", alignItems: "center", gap: 14, background: "#141210", color: "#fff", borderRadius: 24, padding: "16px 18px", textDecoration: "none" }}>
+            <div style={{ flex: 1 }}>
+              <div className="serif" style={{ fontSize: 22, lineHeight: 1.1 }}>Style me for the <em>weekend.</em></div>
+              <div style={{ fontSize: 13, color: "#C9C3BC", marginTop: 4 }}>3 looks from what you already own.</div>
+            </div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
+          </Link>
         )}
 
         {follows.length > 0 && (

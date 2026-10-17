@@ -130,9 +130,11 @@ export function whoFor(i: Item, all: Item[]): Who {
 export function needsAsk(i: Item, all: Item[]) {
   if (i.for_whom || whoFor(i, all) !== "me") return false;
   // A women's piece when most of the closet says men's, or the other way round.
-  const mine = all.filter(o => whoFor(o, all) === "me");
+  // The rest of the closet (not this piece) decides what's usual. A men's piece without a clear
+  // men's majority gets a quick "Is this one yours?" instead of a silent guess.
+  const mine = all.filter(o => o !== i && whoFor(o, all) === "me");
   const men = mine.filter(o => MEN.test(o.name)).length, women = mine.filter(o => WOMEN.test(o.name)).length;
-  if ((WOMEN.test(i.name) && men > women) || (MEN.test(i.name) && women > men)) return true;
+  if ((WOMEN.test(i.name) && men > women) || (MEN.test(i.name) && women >= men)) return true;
   return sizeOff(i, all);
 }
 
@@ -149,7 +151,7 @@ function sizeOff(i: Item, all: Item[]) {
 // Our guess at who a piece is for, only when there's a real sign: a men's piece in a women's closet
 // (or the other way round) means a partner. Otherwise no guess, and we just ask if it's hers.
 export function likelyWho(i: Item, all: Item[]): Who | null {
-  const mine = all.filter(o => whoFor(o, all) === "me");
+  const mine = all.filter(o => o !== i && whoFor(o, all) === "me");
   const men = mine.filter(o => MEN.test(o.name)).length, women = mine.filter(o => WOMEN.test(o.name)).length;
   if ((WOMEN.test(i.name) && men > women) || (MEN.test(i.name) && women > men)) return "partner";
   return null;

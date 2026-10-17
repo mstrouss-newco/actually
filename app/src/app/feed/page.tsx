@@ -88,9 +88,9 @@ export default function Feed() {
     <main className="tabscreen">
       <div className="scroll">
         <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 16 }}>
-        <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "baseline", gap: 14, padding: "0 4px 0 20px", whiteSpace: "nowrap", overflowX: "auto" }}>
+        <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "baseline", gap: 12, padding: "0 12px 0 20px", whiteSpace: "nowrap", overflowX: "auto", WebkitMaskImage: "linear-gradient(to right, #000 88%, transparent)", maskImage: "linear-gradient(to right, #000 88%, transparent)" }}>
           {(feed?.length ? ["friends", "match", "mine", "saved"] as Tab[] : ["mine", "friends", "match", "saved"] as Tab[]).map(k => [k, LABEL[k]] as const).map(([k, label]) => (
-            <button key={k} onClick={() => pick(k)} className="serif" style={{ border: 0, borderBottom: `2px solid ${tab === k ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 22, whiteSpace: "nowrap", color: tab === k ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
+            <button key={k} onClick={() => pick(k)} className="serif" style={{ border: 0, borderBottom: `2px solid ${tab === k ? "var(--ink)" : "transparent"}`, background: "none", padding: 0, cursor: "pointer", fontSize: 19, whiteSpace: "nowrap", color: tab === k ? "var(--ink)" : "#948C84", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
               {label}
             </button>
           ))}
@@ -201,6 +201,15 @@ export default function Feed() {
               </div>
               <ShareLink handle={handle} label="Share" small />
             </div>
+            {mine && mine.following === 0 && (
+              <Link href="/people" className="press up" style={{ margin: "14px 16px 0", display: "flex", alignItems: "center", gap: 12, background: "#DCEFDF", borderRadius: 20, padding: "14px 16px", textDecoration: "none", color: "var(--ink)" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15 }}>Bring your friends</div>
+                  <div style={{ fontSize: 13, color: "#3F5F4A", marginTop: 2 }}>See what they actually buy and keep. Find them or send an invite.</div>
+                </div>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
+              </Link>
+            )}
             {toGo > 0 && (
               <Link href="/sort" className="press" style={{ margin: "14px 16px 0", display: "flex", alignItems: "center", gap: 10, background: "#FAF8F6", borderRadius: 16, padding: "10px 14px", textDecoration: "none" }}>
                 <div style={{ flex: 1, fontSize: 13 }}><b>{toGo} new {toGo === 1 ? "piece" : "pieces"}</b> <span style={{ color: "var(--muted)" }}>to add to your feed</span></div>
@@ -218,7 +227,7 @@ export default function Feed() {
                   {!myLooks.length && <p className="lead" style={{ padding: "0 4px", margin: 0 }}>Build a look from your closet and share it here. Friends can tap each piece to shop it.</p>}
                 </div>
               )}
-              {mineType !== "looks" && mine && mine.items.length === 0 && <p className="lead" style={{ padding: "0 4px", margin: 0 }}>Nothing shared yet. Swipe right in Sort to share a piece.</p>}
+              {mineType !== "looks" && mine && mine.items.length === 0 && <p className="lead" style={{ padding: "0 4px", margin: 0 }}>{toGo > 0 ? "Nothing shared yet. Pick a few favorites in Sort to show them here." : "Nothing shared yet. Open a piece in your closet and choose Show on my feed."}</p>}
               {mineType !== "looks" && mine && <MyGrid items={sortBy(mine.items, order)
                 .filter(i => mineType === "all" || i.category === mineType)} />}
               <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 16, lineHeight: 1.45, padding: "0 4px" }}>Your feed shows the photo, brand, name and your note. Never prices, sizes or order details.</div>

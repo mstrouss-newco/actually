@@ -2,6 +2,15 @@
 
 import { useEffect, useState } from "react";
 
+/** iPhone Safari, not added yet, not dismissed. */
+export function homeTipWanted() {
+  try {
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const standalone = window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone;
+    return ios && !standalone && localStorage.getItem("home-tip") !== "1";
+  } catch { return false; }
+}
+
 // A one-time tip on iPhone Safari: add Actually to the Home Screen so it opens full screen.
 export function HomeScreenTip() {
   const [show, setShow] = useState(false);

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LanderGmail } from "./lander-cta";
+import { LanderGmail, LanderSticky } from "./lander-cta";
 import "./lander.css";
 
 // The public front door for browser visitors. Everything moves: the phones are little looping videos
@@ -174,7 +174,7 @@ export function Lander() {
           <h1>Your order emails, <em>sorted out.</em></h1>
           <p>Connect Gmail and every order becomes your closet. Returns, points and resale, handled. Plus what your friends love.</p>
           <div className="ld-hero-cta"><LanderGmail /></div>
-          <div className="ld-note">Free. We only save your shopping emails.</div>
+          <div className="ld-note">Free. Google will ask to let us read your email: tick the box. We look only at order emails and keep only those, never health, banking or personal mail. <Link href="/privacy">Privacy</Link></div>
         </div>
         <div className="ld-hero-p"><Phone className="ld-float"><TodayScreen /></Phone></div>
       </header>
@@ -201,6 +201,7 @@ export function Lander() {
         <h2>Your closet is already <em>in your inbox.</em></h2>
         <LanderGmail />
       </section>
+      <LanderSticky />
       <footer className="ld-foot">
         <div className="logo" style={{ fontSize: 20 }}>Actually</div>
         <div className="ld-flinks"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/legal/cookies">Cookies</Link><Link href="/legal/delete">Delete your data</Link></div>

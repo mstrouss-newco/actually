@@ -101,7 +101,7 @@ export default function Points() {
             <Job run={scanRewards} label="Check for new points" working="Checking email" noun={["new balance", "new balances"]} onDone={load} />
           </div>
         )}
-        <div style={{ fontSize: 12, color: "var(--muted)", padding: "14px 20px 0", lineHeight: 1.45 }}>Balances come from the latest email each program sent. From card companies we only read rewards emails, never statements or payments. Check the app to be sure before you spend.</div>
+        <div style={{ fontSize: 12, color: "var(--muted)", padding: "14px 20px 0", lineHeight: 1.45 }}>Balances come from the latest email each program sent. From card companies we only read rewards emails, never statements or payments. Check the store&apos;s site or app to be sure before you spend.</div>
       </div>
       <TabBar />
     </main>

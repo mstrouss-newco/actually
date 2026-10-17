@@ -131,7 +131,7 @@ export default function Orders() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" /></svg>List
             </button>
           } />
-        ) : (
+        ) : orders?.length !== 0 && (
           <div style={{ display: "flex", padding: "12px 16px 0" }}>
             <button type="button" onClick={() => setView("photos")} style={{ border: 0, background: "none", padding: 0, font: "700 13px var(--font-sans), sans-serif", color: "var(--ink)", cursor: "pointer", display: "flex", alignItems: "center", gap: 2 }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>Photos</button>
           </div>
@@ -157,7 +157,7 @@ export default function Orders() {
           </>
         )}
 
-        {!query && !photos && (
+        {!query && !photos && orders?.length !== 0 && (
           <div style={{ display: "flex", gap: 18, padding: "18px 36px 0 20px", borderBottom: "1px solid var(--line)", overflowX: "auto", WebkitMaskImage: "linear-gradient(to right, #000 82%, transparent)", maskImage: "linear-gradient(to right, #000 82%, transparent)" }}>
             {TABS.filter(([k]) => !OPTIONAL.includes(k) || all.some(FILTER[k])).map(([k, label]) => (
               <button key={k} type="button" aria-pressed={k === tab} onClick={() => { setTab(k); history.replaceState(history.state, "", `?view=list&tab=${k}`); }} style={{ border: 0, background: "transparent", padding: "10px 0 12px", font: "700 15px var(--font-sans), sans-serif", color: k === tab ? "var(--ink)" : "var(--muted)", borderBottom: `3px solid ${k === tab ? "var(--ink)" : "transparent"}`, cursor: "pointer", whiteSpace: "nowrap" }}>
@@ -170,7 +170,13 @@ export default function Orders() {
         <div style={{ display: photos && orders ? "none" : "flex", flexDirection: "column", gap: 12, padding: "16px 16px 0" }}>
           {orders === undefined && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}>Loading your orders…</div>}
           {orders === null && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}><Link href="/login" style={{ fontWeight: 700 }}>Sign in</Link> to see your orders.</div>}
-          {orders && rows.length === 0 && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}>{query ? "No orders match that." : tab === "canreturn" ? "Nothing to return right now. New orders show up here once they arrive." : "Nothing here right now."}</div>}
+          {orders && orders.length === 0 && !query && (
+            <div style={{ background: "var(--chip)", borderRadius: 26, padding: "20px 18px" }}>
+              <div className="serif" style={{ fontSize: 24, lineHeight: 1.1 }}>No orders <em>yet.</em></div>
+              <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 8, lineHeight: 1.45 }}>When a store emails you about an order, it shows up here with deliveries and return dates. Use your shopping email at checkout and they come in on their own.</div>
+            </div>
+          )}
+          {orders && orders.length > 0 && rows.length === 0 && <div style={{ color: "var(--muted)", fontSize: 14, padding: 4 }}>{query ? "No orders match that." : tab === "canreturn" ? "Nothing to return right now. New orders show up here once they arrive." : "Nothing here right now."}</div>}
           {tab === "canreturn" && !query && rows.length > 0 && <div style={{ fontSize: 13, color: "var(--muted)", padding: "0 4px", lineHeight: 1.45 }}>Return windows start on delivery day. We use each store&apos;s rules when its emails say them.</div>}
           {soon.length > 0 && <div className="kicker" style={{ color: "#C9402F", padding: "6px 4px 0" }}>Closing soon</div>}
           {!(photos && orders) && rows.slice(0, 200).map((g, n) => {

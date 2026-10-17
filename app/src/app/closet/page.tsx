@@ -53,7 +53,10 @@ function ClosetPage() {
   useEffect(() => { setView(urlView === "brands" || urlView === "outfits" ? urlView : "pieces"); }, [urlView]);
   // Remember the tab in the address, so Back from a brand page lands on Brands.
   const pickView = (v: "pieces" | "brands" | "outfits") => { setView(v); router.replace(v !== "pieces" ? `/closet?view=${v}` : "/closet", { scroll: false }); };
-  useEffect(() => { loadOrders().then(g => g && setRets(returnsByEmail(g))); }, []);
+  const [hasOrders, setHasOrders] = useState<boolean | null>(null);
+  useEffect(() => { loadOrders().then(g => { if (g) setRets(returnsByEmail(g)); setHasOrders(!!g?.length); }); }, []);
+  // Today waits until she has seen her closet before asking about brands.
+  useEffect(() => { try { localStorage.setItem("seen-closet", "1"); } catch {} }, []);
   // The open shelf lives in the address (?shelf=tops), so Back from a piece or an outfit lands on it again.
   const cat = params.get("shelf");
   const setCat = (k: string | null) => {
@@ -186,9 +189,12 @@ function ClosetPage() {
               </div>
             )}
             {view === "pieces" && !toAsk[0] && unchecked.length > 0 && (
-              <button onClick={() => setReview(unchecked.map(i => i.id))} style={{ margin: "16px 16px 0", width: "calc(100% - 32px)", textAlign: "left", border: 0, background: "#FAF8F6", borderRadius: 22, padding: "14px 16px", font: "inherit", color: "var(--ink)", cursor: "pointer" }}>
-                <div style={{ fontWeight: 700, fontSize: 14 }}>Is all of this yours?</div>
-                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Take 10 seconds to move anything bought for kids or a partner. {unchecked.length} to check.</div>
+              <button onClick={() => setReview(unchecked.map(i => i.id))} style={{ margin: "16px 16px 0", width: "calc(100% - 32px)", textAlign: "left", border: 0, background: "#FAF8F6", borderRadius: 22, padding: "14px 16px", font: "inherit", color: "var(--ink)", cursor: "pointer", display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ flex: 1 }}>
+                  <span style={{ display: "block", fontWeight: 700, fontSize: 14 }}>Is all of this yours?</span>
+                  <span style={{ display: "block", fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Take 10 seconds to move anything bought for kids or a partner. {unchecked.length} to check.</span>
+                </span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
               </button>
             )}
             {view === "pieces" && toAsk[0] && (
@@ -213,19 +219,24 @@ function ClosetPage() {
 
         {items !== null && everything.length === 0 && (
           <div style={{ margin: "18px 16px 0", background: "var(--chip)", borderRadius: 28, padding: "22px 18px", display: "flex", flexDirection: "column", gap: 14 }}>
-            <div className="serif" style={{ fontSize: 26, lineHeight: 1.05 }}>Fill your closet from your <em>orders.</em></div>
-            <div style={{ fontSize: 14, color: "var(--soft)", lineHeight: 1.45 }}>We read each order email once to find what you bought, the size and a photo. Takes a minute or two.</div>
-            <ReadItems onDone={load} />
+            {hasOrders === false ? <>
+              <div className="serif" style={{ fontSize: 26, lineHeight: 1.05 }}>Your closet fills itself <em>in.</em></div>
+              <div style={{ fontSize: 14, color: "var(--soft)", lineHeight: 1.45 }}>When an order email for clothes, shoes or bags comes in, the pieces show up here with a photo and your size.</div>
+            </> : <>
+              <div className="serif" style={{ fontSize: 26, lineHeight: 1.05 }}>Fill your closet from your <em>orders.</em></div>
+              <div style={{ fontSize: 14, color: "var(--soft)", lineHeight: 1.45 }}>We read each order email once to find what you bought, the size and a photo. Takes a minute or two.</div>
+              <ReadItems onDone={load} />
+            </>}
           </div>
         )}
 
         {!cur && view === "pieces" && list.length > 0 && (
           <>
-            {unsorted > 0 && (
+            {unsorted > 0 && !toAsk[0] && !unchecked.length && (
               <Link href="/sort" style={{ margin: "16px 16px 0", display: "flex", alignItems: "center", gap: 12, background: "var(--ink)", color: "#fff", borderRadius: 22, padding: "14px 16px", textDecoration: "none" }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15 }}>Add pieces to your feed</div>
-                  <div style={{ fontSize: 12, color: "#C9C3BC", marginTop: 2 }}>{unsorted} ready. Swipe to share, sell or keep private.</div>
+                  <div style={{ fontWeight: 700, fontSize: 15 }}>Pick a few favorites to show friends</div>
+                  <div style={{ fontSize: 12, color: "#C9C3BC", marginTop: 2 }}>{unsorted} to go. Swipe to show, sell or keep private.</div>
                 </div>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
               </Link>
@@ -415,10 +426,22 @@ function ClosetPage() {
                 <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>{sel.arriving ? `Ordered ${fmtDate(sel.ordered_at)} from ${sel.store}. On its way.` : `Bought ${fmtDate(sel.ordered_at)} from ${sel.store}`}</div>
               </div>
             </div>
-            <div style={{ marginTop: 16, fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>Who is this for?</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-              {WHO.map(([k, label]) => <button key={k} onClick={() => answer(sel, k)} style={chip(sel.for_whom === k)}>{label}{!sel.for_whom && whoFor(sel, everything) === k ? " (our guess)" : ""}</button>)}
-            </div>
+            {sel.for_whom ? (
+              <div style={{ marginTop: 14, fontSize: 13, color: "var(--muted)", display: "flex", alignItems: "center", gap: 6 }}>
+                For {WHO.find(w => w[0] === sel.for_whom)?.[1].toLowerCase() ?? "me"}
+                <label style={{ position: "relative", fontWeight: 700, color: "var(--ink)", cursor: "pointer", padding: "6px 4px" }}>
+                  Change
+                  <select aria-label="Who is this for?" value={sel.for_whom} onChange={e => answer(sel, e.target.value as Who)} style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}>
+                    {WHO.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+                  </select>
+                </label>
+              </div>
+            ) : <>
+              <div style={{ marginTop: 16, fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>Who is this for?</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                {WHO.map(([k, label]) => <button key={k} onClick={() => answer(sel, k)} style={chip(false)}>{label}{whoFor(sel, everything) === k ? " (our guess)" : ""}</button>)}
+              </div>
+            </>}
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 18 }}>
               {rets.get(sel.gmail_id ?? "")?.returned && <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center" }}>You sent this back, so it can&apos;t go on your feed.</div>}
               {!rets.get(sel.gmail_id ?? "")?.returned && sel.pick !== "share" && <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center" }}>{sel.pick ? "" : "Not on your feed yet. "}Share it and you could earn if a friend buys it.</div>}
