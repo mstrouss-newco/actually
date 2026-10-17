@@ -138,6 +138,11 @@ export function needsAsk(i: Item, all: Item[]) {
   return sizeOff(i, all);
 }
 
+/** Why we're asking: a men's piece, or a size unlike her usual at that brand. */
+export function askReason(i: Item, all: Item[]): "men" | "size" {
+  return MEN.test(i.name) && !sizeOff(i, all) ? "men" : "size";
+}
+
 function sizeOff(i: Item, all: Item[]) {
   if (!i.size) return false;
   const brand = i.brand || i.store;
@@ -165,7 +170,9 @@ export async function confirmMine(ids: string[], all: Item[] = []) {
 
 // Saves her answer for this piece and others of the same brand and size. Pieces for others stay private.
 export async function setWho(i: Item, who: Who, all: Item[]) {
-  const ids = allIds(all, all.filter(o => o === i || (!o.for_whom && sameAs(o, i))).map(o => o.id));
+  // Match the piece by id: the sheet may hold an updated copy of it, not the one in the list.
+  const mine = new Set(i.ids ?? [i.id]);
+  const ids = allIds(all, [...mine, ...all.filter(o => mine.has(o.id) || (!o.for_whom && sameAs(o, i))).map(o => o.id)]);
   const patch = who === "me" ? { for_whom: who } : { for_whom: who, pick: "private" as const };
   await supabase().from("items").update(patch).in("id", ids);
   return ids;

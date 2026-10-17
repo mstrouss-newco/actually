@@ -64,12 +64,14 @@ export default function Import() {
   useEffect(() => { setFrom(new URLSearchParams(location.search).get("from") === "settings" ? "settings" : "signup"); }, []);
   const toSettings = useGoBack("/settings");
   // When it's done, show her actual pieces, not her inbox.
-  const [pieces, setPieces] = useState<Item[]>([]);
+  const [pieces, setPieces] = useState<Item[] | null>(null);
   useEffect(() => {
     if (s.stage !== "done") return;
-    loadItems().then(all => setPieces(all.filter(i => whoFor(i, all) === "me" && i.image_url)));
+    loadItems().then(all => setPieces(all.filter(i => whoFor(i, all) === "me" && i.image_url))).catch(() => setPieces([]));
   }, [s.stage]);
-  const brands = new Set(pieces.map(brandOf)).size;
+  // Hold the final button and list until we know whether there are pieces to show.
+  const ready = s.stage !== "done" || pieces !== null;
+  const brands = new Set((pieces ?? []).map(brandOf)).size;
   useEffect(() => {
     const off = onImport(setS);
     // Start a scan unless one is already running.
@@ -110,19 +112,18 @@ export default function Import() {
       </div>
 
       {s.stage === "done" && !s.orders && <p className="lead" style={{ marginTop: 14 }}>We didn&apos;t find store orders in your inbox. Use your shopping email at checkout and new orders will show up here.</p>}
-      {s.stage === "done" && pieces.length > 0 ? (
+      {!ready ? null : s.stage === "done" && pieces?.length ? (
         <>
           <div className="serif" style={{ marginTop: 24, fontSize: 22 }}>{pieces.length} {pieces.length === 1 ? "piece" : "pieces"}{brands > 1 ? `, ${brands} brands` : ""}</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginTop: 10 }}>
-            {pieces.slice(0, 9).map((i, k) => (
+            {pieces.slice(0, 6).map((i, k) => (
               <div key={i.id} className="found" style={{ animationDelay: `${k * 60}ms` }}><ItemImage cutId={i.id} src={i.image_url} store={i.store} name={i.name} w="100%" h={112} radius={16} size={30} /></div>
             ))}
           </div>
         </>
       ) : s.latest.length > 0 && (
         <>
-          <div className="serif" style={{ marginTop: 24, fontSize: 22 }}>Orders found</div>
-          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ marginTop: 22, display: "flex", flexDirection: "column", gap: 8 }}>
             {s.latest.map(o => {
               const [tag, bg] = TAGS[o.kind] ?? TAGS.order;
               return (
@@ -141,7 +142,7 @@ export default function Import() {
       <NameCard finished={s.stage === "done"} />
       {s.skipped > 0 && s.stage === "done" && <p style={{ margin: "0 0 10px", fontSize: 13, color: "var(--muted)", lineHeight: 1.45 }}>{s.skipped} emails couldn&apos;t be checked. Run this again later to pick them up.</p>}
       {s.stage !== "done" && <p style={{ margin: "0 0 12px", fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>Takes about a minute. Keep this page open while it runs.</p>}
-      {from && <Finish done={s.stage === "done"} hasPieces={pieces.length > 0} fromSettings={from === "settings"} />}
+      {from && ready && <Finish done={s.stage === "done"} hasPieces={!!pieces?.length} fromSettings={from === "settings"} />}
     </main>
   );
 }

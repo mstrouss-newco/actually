@@ -295,7 +295,7 @@ export default function Today() {
         )}
 
         {mine.length >= 6 && (
-          <Link href="/closet?view=outfits" className="press up" style={{ margin: "22px 16px 0", display: "flex", alignItems: "center", gap: 14, background: "#141210", color: "#fff", borderRadius: 24, padding: "16px 18px", textDecoration: "none" }}>
+          <Link href="/closet?view=outfits&style=Weekend" className="press up" style={{ margin: "22px 16px 0", display: "flex", alignItems: "center", gap: 14, background: "#141210", color: "#fff", borderRadius: 24, padding: "16px 18px", textDecoration: "none" }}>
             <div style={{ flex: 1 }}>
               <div className="serif" style={{ fontSize: 22, lineHeight: 1.1 }}>Style me for the <em>weekend.</em></div>
               <div style={{ fontSize: 13, color: "#C9C3BC", marginTop: 4 }}>3 looks from what you already own.</div>

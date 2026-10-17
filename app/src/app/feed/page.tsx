@@ -22,6 +22,7 @@ export default function Feed() {
   const [mine, setMine] = useState<Profile | null>(null);
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [toGo, setToGo] = useState(0);
+  const [hasPieces, setHasPieces] = useState(true);
   const [type, setType] = useState("all");
   const [mineType, setMineType] = useState("all");
   const [order, setOrder] = useState<Order>("new");
@@ -61,7 +62,7 @@ export default function Feed() {
       loadProfilePage(h).then(p => { setMine(p); if (p) load(p.items.map(i => i.id)); });
       loadSaved().then(s => { setSaved(s); load(s.map(i => i.id)); });
       friendsOutfits().then(l => { setLooks(l); if (l.length) setTab(x => (x === "mine" && !new URLSearchParams(location.search).get("tab") ? "friends" : x)); });
-      loadItems().then(all => setToGo(toSort(all).length));
+      loadItems().then(all => { setToGo(toSort(all).length); setHasPieces(all.length > 0); });
       // Each match shows three pieces from their feed.
       similarPeople().then(async list => {
         const pages = await Promise.all(list.slice(0, 6).map(p => loadProfilePage(p.handle)));
@@ -210,13 +211,13 @@ export default function Feed() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#141210" strokeWidth="2.2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
               </Link>
             )}
-            {toGo > 0 && (
+            {toGo > 0 && mine && mine.following > 0 && (
               <Link href="/sort" className="press" style={{ margin: "14px 16px 0", display: "flex", alignItems: "center", gap: 10, background: "#FAF8F6", borderRadius: 16, padding: "10px 14px", textDecoration: "none" }}>
                 <div style={{ flex: 1, fontSize: 13 }}><b>{toGo} new {toGo === 1 ? "piece" : "pieces"}</b> <span style={{ color: "var(--muted)" }}>to add to your feed</span></div>
                 <span style={{ fontSize: 13, fontWeight: 700 }}>Sort →</span>
               </Link>
             )}
-            {mine && (
+            {mine && (mine.items.length > 0 || myLooks.length > 0) && (
               <TypeTabs items={mine.items} value={mineType} onChange={setMineType} lead={[["looks", "Outfits"]]} end={mineType === "looks" ? undefined : <OrderButton value={order} onChange={setOrder} />} />
             )}
             <div style={{ padding: "14px 16px 0" }}>
@@ -227,7 +228,7 @@ export default function Feed() {
                   {!myLooks.length && <p className="lead" style={{ padding: "0 4px", margin: 0 }}>Build a look from your closet and share it here. Friends can tap each piece to shop it.</p>}
                 </div>
               )}
-              {mineType !== "looks" && mine && mine.items.length === 0 && <p className="lead" style={{ padding: "0 4px", margin: 0 }}>{toGo > 0 ? "Nothing shared yet. Pick a few favorites in Sort to show them here." : "Nothing shared yet. Open a piece in your closet and choose Show on my feed."}</p>}
+              {mineType !== "looks" && mine && mine.items.length === 0 && <p className="lead" style={{ padding: "0 4px", margin: 0 }}>{!hasPieces ? "Nothing shared yet. Once your orders bring pieces into your closet, you can show your favorites here." : toGo > 0 ? <>Nothing shared yet. <Link href="/sort" style={{ fontWeight: 700 }}>Pick a few favorites</Link> to show them here.</> : "Nothing shared yet. Open a piece in your closet and choose Show on my feed."}</p>}
               {mineType !== "looks" && mine && <MyGrid items={sortBy(mine.items, order)
                 .filter(i => mineType === "all" || i.category === mineType)} />}
               <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 16, lineHeight: 1.45, padding: "0 4px" }}>Your feed shows the photo, brand, name and your note. Never prices, sizes or order details.</div>

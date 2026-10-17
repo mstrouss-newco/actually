@@ -55,7 +55,7 @@ export function NavTracker() {
   useEffect(() => {
     if (!TAB_ROOTS.includes(path)) return;
     const q = new URLSearchParams(search.toString());
-    q.delete("piece"); q.delete("shelf"); q.delete("find");
+    q.delete("piece"); q.delete("shelf"); q.delete("find"); q.delete("style");
     write(`tab:${path}`, q.size ? `${path}?${q}` : path);
   }, [path, search]);
   return null;
