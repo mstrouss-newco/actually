@@ -17,7 +17,7 @@ export default function WorthItem({ params }: { params: Promise<{ id: string }> 
   const [body, setBody] = useState("");
   const [price, setPrice] = useState("");
   const [copied, setCopied] = useState("");
-  const [donated, setDonated] = useState(false);
+  const [donate, setDonate] = useState<null | "ask" | "done" | "failed">(null);
   const leave = useGoBack("/earn/worth");
   useEffect(() => { loadItems().then(all => setItem(all.find(i => i.id === id) ?? null)); }, [id]);
 
@@ -42,6 +42,11 @@ export default function WorthItem({ params }: { params: Promise<{ id: string }> 
     );
   }
 
+  const giveAway = async () => {
+    setDonate("done");
+    if (await hideItem(item)) setTimeout(leave, 1200);
+    else setDonate("failed");
+  };
   const copy = async (text: string, what: string) => {
     try { await navigator.clipboard.writeText(text); setCopied(what); setTimeout(() => setCopied(""), 1800); } catch {}
   };
@@ -128,8 +133,8 @@ export default function WorthItem({ params }: { params: Promise<{ id: string }> 
               </label>
               <button type="button" onClick={post} className="btn press" style={{ height: 52, fontSize: 15 }}>{copied === "post" ? "Copied. Paste it on " + s.name : `Copy and open ${s.name}`}</button>
               <div style={{ display: "flex", gap: 8 }}>
-                <button type="button" onClick={() => copy(title || body.split("\n")[0], "title")} className="btn btn-ghost" style={{ height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>{copied === "title" ? "Copied" : "Copy title"}</button>
-                <button type="button" onClick={() => copy(body, "body")} className="btn btn-ghost" style={{ height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>{copied === "body" ? "Copied" : "Copy description"}</button>
+                <button type="button" onClick={() => copy(title || body.split("\n")[0], "title")} className="btn btn-ghost" style={{ flex: 1, minWidth: 0, marginTop: 0, height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>{copied === "title" ? "Copied" : "Copy title"}</button>
+                <button type="button" onClick={() => copy(body, "body")} className="btn btn-ghost" style={{ flex: 1, minWidth: 0, marginTop: 0, height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>{copied === "body" ? "Copied" : "Copy description"}</button>
               </div>
               <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.45, textAlign: "center" }}>
                 Add 3 or 4 photos you take yourself, in good light. Buyers trust real photos more than store pictures.
@@ -148,10 +153,23 @@ export default function WorthItem({ params }: { params: Promise<{ id: string }> 
         <div className="up" style={{ margin: "18px 16px 0", background: "#DCEFDF", borderRadius: 24, padding: "16px 18px" }}>
           <div style={{ fontWeight: 700, fontSize: 16 }}>Or donate it</div>
           <div style={{ fontSize: 13, color: "#3F5F4A", marginTop: 4, lineHeight: 1.45 }}>Not worth listing? Give it a second life. Drop it off nearby, then take it out of your closet.</div>
-          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <a href="https://www.goodwill.org/locator/" target="_blank" rel="noreferrer" className="btn press" style={{ flex: 1, marginTop: 0, height: 46, fontSize: 14, background: "var(--ink)" }}>Find a drop-off</a>
-            <button type="button" disabled={donated} onClick={async () => { setDonated(true); await hideItem(item); setTimeout(leave, 900); }} className="btn btn-ghost" style={{ flex: 1, marginTop: 0, height: 46, fontSize: 14, background: "#fff" }}>{donated ? "Donated. Thank you" : "I donated it"}</button>
-          </div>
+          {donate === "ask" ? (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>Take it out of your closet?</div>
+              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                <button type="button" onClick={giveAway} className="btn press" style={{ flex: 1, marginTop: 0, height: 46, fontSize: 14, background: "var(--ink)", color: "#fff" }}>Yes, I donated it</button>
+                <button type="button" onClick={() => setDonate(null)} className="btn" style={{ flex: 1, marginTop: 0, height: 46, fontSize: 14, background: "#fff", color: "var(--ink)", fontWeight: 700 }}>Cancel</button>
+              </div>
+            </div>
+          ) : donate === "done" ? (
+            <div style={{ marginTop: 12, fontSize: 14, fontWeight: 700 }}>Donated. Thank you for giving it a second life.</div>
+          ) : (
+            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <a href="https://www.goodwill.org/locator/" target="_blank" rel="noreferrer" className="btn press" style={{ flex: 1, marginTop: 0, height: 46, fontSize: 14, background: "var(--ink)", color: "#fff" }}>Find a drop-off</a>
+              <button type="button" onClick={() => setDonate("ask")} className="btn press" style={{ flex: 1, marginTop: 0, height: 46, fontSize: 14, background: "#fff", color: "var(--ink)", fontWeight: 700 }}>I donated it</button>
+            </div>
+          )}
+          {donate === "failed" && <div style={{ marginTop: 8, fontSize: 13, color: "#C9402F" }}>That didn&apos;t save. Try again in a moment.</div>}
         </div>
       </div>
       <TabBar />

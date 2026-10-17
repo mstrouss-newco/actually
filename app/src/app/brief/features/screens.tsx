@@ -166,7 +166,7 @@ export function SavedScreen() {
 }
 
 // Share a look: the story picture slides up, then the share buttons.
-const STORY_LOOK: [string, number, number, number, number][] = [["tops-overshirt-rose", 14, 18, 112, -3], ["tops-crew-tee-sky", 118, 26, 92, 3], ["bottoms-jeans-midwash", 40, 150, 70, 0], ["acc-crossbody-blush", 128, 150, 76, 4], ["shoes-sneaker-black-gum", 110, 250, 90, -6]];
+const STORY_LOOK: [string, number, number, number, number][] = [["tops-overshirt-rose", 12, 16, 100, -3], ["tops-crew-tee-sky", 108, 24, 80, 3], ["bottoms-jeans-midwash", 30, 132, 62, 0], ["acc-crossbody-blush", 112, 140, 70, 4], ["shoes-sneaker-black-gum", 96, 214, 76, -6]];
 export function ShareScreen() {
   return (
     <div className="ld-pad" style={{ paddingTop: 22 }}>
@@ -180,7 +180,7 @@ export function ShareScreen() {
         <div className="tr-story-cap"><span className="ld-mlogo" style={{ fontSize: 15 }}>Actually</span><span>Claire&apos;s Easy Saturday</span></div>
       </div>
       <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 10 }}>{["#fff", "#FFE1DC", "#141210"].map((c, i) => <span key={c} style={{ width: 22, height: 22, borderRadius: "50%", background: c, border: i === 1 ? "2px solid #141210" : "1.5px solid #E2DDD7" }} />)}</div>
-      <div className="tr-ig">Share to Instagram</div>
+      <div className="tr-ig"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" /></svg>Share to Instagram</div>
       <div style={{ display: "flex", gap: 8, marginTop: 8 }}><span className="tr-ghost">Send link</span><span className="tr-ghost">Save picture</span></div>
       <div className="tr-note" style={{ background: "#F3F0EB", color: "#5E5852", textAlign: "center" }}>Link copied for your story sticker</div>
     </div>
@@ -196,12 +196,15 @@ export function PubLookScreen() {
       <div className="tr-look" style={{ height: 230, marginTop: 10 }}>
         {STORY_LOOK.map(([k, x, y, w, r]) => (
           // eslint-disable-next-line @next/next/no-img-element
-          <img key={k} src={art(k)} alt="" style={{ position: "absolute", left: x * 0.86, top: y * 0.7, width: w * 0.8, transform: `rotate(${r}deg)` }} />
+          <img key={k} src={art(k)} alt="" style={{ position: "absolute", left: x * 0.95, top: y * 0.68, width: w * 0.86, transform: `rotate(${r}deg)` }} />
         ))}
       </div>
-      {[["zara.com", "Zara", "Overshirt"], ["everlane.com", "Everlane", "Crew tee"], ["levi.com", "Levi's", "501 jeans"]].map(([d, b, n], i) => (
-        <div key={d} className="ld-pi tr-store" style={{ animationDelay: `${0.8 + i * 0.4}s` }}><Logo d={d} s={22} /><b style={{ flex: 1 }}>{b} <span style={{ fontWeight: 400, color: "#7A746D" }}>{n}</span></b><span>See it</span></div>
-      ))}
+      <div style={{ fontWeight: 700, fontSize: 14, marginTop: 14 }}>Shop the look</div>
+      <div style={{ display: "flex", gap: 8, marginTop: 8, overflow: "hidden" }}>
+        {STORY_LOOK.map(([k], i) => (
+          <div key={k} className="tr-shop" style={{ animationDelay: `${0.6 + i * 0.25}s` }}><Pic k={k} h={74} r={14} /></div>
+        ))}
+      </div>
     </div>
   );
 }

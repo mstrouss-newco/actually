@@ -7,18 +7,20 @@ import { LanderGmail } from "./lander-cta";
 
 // On shared pages: people already using Actually get "Open Actually", everyone else the sign-up pitch.
 function useSignedIn() {
-  const [on, setOn] = useState(false);
+  const [on, setOn] = useState<boolean | null>(null);
   useEffect(() => { (async () => { try { const { data } = await supabase().auth.getSession(); setOn(!!data.session); } catch {} })(); }, []);
   return on;
 }
 
 export function PubGet() {
   const on = useSignedIn();
+  if (on === null) return <span className="pub-get" style={{ visibility: "hidden" }}>Get Actually</span>;
   return <Link href={on ? "/today" : "/"} className="pub-get">{on ? "Open Actually" : "Get Actually"}</Link>;
 }
 
 export function PubCta() {
   const on = useSignedIn();
+  if (on === null) return <div className="pub-cta" style={{ visibility: "hidden" }}><h2>&nbsp;</h2><p>&nbsp;</p></div>;
   if (on) return (
     <div className="pub-cta">
       <h2>Make your own <em>looks.</em></h2>
