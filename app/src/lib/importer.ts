@@ -11,6 +11,7 @@ export type ImportState = {
   stage: "idle" | "scan" | "items" | "points" | "done" | "reconnect" | "no-access" | "error";
   read: number; total: number; orders: number; skipped: number; latest: Order[];
   itemsDone: number; itemsTotal: number; itemsFound: number;
+  quiet?: boolean; // the automatic check: runs without showing progress
 };
 
 let state: ImportState = { stage: "idle", read: 0, total: 0, orders: 0, skipped: 0, latest: [], itemsDone: 0, itemsTotal: 0, itemsFound: 0 };
@@ -36,7 +37,7 @@ export async function startImport(opts: { quiet?: boolean } = {}) {
     const token = await gmailToken().catch(() => null);
     if (!token || importing()) return;
   }
-  set({ stage: "scan", read: 0, total: 0, orders: 0, skipped: 0, latest: [], itemsDone: 0, itemsTotal: 0, itemsFound: 0 });
+  set({ quiet: !!opts.quiet, stage: "scan", read: 0, total: 0, orders: 0, skipped: 0, latest: [], itemsDone: 0, itemsTotal: 0, itemsFound: 0 });
   const { data } = await sb.auth.getSession();
   const token = await gmailToken().catch(() => null);
   if (!token || !data.session) return set({ stage: opts.quiet ? "idle" : "reconnect" });

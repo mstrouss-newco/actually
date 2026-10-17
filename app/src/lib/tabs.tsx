@@ -17,10 +17,11 @@ const TABS = [
   { href: "/earn", label: "Earn", icon: <><rect x="3" y="8" width="18" height="13" rx="2" /><path d="M12 8v13M3 12.5h18" /><path d="M12 8C10 4 6 4 6 6.5S12 8 12 8s6-1 6-1.5S14 4 12 8z" /></> },
 ];
 
-// Small progress strip above the tab bar while Gmail is being read.
+// Small progress strip above the tab bar while Gmail is being read. Hidden for the automatic check: new orders just appear.
 function ImportStrip() {
   const [s, setS] = useState<ImportState>(importState());
   useEffect(() => onImport(setS), []);
+  if (s.quiet) return null;
   if (s.stage !== "scan" && s.stage !== "items" && s.stage !== "points") return null;
   const text = s.stage === "scan" ? (s.total ? `Finding orders · ${s.read} of ${s.total}` : "Finding your orders")
     : s.stage === "points" ? "Checking points and credit"

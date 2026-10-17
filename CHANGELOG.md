@@ -2,6 +2,9 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-17: Quiet check
+- The automatic hourly check no longer shows the "Finding orders" strip. New orders just appear. The strip still shows for a first import or Settings > Look for new orders.
+
 ## 2026-10-17: Copy trim
 - Removed rule-style lines from the app ("Never prices or sizes", "Only you see this list", what feeds show, how we read emails). Kept Google's permission note.
 
