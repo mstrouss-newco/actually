@@ -35,6 +35,7 @@ Mike (mstrouss@gmail.com) is not a coder. When talking to him:
 - Copy is about pleasure, never spam. Don't promise emails or say "inside the app".
 - Earning copy stays in ("Share it and you could earn if a friend buys it", cash back): we're testing it and Wildfire goes in before launch. QA should not flag it as an unkept promise.
 - Owners see counts (loves), never who. Never prices, sizes or order details on anything shared.
+- Privacy rules are for us, not her: don't put them in the app as copy (no "Never prices or sizes", "Only you see this"). Keep only what she needs to decide, like Google's permission note.
 - Products link to their real store page when we have it; otherwise a shopping search.
 - Show only what she has: type tabs, rows and filters appear only when there's something in them.
 - Mock first on the design board for anything new, then build what he picks. Design board: claude.ai artifact "Actually" Design (HpSXVJtLvkRLiXjAchBbdw).

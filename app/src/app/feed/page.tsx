@@ -231,14 +231,13 @@ export default function Feed() {
               {mineType !== "looks" && mine && mine.items.length === 0 && <p className="lead" style={{ padding: "0 4px", margin: 0 }}>{!hasPieces ? "Nothing shared yet. Once your orders bring pieces into your closet, you can show your favorites here." : toGo > 0 ? <>Nothing shared yet. <Link href="/sort" style={{ fontWeight: 700 }}>Pick a few favorites</Link> to show them here.</> : "Nothing shared yet. Open a piece in your closet and choose Show on my feed."}</p>}
               {mineType !== "looks" && mine && <MyGrid items={sortBy(mine.items, order)
                 .filter(i => mineType === "all" || i.category === mineType)} />}
-              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 16, lineHeight: 1.45, padding: "0 4px" }}>Your feed shows the photo, brand, name and your note. Never prices, sizes or order details.</div>
             </div>
           </>
         )}
 
         {handle && tab === "saved" && (
           <>
-            <div style={{ padding: "10px 20px 0", fontSize: 14, color: "var(--muted)" }}>Pieces you loved from friends. Only you see this list.</div>
+            <div style={{ padding: "10px 20px 0", fontSize: 14, color: "var(--muted)" }}>Pieces you loved from friends.</div>
             {saved && <TypeTabs items={saved} value={savedType} onChange={setSavedType} />}
             <div style={{ padding: "16px 16px 0" }}>
               {saved && saved.length > 0 && <FriendGrid items={saved.filter(i => savedType === "all" || i.category === savedType)} saved />}

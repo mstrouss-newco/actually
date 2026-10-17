@@ -52,7 +52,7 @@ export default function OutfitPage({ params }: { params: Promise<{ id: string }>
           style={{ margin: "10px 16px 0", width: "calc(100% - 32px)", display: "flex", alignItems: "center", gap: 12, background: "#FAF8F6", border: 0, borderRadius: 20, padding: "12px 14px", textAlign: "left", font: "inherit", color: "var(--ink)", cursor: "pointer" }}>
           <span style={{ flex: 1 }}>
             <span style={{ display: "block", fontWeight: 700, fontSize: 14 }}>{o.shared ? "On your feed" : "Share to my feed"}</span>
-            <span style={{ display: "block", fontSize: 12, color: "var(--muted)" }}>Friends can tap each piece to shop it. Never prices or sizes.</span>
+            <span style={{ display: "block", fontSize: 12, color: "var(--muted)" }}>Friends can tap each piece to shop it.</span>
           </span>
           <span style={{ width: 46, height: 28, borderRadius: 999, background: o.shared ? "var(--ink)" : "#D8D2CB", position: "relative", flex: "none" }}>
             <span style={{ position: "absolute", top: 3, left: o.shared ? 21 : 3, width: 22, height: 22, borderRadius: "50%", background: "#fff", transition: "left .15s" }} />

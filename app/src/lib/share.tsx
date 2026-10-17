@@ -76,7 +76,7 @@ export function ShareSheet({ kind, id, title, on = false, onChange, onClose }: {
         {failed && <div style={{ marginTop: 20, fontSize: 14, color: "var(--muted)" }}>Couldn&apos;t make a link just now. Try again in a moment.</div>}
         {!failed && !ready && (
           <>
-            <p style={{ alignSelf: "stretch", fontSize: 14.5, color: "var(--soft)", lineHeight: 1.45, margin: "12px 0 0" }}>Make a link anyone can open, even without the app. They&apos;ll see the photo, brand, name and your note, and can tap through to the store. Never prices or sizes. You can turn it off any time.</p>
+            <p style={{ alignSelf: "stretch", fontSize: 14.5, color: "var(--soft)", lineHeight: 1.45, margin: "12px 0 0" }}>Make a link anyone can open, even without the app. You can turn it off any time.</p>
             <button type="button" disabled={making} onClick={make} className="press" style={{ ...btn, width: "100%", marginTop: 16, background: "var(--ink)", color: "#fff" }}>{making ? "Making your link" : "Make a link"}</button>
           </>
         )}
@@ -98,7 +98,7 @@ export function ShareSheet({ kind, id, title, on = false, onChange, onClose }: {
               <button type="button" disabled={!ready} onClick={sendLink} style={{ ...btn, flex: 1, height: 44, fontSize: 14, background: "#fff", color: "var(--ink)", border: "1.5px solid var(--line)" }}>Send link</button>
               <button type="button" disabled={!ready} onClick={save} style={{ ...btn, flex: 1, height: 44, fontSize: 14, background: "#fff", color: "var(--ink)", border: "1.5px solid var(--line)" }}>Save picture</button>
             </div>
-            <div role="status" style={{ minHeight: 18, fontSize: 12.5, color: "var(--soft)", marginTop: 10, textAlign: "center" }}>{note || "Your link is on. Anyone with it can see this. Never prices or sizes."}</div>
+            <div role="status" style={{ minHeight: 18, fontSize: 12.5, color: "var(--soft)", marginTop: 10, textAlign: "center" }}>{note || "Your link is on. Anyone with it can see this."}</div>
             {ready && <button type="button" onClick={stop} style={{ marginTop: 6, border: 0, background: "none", font: "700 13px var(--font-sans), sans-serif", color: "var(--muted)", cursor: "pointer" }}>Turn off this link</button>}
           </>
         )}
