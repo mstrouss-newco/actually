@@ -1,4 +1,5 @@
 "use client";
+import { useSheetHistory } from "./nav";
 
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "./supabase";
@@ -18,6 +19,7 @@ export async function setLinkShared(kind: Kind, id: string, on: boolean) {
 const IG = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" /></svg>;
 
 export function ShareSheet({ kind, id, title, on = false, onChange, onClose }: { kind: Kind; id: string; title: string; on?: boolean; onChange?: (on: boolean) => void; onClose: () => void }) {
+  useSheetHistory(true, onClose);
   const [ready, setReady] = useState(on);
   const [failed, setFailed] = useState(false);
   const [making, setMaking] = useState(false);

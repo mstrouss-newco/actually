@@ -80,7 +80,7 @@ export default function Today() {
         const [asked, f] = await Promise.all([brandsAsked(), loadFollows()]);
         setFollows(f);
         // Once her closet has pieces, ask her which brands she loves (one time only).
-        if (!asked && all.some(i => whoFor(i, all) === "me")) router.push("/follow");
+        if (!asked && all.some(i => whoFor(i, all) === "me")) router.replace("/follow");
       });
       // Look up delivery dates for orders on the way that don't have one yet.
       if (list.some(g => isArriving(g) && !g.eta)) {

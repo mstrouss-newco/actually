@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackLink } from "./nav";
 
 // DRAFT legal pages. Placeholders in [brackets] must be filled in, and every page reviewed by counsel,
 // before launch. Written to match what the app actually does today; keep them in sync when that changes.
@@ -173,7 +174,7 @@ export function LegalPage({ doc }: { doc: string }) {
   return (
     <main className="tabscreen" style={{ paddingBottom: 0 }}>
       <div className="scroll" style={{ padding: "0 20px 60px" }}>
-        <Link href="/legal" className="back">← Legal</Link>
+        <BackLink fallback="/legal" />
         <div style={{ marginTop: 14, background: "#FFF0BF", borderRadius: 14, padding: "10px 14px", fontSize: 13, fontWeight: 700 }}>Draft. Pending legal review and not yet in effect.</div>
         <h1 className="serif" style={{ fontWeight: 400, fontSize: 32, lineHeight: 1.05, margin: "16px 0 0", letterSpacing: "-0.02em" }}>{d.title}</h1>
         <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 6 }}>Last updated {UPDATED}</div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { BackLink } from "@/lib/nav";
 import { type SharedItem, loadProfilePage, myHandle, myPeople, searchPeople, similarPeople } from "@/lib/social";
 import { Avatar, FollowButton, ShareLink } from "@/lib/feed-ui";
 import { ItemImage, TabBar } from "@/lib/tabs";
@@ -59,9 +60,7 @@ export default function People() {
     <main className="tabscreen">
       <div className="scroll" style={{ paddingTop: 20 }}>
         <div style={{ padding: "0 20px", display: "flex", flexDirection: "column" }}>
-          <Link href="/feed?tab=mine" className="back" style={{ padding: "0 14px 0 8px" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>My feed
-          </Link>
+          <BackLink fallback="/feed" style={{ padding: "0 14px 0 8px" }} />
           <h1 className="serif" style={{ fontWeight: 400, fontSize: 38, lineHeight: 1.02, letterSpacing: "-0.02em", margin: "22px 0 0" }}>Find your <em>people.</em></h1>
           <div style={{ fontSize: 15, color: "var(--soft)", marginTop: 8 }}>Follow friends to see what they actually bought.</div>
         </div>

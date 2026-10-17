@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { BackLink } from "@/lib/nav";
 import { type Item, brandOf, loadItems, setPick, setPicks, toSort } from "@/lib/items";
 import { loadOrders, returnsByEmail } from "@/lib/orders";
 import { ItemImage } from "@/lib/tabs";
@@ -86,7 +87,7 @@ export default function Sort() {
   return (
     <main className="screen" style={{ padding: "20px 20px 26px", overflow: "hidden" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link href="/closet" className="back" style={{ padding: "0 14px" }}>{finished ? "Done" : "Later"}</Link>
+        <BackLink fallback="/closet" label={finished ? "Done" : "Later"} style={{ padding: "0 14px 0 8px" }} />
         {!finished && (
           <button onClick={undo} disabled={!i} style={{ height: 36, padding: "0 14px", borderRadius: 999, border: 0, background: "transparent", font: "700 13px var(--font-sans), sans-serif", color: i ? "var(--ink)" : "#C9C3BC", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14L4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-3" /></svg>Undo

@@ -1,11 +1,11 @@
 "use client";
 
 import { use, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type OrderGroup, blockStore, boughtInStore, dayLabel, deliveredAt, etaText, fmtDate, gmailLink, isArriving, justArrived, loadOrders, orderTitle, removeOrder, returnBy, returnDaysLeft, ruleText, trackStep, usd } from "@/lib/orders";
 import { Confetti, TrackBar, delay } from "@/lib/motion";
 import { ItemImage, TabBar, tint } from "@/lib/tabs";
+import { BackLink } from "@/lib/nav";
 
 const LABEL: Record<string, string> = {
   order: "Ordered", receipt: "Receipt", shipping: "Shipped", delivered: "Delivered", return: "Return started", refund: "Refunded", cancel: "Cancelled",
@@ -33,9 +33,16 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
   // Removing waits 8 seconds so Undo can catch a slip.
   const removeSoon = (g: OrderGroup) => {
     setRemoved(true);
-    timer.current = setTimeout(async () => { await removeOrder(g); router.replace("/orders"); }, 8000);
+    pending.current = g;
+    timer.current = setTimeout(async () => { pending.current = null; await removeOrder(g); router.replace("/orders"); }, 8000);
   };
-  const undoRemove = () => { if (timer.current) clearTimeout(timer.current); setRemoved(false); setConfirm(null); };
+  // If she leaves before the 8 seconds are up, finish the removal quietly and don't move her.
+  const pending = useRef<OrderGroup | null>(null);
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+    if (pending.current) { const g = pending.current; pending.current = null; void removeOrder(g); }
+  }, []);
+  const undoRemove = () => { if (timer.current) clearTimeout(timer.current); pending.current = null; setRemoved(false); setConfirm(null); };
   const [party, setParty] = useState(false);
   useEffect(() => {
     const k = decodeURIComponent(key);
@@ -54,7 +61,7 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
     return (
       <main className="tabscreen">
         <div className="scroll" style={{ padding: "22px 20px 110px" }}>
-          <Link href="/orders" className="back">← Orders</Link>
+          <BackLink fallback="/orders" />
           <p className="lead">We couldn&apos;t find that order.</p>
         </div>
         <TabBar />
@@ -70,9 +77,7 @@ export default function OrderDetail({ params }: { params: Promise<{ key: string 
     <main className="tabscreen">
       <div className="scroll" style={{ paddingTop: 0 }}>
         <div style={{ background: bg, padding: "20px 20px 26px", borderRadius: "0 0 36px 36px" }}>
-          <Link href="/orders" style={{ display: "inline-flex", alignItems: "center", gap: 4, height: 40, padding: "0 14px 0 8px", borderRadius: 999, background: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>Orders
-          </Link>
+          <BackLink fallback="/orders" className="" style={{ display: "inline-flex", alignItems: "center", gap: 4, height: 40, padding: "0 14px 0 8px", borderRadius: 999, background: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none", color: "inherit" }} />
           <div style={{ display: "flex", gap: 16, alignItems: "flex-end", marginTop: 20 }}>
             <div className="float" style={{ transform: "rotate(-3deg)", boxShadow: "0 10px 24px rgba(20,18,16,.12)", borderRadius: 22 }}>
               <ItemImage src={order.photo} store={order.store} name={order.items[0] ?? order.what ?? undefined} domain={order.store_domain} w={110} h={138} radius={22} size={52} />

@@ -2,6 +2,17 @@
 
 Newest first. One line per change, in plain words. Link the PR.
 
+## 2026-10-16: Getting around
+
+- Back goes where she came from (and to a sensible page on a fresh load or shared link), on orders, brands, people, profiles, resale, points, Sort, the outfit editor and pages, Settings and legal.
+- The iPhone back swipe closes sheets (closet piece, sort, style, share, outfit Done) instead of leaving the screen. The piece sheet scrolls on small phones and has a close button.
+- Tabs reopen the view she last used (Closet > Brands, Orders list, Feed tab); the right tab lights up on outfit pages and Settings.
+- Closet shelf is in the address, so Back from a piece or outfit returns to it. "Is all of this yours?" has Not now.
+- Feed: Find people is always in the header; filters are remembered. Story: close button, tap left for the previous card.
+- Outfit editor asks before throwing away changes; the layer button says Behind. Saving no longer leaves the editor behind it.
+- Removing an order then leaving no longer yanks her to Orders later. Brands from Settings returns to Settings. New page-not-found screen.
+- Blind QA found 10 history bugs in the first pass (duplicate entries, stale sheet steps, saved outfit reopening the editor, ?piece reopening); all fixed and re-tested in a browser.
+
 ## 2026-10-16: Hourly Gmail check
 
 - When she opens the app or comes back to it, Actually quietly checks Gmail for new orders, shipping and delivery emails (at most once an hour, only mail since the last check). Today and Orders refresh when it finishes. Before this, new mail was only read at sign-up or from Settings.

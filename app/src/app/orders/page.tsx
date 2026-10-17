@@ -66,7 +66,10 @@ export default function Orders() {
   const [orders, setOrders] = useState<OrderGroup[] | null | undefined>(undefined);
   const [tab, setTab] = useState<Tab>("arriving");
   const [q, setQ] = useState("");
-  const [cat, setCat] = useState("all");
+  const [cat, setCatState] = useState("all");
+  // The photo filter stays put when she opens an order and comes back.
+  const setCat = (c: string) => { setCatState(c); try { sessionStorage.setItem("orders-cat", c); } catch {} };
+  useEffect(() => { try { const c = sessionStorage.getItem("orders-cat"); if (c) setCatState(c); } catch {} }, []);
   const findRef = useRef<HTMLInputElement>(null);
   // From the search button on Today: ready to type.
   useEffect(() => { if (new URLSearchParams(location.search).get("find")) findRef.current?.focus(); }, []);

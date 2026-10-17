@@ -4,6 +4,7 @@ import { ensureCutouts } from "@/lib/cutouts";
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
+import { BackLink } from "@/lib/nav";
 import { useRouter } from "next/navigation";
 import { type Item, loadItems } from "@/lib/items";
 import { type Outfit, deleteOutfit, loadOutfit, setShared } from "@/lib/outfits";
@@ -33,7 +34,7 @@ export default function OutfitPage({ params }: { params: Promise<{ id: string }>
     <main className="tabscreen">
       <div className="scroll">
         <div style={{ padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/closet?view=outfits" className="back">← Outfits</Link>
+          <BackLink fallback="/closet?view=outfits" />
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <Link href={`/outfit/edit/${o.id}`} style={{ fontWeight: 700, fontSize: 15, textDecoration: "none" }}>Edit</Link>
             <button type="button" onClick={() => setShare(true)} className="press" style={{ height: 38, padding: "0 14px", borderRadius: 999, border: 0, background: "var(--ink)", color: "#fff", display: "flex", alignItems: "center", gap: 6, font: "700 14px var(--font-sans), sans-serif", cursor: "pointer" }}>

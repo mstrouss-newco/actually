@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
+import { BackLink } from "@/lib/nav";
 import { CATS, type Item, brandOf, loadItems, shortSize, sizesByBrand, whoFor } from "@/lib/items";
 import { type OrderGroup, boughtInStore, dayLabel, fmtDate, isArriving, isReturn, loadOrders, orderTitle, returnBy, returnDaysLeft, ruleText, windowDays } from "@/lib/orders";
 import { ItemImage, StoreTile, TabBar, tint } from "@/lib/tabs";
@@ -139,9 +140,7 @@ export default function Brand({ params }: { params: Promise<{ name: string }> })
     <main className="tabscreen">
       <div className="scroll" style={{ paddingTop: 0 }}>
         <div style={{ background: tint(name), padding: `20px 20px ${sizes.length ? 64 : 28}px`, borderRadius: "0 0 36px 36px" }}>
-          <Link href="/closet?view=brands" className="back" style={{ height: 40, padding: "0 14px 0 8px", background: "#fff", fontSize: 14 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>Brands
-          </Link>
+          <BackLink fallback="/closet?view=brands" style={{ height: 40, padding: "0 14px 0 8px", background: "#fff", fontSize: 14 }} />
           <div style={{ marginTop: 24 }}><StoreTile store={name} w={64} h={64} radius={18} size={28} /></div>
           <h1 className="serif" style={{ fontWeight: 400, fontSize: name.length > 20 ? 30 : name.length > 12 ? 36 : 48, lineHeight: 1.15, letterSpacing: "-0.03em", margin: "14px 0 0", overflowWrap: "break-word", hyphens: "auto" }}>{name}</h1>
           {items && <div style={{ fontSize: 14, color: "var(--soft)", marginTop: 6 }}>{count} {count === 1 ? "order" : "orders"}{first && new Date(first).getFullYear() < new Date().getFullYear() ? ` since ${new Date(first).getFullYear()}` : ""}{spentHere > 0 ? ` · $${spentHere.toLocaleString("en-US")} spent` : ""}{mine[0] ? ` · last one ${fmtDate(mine[0].ordered_at)}` : ""}</div>}

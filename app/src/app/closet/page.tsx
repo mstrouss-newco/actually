@@ -13,6 +13,7 @@ import { type Ret, dayLabel, fmtDate, loadOrders, matches, returnsByEmail } from
 import { ReadItems } from "@/lib/read-items";
 import { ensureCutouts } from "@/lib/cutouts";
 import { ItemImage, BrandLogo, TabBar, tint } from "@/lib/tabs";
+import { canGoBack, useSheetHistory } from "@/lib/nav";
 import { delay } from "@/lib/motion";
 
 const PICKS: [NonNullable<Item["pick"]>, string][] = [["share", "Show on my feed"], ["sell", "Want to sell"], ["private", "Keep private"]];
@@ -53,19 +54,15 @@ function ClosetPage() {
   // Remember the tab in the address, so Back from a brand page lands on Brands.
   const pickView = (v: "pieces" | "brands" | "outfits") => { setView(v); router.replace(v !== "pieces" ? `/closet?view=${v}` : "/closet", { scroll: false }); };
   useEffect(() => { loadOrders().then(g => g && setRets(returnsByEmail(g))); }, []);
-  const [cat, setCatState] = useState<string | null>(null);
-  // Opening a shelf adds a step to the browser history, so Back returns to the closet.
+  // The open shelf lives in the address (?shelf=tops), so Back from a piece or an outfit lands on it again.
+  const cat = params.get("shelf");
   const setCat = (k: string | null) => {
-    if (k && !cat) history.pushState({ shelf: k }, "");
-    else if (!k && cat && history.state?.shelf) return history.back();
-    setCatState(k);
+    const u = new URLSearchParams(params.toString());
+    if (k) { u.set("shelf", k); router.push(`/closet?${u}`, { scroll: false }); }
+    else if (canGoBack()) router.back();
+    else { u.delete("shelf"); router.replace(u.size ? `/closet?${u}` : "/closet", { scroll: false }); }
     document.querySelector(".tabscreen > .scroll")?.scrollTo(0, 0);
   };
-  useEffect(() => {
-    const pop = () => setCatState(null);
-    addEventListener("popstate", pop);
-    return () => removeEventListener("popstate", pop);
-  }, []);
   const [sel, setSel] = useState<Item | null>(null);
   const [styleFor, setStyleFor] = useState<Item | null>(null);
   const [shareFor, setShareFor] = useState<Item | null>(null);
@@ -73,9 +70,13 @@ function ClosetPage() {
   const [undo, setUndo] = useState<Item | null>(null);
   // The pieces shown in "Is all of this yours?", fixed when it opens so answers don't reshuffle it.
   const [review, setReview] = useState<string[] | null>(null);
+  const closeSel = () => setSel(null);
+  useSheetHistory(!!sel, closeSel);
+  useSheetHistory(sortOpen, () => setSortOpen(false));
+  useSheetHistory(!!styleFor, () => setStyleFor(null));
   // Esc closes whatever sheet is open.
   useEffect(() => {
-    const key = (e: KeyboardEvent) => { if (e.key === "Escape") { setSel(null); setSortOpen(false); } };
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") { setSel(null); setSortOpen(false); setStyleFor(null); } };
     addEventListener("keydown", key);
     return () => removeEventListener("keydown", key);
   }, []);
@@ -108,6 +109,8 @@ function ClosetPage() {
     ensureCutouts(list.filter(i => i.image_url && whoFor(i, list) === "me").map(i => i.id));
     const id = new URLSearchParams(location.search).get("piece");
     const hit = id ? list.find(i => i.id === id) : null;
+    // Take ?piece out of the address first, so closing the sheet or a reload doesn't bring it back.
+    if (id) { const u = new URLSearchParams(location.search); u.delete("piece"); history.replaceState(null, "", u.size ? `/closet?${u}` : "/closet"); }
     if (hit) setSel(hit);
   }); }, []);
   useEffect(load, [load]);
@@ -395,9 +398,12 @@ function ClosetPage() {
       )}
 
       {sel && (
-        <div onClick={() => setSel(null)} style={{ position: "absolute", inset: 0, zIndex: 20, background: "rgba(20,18,16,.35)", display: "flex", alignItems: "flex-end" }}>
-          <div onClick={e => e.stopPropagation()} className="popIn" style={{ width: "100%", background: "#fff", borderRadius: "30px 30px 0 0", padding: "14px 20px 28px" }}>
+        <div onClick={closeSel} style={{ position: "absolute", inset: 0, zIndex: 20, background: "rgba(20,18,16,.35)", display: "flex", alignItems: "flex-end" }}>
+          <div onClick={e => e.stopPropagation()} className="popIn" style={{ position: "relative", width: "100%", maxHeight: "88%", overflowY: "auto", background: "#fff", borderRadius: "30px 30px 0 0", padding: "14px 20px calc(28px + env(safe-area-inset-bottom))" }}>
             <div style={{ width: 40, height: 5, borderRadius: 3, background: "#E5E0DA", margin: "0 auto 16px" }} />
+            <button onClick={closeSel} aria-label="Close" style={{ position: "absolute", top: 12, right: 14, width: 34, height: 34, borderRadius: "50%", border: 0, background: "#F3F0EB", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+            </button>
             <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
               <ItemImage cutId={sel.id} src={sel.image_url} store={sel.store} name={sel.name} w={96} h={120} radius={20} size={44} />
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -423,8 +429,8 @@ function ClosetPage() {
               ))}
               {whoFor(sel, everything) === "me" && (
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { setStyleFor(sel); setSel(null); }} className="btn btn-ghost" style={{ flex: 1, marginTop: 0, height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>Style this piece</button>
-                  <button onClick={() => { setShareFor(sel); setSel(null); }} className="btn btn-ghost" style={{ flex: 1, marginTop: 0, height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>{sel.link_shared ? "Link on" : "Share a link"}</button>
+                  <button onClick={() => { setStyleFor(sel); closeSel(); }} className="btn btn-ghost" style={{ flex: 1, marginTop: 0, height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>Style this piece</button>
+                  <button onClick={() => { setShareFor(sel); closeSel(); }} className="btn btn-ghost" style={{ flex: 1, marginTop: 0, height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>{sel.link_shared ? "Link on" : "Share a link"}</button>
                 </div>
               )}
               {whoFor(sel, everything) === "me" && <Link href={`/outfit/edit/new?with=${sel.id}`} className="btn btn-ghost" style={{ height: 44, fontSize: 14, border: "1.5px solid var(--line)" }}>Make an outfit with this</Link>}
@@ -471,6 +477,7 @@ function ClosetPage() {
           </div>
           <div style={{ padding: "8px 16px 24px" }}>
             <button className="btn" onClick={finishReview} style={{ height: 50 }}>Done</button>
+            <button className="btn btn-ghost" onClick={() => setReview(null)} style={{ height: 44, marginTop: 6, fontSize: 14 }}>Not now</button>
           </div>
         </div>
       )}

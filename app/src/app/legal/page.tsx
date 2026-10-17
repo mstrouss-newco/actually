@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackLink } from "@/lib/nav";
 import { LEGAL_LINKS } from "@/lib/legal";
 
 export const metadata = { title: "Legal · Actually" };
@@ -7,7 +8,7 @@ export default function Legal() {
   return (
     <main className="tabscreen" style={{ paddingBottom: 0 }}>
       <div className="scroll" style={{ padding: "0 20px 60px" }}>
-        <Link href="/" className="back">← Back</Link>
+        <BackLink fallback="/" />
         <h1 className="serif" style={{ fontWeight: 400, fontSize: 34, margin: "16px 0 0", letterSpacing: "-0.02em" }}>Legal</h1>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 18 }}>
           {LEGAL_LINKS.map(([h, t]) => (
