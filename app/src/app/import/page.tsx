@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useGoBack } from "@/lib/nav";
 import { type ImportState, importState, onImport, startImport } from "@/lib/importer";
 import { StoreTile } from "@/lib/tabs";
 import { supabase } from "@/lib/supabase";
@@ -117,7 +118,16 @@ export default function Import() {
       <NameCard />
       {s.skipped > 0 && s.stage === "done" && <p style={{ margin: "0 0 10px", fontSize: 13, color: "var(--muted)", lineHeight: 1.45 }}>{s.skipped} emails couldn&apos;t be checked. Run this again later to pick them up.</p>}
       {s.stage !== "done" && <p style={{ margin: "0 0 12px", fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>Takes about a minute. Keep the app open while it runs.</p>}
-      <Link href="/today" className="btn">{s.stage === "done" ? "See my orders" : "Look around while this runs"}</Link>
+      <Finish done={s.stage === "done"} />
     </main>
   );
+}
+
+// From Settings, she goes back to Settings; at sign-up, on to Today.
+function Finish({ done }: { done: boolean }) {
+  const [fromSettings, setFromSettings] = useState(false);
+  useEffect(() => { setFromSettings(new URLSearchParams(location.search).get("from") === "settings"); }, []);
+  const back = useGoBack("/settings");
+  if (fromSettings) return <button type="button" className="btn" onClick={back}>{done ? "Back to Settings" : "Back to Settings while this runs"}</button>;
+  return <Link href="/today" className="btn">{done ? "See my orders" : "Look around while this runs"}</Link>;
 }

@@ -24,7 +24,7 @@ export default function OutfitPage({ params }: { params: Promise<{ id: string }>
   useEffect(() => { loadOutfit(id).then(o => { setO(o); if (o) ensureCutouts(o.layout.map(l => l.id), true); }); loadItems().then(setItems); }, [id]);
 
   if (o === undefined) return <main className="tabscreen"><TabBar /></main>;
-  if (o === null) return <main className="tabscreen"><div className="scroll" style={{ padding: "0 20px" }}><Link href="/closet?view=outfits" className="back">← Outfits</Link><p className="lead">We couldn&apos;t find that outfit.</p></div><TabBar /></main>;
+  if (o === null) return <main className="tabscreen"><div className="scroll" style={{ padding: "0 20px" }}><BackLink fallback="/closet?view=outfits" /><p className="lead">We couldn&apos;t find that outfit.</p></div><TabBar /></main>;
 
   const byId = new Map(items.map(i => [i.id, i]));
   const pieces = o.layout.map(l => byId.get(l.id)).filter((i): i is Item => !!i);

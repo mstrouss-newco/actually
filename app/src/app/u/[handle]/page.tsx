@@ -12,10 +12,10 @@ import { TabBar } from "@/lib/tabs";
 export default function PublicFeed({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = use(params);
   const [p, setP] = useState<Profile | null | undefined>(undefined);
-  const [signedIn, setSignedIn] = useState(false);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [type, setType] = useState("all");
   const [order, setOrder] = useState<Order>("new");
-  const loves = useLovesStore(signedIn);
+  const loves = useLovesStore(!!signedIn);
   const { load } = loves;
   useEffect(() => {
     (async () => {
@@ -30,7 +30,7 @@ export default function PublicFeed({ params }: { params: Promise<{ handle: strin
     <main className="tabscreen">
       <div className="scroll" style={{ paddingBottom: signedIn ? 110 : 40 }}>
         <div style={{ padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          {signedIn ? <BackLink fallback="/feed" /> : <Link href="/" className="logo" style={{ textDecoration: "none" }}>Actually</Link>}
+          {signedIn === null ? <div style={{ height: 40 }} /> : signedIn ? <BackLink fallback="/feed" /> : <Link href="/" className="logo" style={{ textDecoration: "none" }}>Actually</Link>}
         </div>
 
         {p === null && <p className="lead" style={{ padding: "0 20px" }}>No one goes by {handle} here.</p>}

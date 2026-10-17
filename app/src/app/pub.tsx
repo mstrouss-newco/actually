@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LanderGmail } from "./lander-cta";
+import { PubCta, PubGet } from "./pub-cta";
 import "./lander.css";
 import "./pub.css";
 
@@ -8,14 +8,10 @@ export function PubFrame({ who, kicker, children }: { who: string; kicker: strin
   return (
     <div className="pub">
       <div className="pub-in">
-        <div className="pub-top"><Link href="/" className="logo">Actually</Link><Link href="/" className="pub-get">Get Actually</Link></div>
+        <div className="pub-top"><Link href="/" className="logo">Actually</Link><PubGet /></div>
         <div className="pub-who"><span className="pub-av">{who[0]}</span><div><div style={{ fontWeight: 700, fontSize: 15 }}>{who}</div><div style={{ fontSize: 13, color: "var(--muted)" }}>{kicker}</div></div></div>
         {children}
-        <div className="pub-cta">
-          <h2>Your closet is already <em>in your inbox.</em></h2>
-          <p>Connect Gmail and every order becomes your closet. Make looks like this and share what you love.</p>
-          <LanderGmail />
-        </div>
+        <PubCta />
         <div className="pub-foot"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></div>
       </div>
     </div>
@@ -25,7 +21,7 @@ export function PubFrame({ who, kicker, children }: { who: string; kicker: strin
 export function NotShared({ what }: { what: string }) {
   return (
     <div className="pub"><div className="pub-in">
-      <div className="pub-top"><Link href="/" className="logo">Actually</Link><Link href="/" className="pub-get">Get Actually</Link></div>
+      <div className="pub-top"><Link href="/" className="logo">Actually</Link><PubGet /></div>
       <h1 className="pub-h" style={{ marginTop: 60 }}>This {what} isn&apos;t shared anymore.</h1>
       <p className="lead">The person who shared it turned off the link.</p>
     </div></div>

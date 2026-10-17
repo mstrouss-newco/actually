@@ -1,9 +1,9 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { BackLink } from "@/lib/nav";
+import { BackLink, useGoBack } from "@/lib/nav";
 import { CONDITIONS, type Condition, SITES, askPrice, buildListing, money } from "@/lib/earn";
-import { type Item, loadItems, setPick } from "@/lib/items";
+import { type Item, hideItem, loadItems, setPick } from "@/lib/items";
 import { ItemImage, TabBar, tint } from "@/lib/tabs";
 import { delay } from "@/lib/motion";
 
@@ -17,6 +17,8 @@ export default function WorthItem({ params }: { params: Promise<{ id: string }> 
   const [body, setBody] = useState("");
   const [price, setPrice] = useState("");
   const [copied, setCopied] = useState("");
+  const [donated, setDonated] = useState(false);
+  const leave = useGoBack("/earn/worth");
   useEffect(() => { loadItems().then(all => setItem(all.find(i => i.id === id) ?? null)); }, [id]);
 
   const s = SITES[site];
@@ -140,6 +142,16 @@ export default function WorthItem({ params }: { params: Promise<{ id: string }> 
           <button type="button" onClick={async () => { const next = item.pick === "sell" ? null : "sell"; setItem({ ...item, pick: next }); await setPick(item, next); }} className="btn btn-ghost" style={{ height: 44, fontSize: 14 }}>
             {item.pick === "sell" ? "✓ On your sell list" : "Add to my sell list"}
           </button>
+        </div>
+
+        {/* Not worth the hassle of selling: give it a second home. */}
+        <div className="up" style={{ margin: "18px 16px 0", background: "#DCEFDF", borderRadius: 24, padding: "16px 18px" }}>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>Or donate it</div>
+          <div style={{ fontSize: 13, color: "#3F5F4A", marginTop: 4, lineHeight: 1.45 }}>Not worth listing? Give it a second life. Drop it off nearby, then take it out of your closet.</div>
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            <a href="https://www.goodwill.org/locator/" target="_blank" rel="noreferrer" className="btn press" style={{ flex: 1, marginTop: 0, height: 46, fontSize: 14, background: "var(--ink)" }}>Find a drop-off</a>
+            <button type="button" disabled={donated} onClick={async () => { setDonated(true); await hideItem(item); setTimeout(leave, 900); }} className="btn btn-ghost" style={{ flex: 1, marginTop: 0, height: 46, fontSize: 14, background: "#fff" }}>{donated ? "Donated. Thank you" : "I donated it"}</button>
+          </div>
         </div>
       </div>
       <TabBar />
